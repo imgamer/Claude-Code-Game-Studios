@@ -46,6 +46,7 @@
 | 08 | [上下文管理艺术](file:///workspace/study-docs/08-上下文管理艺术.md) | 长会话怎么不失忆？ | 文件即记忆、增量写入、压缩 |
 | 09 | [实战案例剖析](file:///workspace/study-docs/09-实战案例剖析.md) | 一个功能从设计到上线全流程 | `/dev-story`、`/team-combat` |
 | 10 | [学习路径与练习](file:///workspace/study-docs/10-学习路径与练习.md) | 我该怎么练？ | 阶梯任务、自检清单 |
+| 11 | [CLAUDE.md 编写指导](file:///workspace/study-docs/11-CLAUDE.md编写指导.md) | CLAUDE.md 怎么写？ | 定位、`@` 引用、分层、反模式 |
 
 ---
 
