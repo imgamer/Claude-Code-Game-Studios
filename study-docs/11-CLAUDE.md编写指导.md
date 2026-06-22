@@ -15,10 +15,13 @@
 
 - 一开始要设定"专家角色"吗？
 - 为什么这个项目先写项目名称和介绍？
-- `@路径` 引用语法背后是什么原理？
+- `@路径` 引用语法背后是什么原理？**会在启动时加载吗？**
+- `@` 引用和"路径特定规则"（path-specific rules）是什么关系？
 - 哪些内容该放 CLAUDE.md，哪些该拆出去？
 - 子目录的 CLAUDE.md 有什么用？
 - 怎么避免 CLAUDE.md 撑爆上下文？
+
+> **重要澄清**：根据 [Claude Code 官方文档](https://code.claude.com/docs/zh-CN/memory)，`@路径` 引用的文件**会在会话启动时全量加载**（不是按需加载）。真正实现"按需加载"的是子目录 CLAUDE.md（懒加载）。`@` 引用和路径特定规则（`.claude/rules/` 的 `paths` frontmatter）是**两个完全不同的机制**。详见下文"核心问题 4.5"。
 
 ---
 
@@ -186,7 +189,7 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 
 ### `@` 引用的技术原理
 
-`@路径` 是 Claude Code 的**文件引用语法**。它的作用是：
+`@路径` 是 Claude Code 的**文件引用语法**（官方文档称"导入其他文件 / Import additional files"）。它的作用是：
 
 > 在读取 CLAUDE.md 时，把 `@` 后面那个文件的内容**内联展开**到当前位置。
 
@@ -194,19 +197,28 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 
 1. **可维护性**：子文件独立修改，主文件不动。
 2. **可复用性**：一个子文件可以被多个地方引用（虽然 CLAUDE.md 里通常只引一次）。
-3. **按需加载**：某些实现支持延迟加载，不一定全部塞进初始上下文。
+3. **关注点分离**：主文件是"目录页"，细节进子文件，阅读和维护更清晰。
+
+#### ⚠️ 关键澄清：`@` 引用是"启动时全量加载"，不是"按需加载"
+
+根据 [Claude Code 官方文档](https://code.claude.com/docs/zh-CN/memory)，CLAUDE.md 在会话启动时**全部内容都会被加载**（不会只挑相关部分），`@` 引用的文件内容会被内联展开后一起加载。
+
+**这意味着**：
+- `@` 引用**不能减少上下文 token 成本**——该加载的还是加载了。
+- `@` 引用的真正价值是**可维护性和可读性**，不是省 token。
+- 如果引用的文件太大，照样会撑爆上下文。
+
+**所以 `@` 引用 ≠ 按需加载**。真正实现"按需加载"的是另外两个机制（见下文"三种加载机制对比"）。
 
 ### 为什么不直接全写进 CLAUDE.md
 
-**核心原因：上下文窗口有限**。
+如果 `@` 引用不省 token，为什么还要拆？三个原因：
 
-这个项目的 6 个子文件加起来内容很多（technical-preferences.md 87 行、coordination-rules.md 65 行、coding-standards.md 66 行、context-management.md 99 行……）。如果全塞进 CLAUDE.md：
+1. **可维护性**：主文件几百行难以阅读和修改，拆开后每个子文件独立维护。
+2. **可读性**：主文件保持"目录页"角色，一眼看清项目有哪些配置维度。
+3. **修改隔离**：改编码标准不用动主文件，降低误伤其他部分的风险。
 
-- 主文件几百行，**难以阅读和维护**。
-- 每次对话启动都加载全部，**上下文成本高**。
-- 修改一处要动主文件，**容易误伤其他部分**。
-
-`@` 引用让主文件保持"目录"的角色，细节进子文件。
+**注意**：拆出去不等于省上下文。如果子文件内容很多，`@` 引用后总 token 一样多。要真正减少上下文成本，用下面两种机制。
 
 ### `@` 引用的设计原则
 
@@ -327,6 +339,105 @@ Every task follows: Question -> Options -> Decision -> Draft -> Approval
 
 ---
 
+## 核心问题 4.5：三种"加载机制"别搞混（官方文档澄清）
+
+这是编写 CLAUDE.md 最容易混淆的地方。很多人把三种机制搞混，导致配置不符合预期。根据 [Claude Code 官方文档](https://code.claude.com/docs/zh-CN/memory)，有三种**完全不同**的机制：
+
+### 机制 1：`@路径` 引用 —— 启动时全量加载
+
+**是什么**：在 CLAUDE.md 里写 `@.claude/docs/xxx.md`，把那个文件内容内联展开。
+
+**加载时机**：**会话启动时全量加载**。CLAUDE.md 的所有内容（含 `@` 引用展开后的内容）在启动时一次性注入上下文。
+
+**官方原文**（[memory 文档](https://code.claude.com/docs/zh-CN/memory#import-additional-files)）：
+
+> Use `@path/to/import/file.md` to import additional files... Claude Code reads CLAUDE.md files at session start.
+
+**能省 token 吗**：**不能**。`@` 引用的文件内容会被展开后一起加载，总 token 不变。
+
+**真正价值**：可维护性、可读性、关注点分离（见上文）。
+
+### 机制 2：路径特定规则（path-specific rules）—— 按路径生效
+
+**是什么**：在 `.claude/rules/` 下放规则文件，用 frontmatter 的 `paths` 字段限定只在哪些路径生效。
+
+**加载时机**：**启动时全量注入** `.claude/rules/` 下所有规则文件的内容。但 `paths` frontmatter 让规则**只在 AI 处理匹配路径的文件时才"激活约束"**。
+
+**官方原文**（[memory 文档 path-specific-rules](https://code.claude.com/docs/zh-CN/memory#path-specific-rules)）：
+
+> Rules can be scoped to specific file paths using `globs` in the YAML frontmatter.
+
+**和 `@` 引用的区别**：
+- `@` 引用是"把文件内容塞进 CLAUDE.md"，没有路径限定。
+- path-specific rules 是"规则文件独立存在，用 `paths` 限定生效范围"。
+
+**这个项目的实例**：[gameplay-code.md](file:///workspace/.claude/rules/gameplay-code.md)
+
+```markdown
+---
+paths:
+  - "src/gameplay/**"
+---
+# Gameplay Code Rules
+- ALL gameplay values MUST come from external config/data files, NEVER hardcoded
+...
+```
+
+这条规则只在 AI 写 `src/gameplay/` 下的文件时激活约束。详见 [06 Rules 路径规则](file:///workspace/study-docs/06-Rules路径规则.md)。
+
+### 机制 3：子目录 CLAUDE.md —— 懒加载（真正的按需加载）
+
+**是什么**：在子目录放 CLAUDE.md（如 `src/CLAUDE.md`、`design/CLAUDE.md`）。
+
+**加载时机**：**懒加载**。启动时**不加载**，只有当 Claude 真正读取或修改该子目录下的文件时，那个子目录（及其路径上）的 CLAUDE.md 才被加载。
+
+**官方原文**（[memory 文档](https://code.claude.com/docs/zh-CN/memory#how-claude-md-files-load)）：
+
+> Claude Code does not load CLAUDE.md files in subdirectories at launch. Instead, they are included when Claude reads files in those subdirectories.
+
+**这是唯一真正"按需加载"的机制**。如果整个会话没碰过 `frontend/`，它的 CLAUDE.md 始终不加载，不占 token。
+
+### 三种机制对比表
+
+| 维度 | `@路径` 引用 | 路径特定规则 | 子目录 CLAUDE.md |
+|------|-------------|-------------|------------------|
+| **放哪** | CLAUDE.md 里写 `@路径` | `.claude/rules/` 下放 `.md` | 子目录下放 `CLAUDE.md` |
+| **加载时机** | 启动时全量加载 | 启动时全量注入 | 懒加载（处理该目录文件时） |
+| **能省 token 吗** | ❌ 不能 | ❌ 不能（启动全注入） | ✅ 能（不碰就不加载） |
+| **路径限定** | 无 | `paths` frontmatter 限定 | 天然按目录限定 |
+| **主要价值** | 可维护性、关注点分离 | 按路径激活不同约束 | 真正的按需加载 |
+| **适合放什么** | 详细规范、长文档 | 编码规则、命名规范 | 目录专属规则 |
+
+### 完整加载顺序
+
+根据官方文档和社区分析，Claude Code 会话启动时的加载顺序：
+
+```
+1. settings.json          → 系统能力（权限、hooks、env）
+2. settings.local.json    → 本地覆盖（个人配置）
+3. CLAUDE.md              → 项目入口（含 @ 引用展开后的全部内容）
+   （向上递归到根目录的所有 CLAUDE.md 也加载）
+4. .claude/rules/         → 全量注入所有规则文件
+5. Auto Memory            → 自动记忆（MEMORY.md 索引）
+```
+
+**注意**：子目录 CLAUDE.md **不在启动时加载**，是懒加载。
+
+### 这个项目三种机制都用了
+
+| 机制 | 项目里的实例 | 解决什么问题 |
+|------|-------------|-------------|
+| `@` 引用 | CLAUDE.md 里 `@.claude/docs/coding-standards.md` | 把详细规范拆出主文件，可维护 |
+| 路径特定规则 | `.claude/rules/gameplay-code.md` 的 `paths: src/gameplay/**` | 玩法代码必须数据驱动 |
+| 子目录 CLAUDE.md | `src/CLAUDE.md`、`design/CLAUDE.md` | 源码/设计目录专属规则，不碰不加载 |
+
+**编排启示**：三种机制各有所长，组合使用：
+- 用 `@` 引用拆分长文档（可维护）
+- 用路径特定规则约束不同路径的代码（精准）
+- 用子目录 CLAUDE.md 隔离目录专属规则（省 token）
+
+---
+
 ## 核心问题 5：子目录的 CLAUDE.md 有什么用
 
 这个项目有**多个 CLAUDE.md**，分布在不同目录：
@@ -338,11 +449,17 @@ Every task follows: Question -> Options -> Decision -> Draft -> Approval
 /workspace/docs/CLAUDE.md      ← 技术文档目录
 ```
 
-### 分层 CLAUDE.md 的原理
+### 分层 CLAUDE.md 的原理（懒加载）
 
-Claude Code 支持**分层 CLAUDE.md**：当 AI 在某个目录工作时，会读取该目录的 CLAUDE.md（如果有），叠加到主 CLAUDE.md 之上。
+Claude Code 支持**分层 CLAUDE.md**：在子目录放 CLAUDE.md，当 AI 读取/修改该子目录下的文件时，那个子目录的 CLAUDE.md 才被加载，叠加到主 CLAUDE.md 之上。
 
-**作用**：让"目录专属规则"只在那个目录生效，不污染全局上下文。
+**官方机制**（[memory 文档](https://code.claude.com/docs/zh-CN/memory#how-claude-md-files-load)）：
+
+> Claude Code does not load CLAUDE.md files in subdirectories at launch. Instead, they are included when Claude reads files in those subdirectories.
+
+**关键**：子目录 CLAUDE.md 是**懒加载**——启动时不加载，只有处理该目录文件时才加载。这是它和 `@` 引用（启动时全量加载）的根本区别。
+
+**作用**：让"目录专属规则"只在那个目录生效，**不碰就不占 token**，真正实现按需加载。
 
 看 [src/CLAUDE.md](file:///workspace/src/CLAUDE.md)：
 
@@ -365,8 +482,8 @@ The LLM's training data predates the pinned engine version.
 
 **为什么不放主 CLAUDE.md**：
 - 这些规则只在写 `src/` 下代码时相关，写 `design/` 文档时无关。
-- 放主 CLAUDE.md 会增加无关上下文成本。
-- 分层让规则"按需加载"。
+- 放主 CLAUDE.md 会**启动时全量加载**，增加无关上下文成本。
+- 放子目录 CLAUDE.md 是**懒加载**，不碰 `src/` 就不加载，真正省 token。
 
 ### 看 [design/CLAUDE.md](file:///workspace/design/CLAUDE.md) 的对比
 
@@ -395,21 +512,29 @@ Every GDD must include all **8 required sections** in this order:
 
 ## 核心问题 6：怎么避免 CLAUDE.md 撑爆上下文
 
-这是编写 CLAUDE.md 最实际的挑战。这个项目用了几个策略：
+这是编写 CLAUDE.md 最实际的挑战。根据官方文档，要区分"启动时加载"和"懒加载"两种机制，对症下药。
 
-### 策略 1：主文件精简，细节 `@` 引用
+### 策略 1：主文件精简，细节 `@` 引用（可维护性）
 
 主 CLAUDE.md 只有 53 行，但通过 6 个 `@` 引用加载了完整配置。
 
-**原则**：主文件是"目录页"，不是"正文"。
+**注意**：`@` 引用**不省 token**（启动时全量加载），但让主文件可读、可维护。
 
-### 策略 2：分层 CLAUDE.md 按需加载
+**原则**：主文件是"目录页"，不是"正文"。`@` 引用是为了可维护性，不是为了省 token。
 
-`src/CLAUDE.md` 只在写源码时加载，`design/CLAUDE.md` 只在写设计文档时加载。
+### 策略 2：子目录 CLAUDE.md 懒加载（真正省 token）
 
-**原则**：局部规则放局部，不污染全局。
+`src/CLAUDE.md` 只在写源码时加载，`design/CLAUDE.md` 只在写设计文档时加载。**这是唯一真正省 token 的机制**——不碰那个目录就不加载。
 
-### 策略 3：CLAUDE.md vs CLAUDE.local.md
+**原则**：目录专属规则放子目录 CLAUDE.md，利用懒加载省上下文。
+
+### 策略 3：路径特定规则精准约束（启动加载，但按路径激活）
+
+`.claude/rules/` 下的规则文件用 `paths` frontmatter 限定生效范围。虽然启动时全量注入，但约束只在匹配路径激活。
+
+**原则**：不同路径要不同约束时，用路径特定规则，不要堆进 CLAUDE.md。
+
+### 策略 4：CLAUDE.md vs CLAUDE.local.md
 
 看 [CLAUDE-local-template.md](file:///workspace/.claude/docs/CLAUDE-local-template.md)：
 
@@ -434,7 +559,7 @@ Every GDD must include all **8 required sections** in this order:
 
 **原则**：团队共享的写 CLAUDE.md，个人的写 CLAUDE.local.md。不要把个人偏好污染团队配置。
 
-### 策略 4：区分"每次都要见"和"按需见"
+### 策略 5：区分"每次都要见"和"按需见"
 
 **每次都要见**（直接写 CLAUDE.md）：
 - 项目定位
@@ -442,7 +567,7 @@ Every GDD must include all **8 required sections** in this order:
 - 技术栈
 - 入门指引
 
-**按需见**（`@` 引用或子目录 CLAUDE.md）：
+**按需见**（子目录 CLAUDE.md 懒加载）：
 - 详细编码标准
 - 目录结构
 - 上下文管理策略
@@ -819,20 +944,29 @@ The LLM's training data predates the pinned engine version.
 
 ---
 
-## 总结：CLAUDE.md 编写的五条铁律
+## 总结：CLAUDE.md 编写的六条铁律
 
 1. **先定位，后细节**——开头一句话锚定领域和特征，后续所有内容在这个上下文里理解。
-2. **主文件精简，细节 `@` 引用**——主文件是目录页，不是正文。超过 100 行就该拆。
-3. **核心铁律直接写，长文档拆出去**——每次都要见的直接写，按需见的 `@` 引用。
-4. **局部规则放子目录 CLAUDE.md**——不污染全局上下文，按需加载。
-5. **团队配置和个人偏好分开**——CLAUDE.md 提交 git，CLAUDE.local.md 不提交。
+2. **主文件精简，细节 `@` 引用**——主文件是目录页，不是正文。超过 100 行就该拆。**注意：`@` 引用是为了可维护性，不省 token**（启动时全量加载）。
+3. **核心铁律直接写，长文档 `@` 引用拆出去**——每次都要见的直接写，详细规范用 `@` 引用。
+4. **目录专属规则放子目录 CLAUDE.md**——这是唯一**真正省 token**的机制（懒加载，不碰不加载）。
+5. **不同路径要不同约束，用路径特定规则**——`.claude/rules/` 下用 `paths` frontmatter，不要堆进 CLAUDE.md。
+6. **团队配置和个人偏好分开**——CLAUDE.md 提交 git，CLAUDE.local.md 不提交。
 
-**一句话**：CLAUDE.md 是"项目宪法"——简短、稳定、锚定方向；细节法律拆到子文件，地方法规放地方。
+**一句话**：CLAUDE.md 是"项目宪法"——简短、稳定、锚定方向；细节法律用 `@` 引用拆到子文件（可维护），地方法规放子目录 CLAUDE.md（懒加载省 token），路径专属约束用 `.claude/rules/`（精准激活）。
 
 ---
 
 ## 延伸阅读
 
+### 官方文档（权威依据）
+- [探索 .claude 目录](https://code.claude.com/docs/zh-CN/claude-directory)——官方 .claude 目录说明
+- [存储指令和记忆](https://code.claude.com/docs/zh-CN/memory)——官方 CLAUDE.md 和记忆机制说明
+- [特定路径的规则](https://code.claude.com/docs/zh-CN/memory#path-specific-rules)——官方 path-specific rules 说明
+- [导入其他文件](https://code.claude.com/docs/zh-CN/memory#import-additional-files)——官方 `@` 引用语法说明
+- [CLAUDE.md 文件如何加载](https://code.claude.com/docs/zh-CN/memory#how-claude-md-files-load)——官方加载机制说明
+
+### 项目内文件（实例参考）
 - [这个项目的 CLAUDE.md](file:///workspace/CLAUDE.md)——本文的主要分析对象
 - [CLAUDE-local-template.md](file:///workspace/.claude/docs/CLAUDE-local-template.md)——个人配置模板
 - [src/CLAUDE.md](file:///workspace/src/CLAUDE.md)——源码目录分层 CLAUDE.md
@@ -840,5 +974,7 @@ The LLM's training data predates the pinned engine version.
 - [docs/CLAUDE.md](file:///workspace/docs/CLAUDE.md)——文档目录分层 CLAUDE.md
 - [technical-preferences.md](file:///workspace/.claude/docs/technical-preferences.md)——技术偏好子文件范例
 - [coding-standards.md](file:///workspace/.claude/docs/coding-standards.md)——编码标准子文件范例
+- [gameplay-code.md](file:///workspace/.claude/rules/gameplay-code.md)——路径特定规则范例
 - [study-docs/02-Claude-Code基础概念.md](file:///workspace/study-docs/02-Claude-Code基础概念.md)——本系列的基础概念篇
+- [study-docs/06-Rules路径规则.md](file:///workspace/study-docs/06-Rules路径规则.md)——路径特定规则详解
 - [study-docs/07-协作协议与人在环.md](file:///workspace/study-docs/07-协作协议与人在环.md)——协作协议详解
