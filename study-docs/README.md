@@ -48,6 +48,7 @@
 | 10 | [学习路径与练习](file:///workspace/study-docs/10-学习路径与练习.md) | 我该怎么练？ | 阶梯任务、自检清单 |
 | 11 | [CLAUDE.md 编写指导](file:///workspace/study-docs/11-CLAUDE.md编写指导.md) | CLAUDE.md 怎么写？ | 定位、`@` 引用、分层、反模式 |
 | 12 | [从零编排智能体协作](file:///workspace/study-docs/12-从零编排智能体协作.md) | 主会话怎么触发智能体？工作室怎么从零搭？ | `Task` 工具、三层规则源、调用流程、8 步搭建、9 种编排模式 |
+| 13 | [术语对照表](file:///workspace/study-docs/13-术语对照表.md) | TD-ENGINE-RISK 是什么？ADR Approve 是什么？ | 门禁 ID 体系、游戏开发流程术语、智能体编排术语、25 个门禁速查 |
 
 ---
 
