@@ -254,22 +254,514 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 
 ---
 
+## 术语速查表（先读这节，后面才看得懂）
+
+下面这些术语会在讲"实际产出哪些文档"时反复出现。先从字面到内涵讲清楚。
+
+### 文档类型术语
+
+| 术语 | 全称 / 字面 | 内涵 |
+|------|------------|------|
+| **GDD** | Game Design Document | 游戏设计文档。本系统强制每个系统一份，8 个必填章节，是实现的源头规格。 |
+| **LDD** | Level Design Document | 关卡设计文档。描述单个关卡的布局、遭遇、节奏。 |
+| **TDD** | Technical Design Document | 技术设计文档。描述系统"怎么实现"（区别于 GDD 的"做什么"）。 |
+| **ADR** | Architecture Decision Record | 架构决策记录。每个重要技术决策一份，状态流：Proposed → Accepted → Superseded。 |
+| **TR-ID** | Technical Requirement ID | 技术需求编号，格式 `TR-[gdd-slug]-[NNN]`。从 GDD 提取到架构文档，建立"需求→实现"可追溯性。 |
+| **slug** | — | kebab-case 文件名标识符（如 `combat-system`）。用于 GDD 文件名、TR-ID、引用。 |
+
+### 设计理论术语
+
+| 术语 | 内涵 | 类比 |
+|------|------|------|
+| **MDA** | Mechanics-Dynamics-Aesthetics 框架。Aesthetics（玩家感受，8 种：Sensation/Fantasy/Narrative/Challenge/Fellowship/Discovery/Expression/Submission）→ Dynamics（涌现行为）→ Mechanics（规则）。设计从目标感受**倒推**到机制。 | 先定"要让玩家觉得帅"，再倒推"什么机制能让玩家觉得帅" |
+| **SDT** | Self-Determination Theory 自我决定理论。三大需求：Autonomy（自主）/ Competence（胜任）/ Relatedness（关联）。每系统至少满足一项。 | 玩家要觉得"我能做主"、"我变强了"、"我属于这里" |
+| **Bartle 四分类** | 玩家四类：Achievers（成就者）/ Explorers（探索者）/ Socializers（社交者）/ Killers（竞争者）。 | 你游戏讨好哪类人？ |
+| **Flow（心流）** | 挑战与技能匹配时进入心流；过低→无聊，过高→焦虑。难度曲线遵循锯齿模式。 | 乒乓球——对手太弱无聊，太强挫败，刚好就停不下来 |
+| **Pillars（支柱）** | 3-5 条不可协商的设计原则。特征：可证伪 / 具约束力 / 跨部门 / 可记忆。每条含 design test。 | 公司使命宣言——所有决策要服从它 |
+| **Anti-Pillars（反支柱）** | "我们**不做** X，因为它会破坏支柱 Y"。防止"要是能加 X 就酷了"的范围蔓延。 | 黑名单——明确禁止的诱惑 |
+| **Core Loop（核心循环）** | 嵌套模型：30 秒微循环（内在满足的动作）⊂ 5-15 分中循环（目标-奖励）⊂ 30-120 分宏循环（进度+停点）⊂ 长期循环。 | 打怪→掉装备→升级→打更强的怪 |
+| **Verb-First Design** | 先定玩家核心动词（build/fight/explore/solve/survive/create/manage/discover），动词即游戏。 | "这游戏的核心动作是探索还是战斗？" |
+| **Ludonarrative Harmony** | 玩法-叙事和谐。机制与故事互相强化；dissonance（不和谐）= 故事说一套、玩法奖励另一套。 | 故事讲"和平使者"，玩法却奖励屠杀 = 不和谐 |
+
+### 范围与流程术语
+
+| 术语 | 内涵 |
+|------|------|
+| **MVP** | Minimum Viable Product 最小可行产品。本系统的 Scope Tier 之一——绝对最小可玩构建，测核心循环是否有趣。 |
+| **Vertical Slice（垂直切片）** | 3-5 分钟 polished 连续体验，跨所有层（玩法+美术+音频+UI+关卡）。验证"可生产性"。判决：PROCEED/PIVOT/KILL。 |
+| **Alpha / Full Vision** | Scope Tier 三、四层。Alpha 功能完整但内容不全；Full Vision 完整愿景。 |
+| **Skeleton-first（骨架先行）** | 先建文件（含所有空 section header + `[To be designed]` 占位符），逐 section 增量写入。崩溃只丢当前 section。 |
+| **Retrofit mode（改装模式）** | `/design-system retrofit [路径]` 检测已存在 GDD，识别已写章节（不动）、占位符（只填这些）。 |
+| **Section Cycle** | 单 section 写入循环：Context → Questions → Options → Decision → Draft → Approval → Write。 |
+| **Director Gate（总监门禁）** | Director 级审查关卡。如 CD-GDD-ALIGN、TD-ARCHITECTURE。判决：APPROVED/CONCERNS/REJECT。 |
+| **Review Modes** | 评审模式三档：full（所有总监审）/ lean（只阶段门）/ solo（不审，求快）。存 `production/review-mode.txt`。 |
+
+### 经济与平衡术语
+
+| 术语 | 内涵 |
+|------|------|
+| **Sink/Faucet Model** | 经济水槽-水龙头模型。faucet = 货币进入源头；sink = 货币离开去向。目标 session 长度内必须平衡。 |
+| **Pity System（保底）** | 概率奖励在 N 次内必中，防极端坏运。 |
+| **Sawtooth Pattern（锯齿模式）** | 难度曲线健康形态：紧张累积 → 里程碑释放 → 略高基线再起。避免 flat（无聊）和 vertical spike（挫败）。 |
+| **Gini Coefficient（基尼系数）** | 衡量经济财富集中度。游戏健康目标 <0.4，>0.5 触发警告。 |
+| **TTK / TTC** | Time to Kill / Time to Complete。击杀/完成时间。其他数值从此倒推。 |
+| **Tuning Knobs** | 调参旋钮三分类：Feel knobs（手感，靠 playtest）/ Curve knobs（曲线，靠数学）/ Gate knobs（节奏门，靠 session 目标）。 |
+
+---
+
+## 实际开发流程中会产生哪些文档
+
+上面讲了"骨架文件"和"子目录会放什么"。这一节具体讲：**真正做游戏时，每个子目录下会产出哪些文件，每个文件长什么样**。
+
+按子目录分组讲。每个文档给：**一句话作用 + 谁产出 + 何时产出 + 章节结构**。
+
+### A. `design/gdd/` —— 概念、索引、系统设计（核心中的核心）
+
+这个子目录放 3 类文档：概念文档、系统索引、各系统 GDD。
+
+#### A1. `game-concept.md` —— 游戏概念文档
+
+**作用**：立项的"出生证明"。定义游戏是什么、给谁玩、为什么独特。是后续所有设计文档的源头。
+
+**谁产出**：`/brainstorm` 技能（creative-director + art-director 协作）。
+**何时产出**：Phase 1（概念阶段）。
+
+**16 个章节**（来自 [game-concept.md](file:///workspace/.claude/docs/templates/game-concept.md) 模板）：
+
+1. **Elevator Pitch** —— 一句话电梯陈述
+2. **Core Identity** —— 表格：类型/平台/目标受众/人数/时长/商业模式/规模/对标作品
+3. **Core Fantasy** —— 核心幻想（玩家想象自己是什么）
+4. **Unique Hook** —— 独特卖点，必须过"and also"测试（像 X **且还** Y）
+5. **Player Experience Analysis** —— 基于 MDA 框架（目标 Aesthetics + 关键 Dynamics + 核心 Mechanics）
+6. **Player Motivation Profile** —— SDT + Bartle 四类 + Flow 通道
+7. **Core Loop** —— 嵌套循环：30s / 5-15m / 30-120m / 长期，含留存钩子
+8. **Game Pillars** —— 3-5 条支柱
+9. **Anti-Pillars** —— 3+ 条反支柱
+10. **Inspiration and References**
+11. **Target Player Profile**
+12. **Technical Considerations**
+13. **Risks and Open Questions**
+14. **MVP Definition** —— Scope Tiers：MVP / Vertical Slice / Alpha / Full Vision
+15. **Next Steps**
+16. **Visual Identity Anchor** —— 视觉方向锚点（brainstorm Phase 4 后追加）
+
+#### A2. `game-pillars.md` —— 游戏支柱文档（可选独立）
+
+**作用**：把概念文档里的 Pillars 单独展开成一份完整文档，给每个部门（设计/美术/音频/叙事/工程）明确"该怎么服从支柱、怎么算违反支柱"。
+
+**谁产出**：`/brainstorm`（creative-director 主导）。
+**何时产出**：Phase 1（可嵌入概念文档，也可独立）。
+
+**关键章节**：The Pillars（3-5 条，每条含：一句话定义 / 服务的目标 Aesthetics / design test / 各部门"服从 vs 违反"两栏表）/ Anti-Pillars / Pillar Conflict Resolution（优先级排序）/ Pillar Validation Checklist（11 项）。
+
+#### A3. `systems-index.md` —— 系统索引
+
+**作用**：所有系统的"总目录 + 依赖地图 + 设计顺序"。决定先写哪个 GDD、后写哪个。
+
+**谁产出**：`/map-systems` 技能（game-designer 主导）。
+**何时产出**：Phase 1 末 / Phase 2 初。
+
+**关键章节**：Systems Enumeration（表格：# / 系统名 / 分类 / 优先级 / 状态 / 设计文档 / 依赖）/ Categories（Core/Gameplay/Progression/Economy/Persistence/UI/Audio/Narrative/Meta）/ Priority Tiers（MVP/Vertical Slice/Alpha/Full Vision）/ Dependency Map（按 5 层：Foundation → Core → Feature → Presentation → Polish）/ Recommended Design Order（含 Agent 和 Effort S/M/L）。
+
+> 💡 **5 层依赖**是设计顺序的核心：Foundation（事件总线、save/load）无上游 → Core（移动、战斗、背包）→ Feature（进度、经济、制作）→ Presentation（UI/HUD/音频反馈）→ Polish（VFX/juice）。必须从底往上写 GDD。
+
+#### A4. `[system-slug].md` —— 系统级 GDD（最重要）
+
+**作用**：单个系统的完整设计规格。8 个必填章节齐全，是实现的直接源头。
+
+**谁产出**：`/design-system <system-name>` 技能。按"Specialist Agent Routing"决定谁参与——比如 combat 系统会叫上 game-designer + systems-designer + ai-programmer + art-director。
+**何时产出**：Phase 2（系统设计阶段），按 systems-index 的 Recommended Design Order 顺序。
+
+**文件命名**：kebab-case，如 `combat-system.md`、`movement-system.md`、`inventory-system.md`。
+
+**Frontmatter（强制）**：Status / Author / Last Updated / Last Verified / Implements Pillar。
+
+**8 个必填章节**（CLAUDE.md 强约束）：
+
+| # | 章节 | 写什么 | 防什么坑 |
+|---|------|--------|---------|
+| 1 | Overview | 一段总结 | 没全局观，写跑题 |
+| 2 | Player Fantasy | 玩家感受 + 目标 MDA 美学 | 只写机制不写体验 |
+| 3 | Detailed Design | Core Rules + States and Transitions + Interactions with Other Systems | 规则含糊、状态遗漏、接口不清 |
+| 4 | Formulas | 每个公式四要素：表达式 + 变量表（符号/类型/范围/说明）+ 输出范围 + Worked Example | 公式没法实现、变量没范围 |
+| 5 | Edge Cases | 格式 "If [condition]: [outcome]. [rationale]" | 罕见情况没考虑，实现时靠猜 |
+| 6 | Dependencies | 双向（depends on / depended on by）+ 接口描述 | 集成时才发现接口对不上 |
+| 7 | Tuning Knobs | 表格（旋钮/默认值/范围/分类[feel/curve/gate]/理由） | 数值硬编码、调参无边界 |
+| 8 | Acceptance Criteria | Given-When-Then 格式，可独立测试 | 没法验收"做没做完" |
+
+**附加章节**（部分强制）：
+
+- **Game Feel** —— 子节：Feel Reference / Input Responsiveness (ms/frames) / Animation Feel Targets (startup/active/recovery) / Impact Moments / Weight Profile / Feel Acceptance Criteria
+- **Visual/Audio Requirements** —— 视觉/动画/特效/音频类系统强制
+- **UI Requirements** —— 含真实 UI 需求时强制，会触发 UX Flag
+- **Cross-References** —— 表格（系统 / 关系性质[Data dependency/State trigger/Rule dependency/Ownership handoff] / 方向 / 描述）。由 `/review-all-gdds` Phase 2c 机器检查
+- **Open Questions** —— 含 owner 和 target resolution date
+
+#### A5. `gdd-cross-review-[date].md` —— GDD 交叉评审报告
+
+**作用**：所有 MVP 系统 GDD 单独评审通过后，做一次"跨 GDD 一致性"总评审，产出报告。
+
+**谁产出**：`/review-all-gdds` 技能（game-designer + systems-designer + creative-director）。
+**何时产出**：Phase 2 末（所有 MVP GDD 完成后）。
+
+**重点检查**：Cross-References 表双向一致 / entities.yaml 无冲突 / 接口契约对齐 / 循环依赖识别。
+
+### B. `design/quick-specs/` —— 轻量规范
+
+#### B1. `[kebab-title]-[YYYY-MM-DD].md` —— 快速设计规格
+
+**作用**：不值得写整份 8 章节 GDD 的小改动——调数值、加小机制、微调规则。
+
+**谁产出**：`/quick-design "描述"` 技能（game-designer）。
+**何时产出**：Phase 2 之后随时——生产中调平衡、加小功能最常用。
+**文件命名**：`jump-height-tuning-2026-03-10.md`（标题 + 日期）。
+
+**四种变体**（按 Type 分）：
+
+| 变体 | 用途 | 核心内容 |
+|------|------|---------|
+| **Tuning** | 调数值 | Change 表（参数/旧值/新值/理由）+ Tuning Knob Mapping + 验收标准 |
+| **Tweak** | 微调规则 | Change Summary + Motivation + Design Delta（引用 GDD 原文 + 新规则）+ 影响系统表 |
+| **Addition** | 加小功能 | 同 Tweak，但加 New Rules / Values |
+| **New Small System** | 精简版新系统 | Overview + Core Rules + Tuning Knobs + 验收标准 + 是否纳入索引建议 |
+
+### C. `design/ux/` —— UX 规范
+
+#### C1. `[screen-slug].md` —— UX 屏幕规格
+
+**作用**：单个 UI 屏幕的完整设计——布局、状态、交互、数据、事件、无障碍。
+
+**谁产出**：`/ux-design screen <name>` 或 `/ux-design <name>`（ux-designer）。
+**何时产出**：Phase 4（预制作）。
+
+**15 个章节**：Purpose & Player Need / Player Context on Arrival / Navigation Position / Entry & Exit Points / Layout Specification（Wireframe + Zone Definitions + Component Inventory）/ States & Variants / Interaction Map / Data Requirements / Events Fired / Transition & Animation / Input Method Completeness Checklist（键盘/手柄/鼠标/触摸）/ Screen-Level Accessibility Requirements（对比度/色盲/焦点顺序/屏幕阅读器/认知负荷）/ Localization Considerations / Acceptance Criteria / Open Questions。
+
+#### C2. `hud.md` —— HUD 设计文档
+
+**作用**：抬头显示的完整设计——什么信息常驻、什么按需显示、布局分区、平台适配。
+
+**谁产出**：`/ux-design hud`（ux-designer）。
+**何时产出**：Phase 4。
+
+**13 个章节**：HUD Philosophy（含 Visibility principle + Rule of Necessity）/ Information Architecture（Always Show / Contextual / On Demand / Hidden 四档表）/ Layout Zones / HUD Element Specifications / HUD States by Gameplay Context / Information Hierarchy / Visual Budget / Feedback & Notification Systems / Platform Adaptation / Accessibility（色盲模式/文字缩放/动效敏感/字幕/HUD 透明度）/ Tuning Knobs / Acceptance Criteria / Open Questions。
+
+#### C3. `interaction-patterns.md` —— 交互模式库
+
+**作用**：统一所有屏幕的控件标准——避免每个屏幕的按钮、滑块、列表长得不一样。
+
+**谁产出**：`/ux-design patterns`（ux-designer）；后续 `/team-ui` 会把新发明的模式（如 inventory drag-drop）追加进来。
+**何时产出**：Phase 4。
+
+**内容**：Standard Control Patterns（16 种：按钮/开关/滑块/下拉/列表项/网格项/模态框/确认框/Toast/Tooltip/进度条/输入框/Tab栏/滚动容器）/ Game-Specific UI Patterns（10 种：库存格/技能图标/血量条/小地图/任务追踪/对话框/上下文动作提示/伤害数字/状态效果图标/通知横幅）/ Navigation Patterns / Feedback and Loading Patterns / Animation Standards（统一 timing 表）/ Sound Standards。
+
+#### C4. `accessibility-requirements.md` —— 无障碍需求文档
+
+**作用**：定项目承诺的"无障碍等级"，所有 UX 规范必须符合。这是 Phase 3 就要定的前置。
+
+**谁产出**：producer + ux-designer 协作。
+**何时产出**：Phase 3（技术搭建）——比其他 UX 文档早。
+
+**四档等级**：Basic / Standard / Comprehensive / Exemplary（对应 WCAG 2.1 AA 的 4.5:1 对比度到 AAA 的 7:1）。
+
+**12 个章节**：Accessibility Tier Definition / Visual Accessibility（15 features）/ Motor Accessibility（10 features）/ Cognitive Accessibility（8 features）/ Auditory Accessibility（6 features）/ Platform Accessibility API Integration / Per-Feature Accessibility Matrix / Accessibility Test Plan / Known Intentional Limitations / Audit History / External Resources / Open Questions。
+
+### D. `design/art/` —— 美术规范
+
+#### D1. `art-bible.md` —— 美术圣经
+
+**作用**：统一全游戏视觉风格——色彩、风格、角色标准、环境标准、UI 标准、VFX 标准、资产命名。
+
+**谁产出**：`/art-bible` 技能（art-director，强制 spawn 每个 section）。
+**何时产出**：Phase 1 末 / Phase 2 初（在 Technical Setup gate 前必须存在）。
+
+**11 个章节**：Document Status / Visual Identity Summary / Reference Board / Color Palette（含按游戏状态的色彩映射：探索/战斗/安全/危险）/ Art Style / Character Art Standards / Environment Art Standards / UI Art Standards / VFX Standards / Asset Production Standards（命名约定 `[category]_[name]_[variant]_[size].[ext]`）/ Accessibility。
+
+### E. `design/narrative/` —— 叙事内容
+
+#### E1. `characters/[character-slug].md` —— 角色卡
+
+**作用**：单个角色的完整设定——外貌、性格、动机、弧光、对话风格、游戏功能。
+
+**谁产出**：narrative-director + writer。
+**何时产出**：Phase 2 / Phase 4。
+
+**10 个章节**：Quick Reference（全名/故事角色/游戏角色/首次出场/状态）/ Concept / Appearance（体型/特征/色彩/服装）/ Personality（核心特质 + 语音特征 + 情感范围）/ Motivation and Arc（主动机 + 角色弧表：引入/发展/结局 + 内心冲突）/ Relationships / Gameplay Function（提供什么 + 遭遇设计）/ Dialogue Notes（话题 + 回避/撒谎 + 状态依赖）/ Lore Connections / Cross-References。
+
+#### E2. `factions/[faction-slug].md` —— 阵营设计文档
+
+**作用**：单个阵营的完整设定——身份、历史、信仰、结构、领地、声誉系统、游戏机制。
+
+**谁产出**：world-builder。
+**何时产出**：Phase 2 / Phase 4。
+
+**12 个章节**：Identity（全名/通称/类型/阵营/徽章/颜色/箴言）/ Overview / History / Beliefs and Values / Structure and Leadership / Territory and Resources / Relationships / Reputation System（Hostile → Exalted 六档）/ Gameplay Role（玩家互动 + 独有机制 + 任务线）/ Aesthetic Guide / Lore Consistency Notes / Dependencies。
+
+### F. `design/levels/` —— 关卡设计
+
+#### F1. `[level-name].md` —— 关卡设计文档（LDD）
+
+**作用**：单个关卡的完整设计——布局、遭遇、节奏、音频、视觉、收集品。
+
+**谁产出**：level-designer 智能体（在 `/team-level` 中协作）。必读 combat/progression/narrative GDD。
+**何时产出**：Phase 4（首个垂直切片关卡）/ Phase 5（全关卡）。
+
+**9 个章节**：Quick Reference（区域/类型/预估时长/难度/前置/状态）/ Narrative Context / Layout（ASCII 地图含符号 `[S]起点 [E]出口 [C]战斗 [P]谜题 [R]休息 [!]危险 [?]秘密 [>]捷径 [=]锁门 [@]NPC [B]Boss` + 关键路径 + 可选路径 + 兴趣点）/ Encounters（战斗 + 非战斗）/ Pacing Chart（ASCII 强度图）/ Audio Direction / Visual Direction / Collectibles and Secrets / Technical Notes。
+
+### G. `design/balance/` —— 平衡数据
+
+#### G1. `difficulty-curve.md` —— 难度曲线
+
+**作用**：定义全游戏难度如何变化——哲学、维度、曲线、新手引导、锯齿模式、调节杠杆。
+
+**谁产出**：game-designer / systems-designer。
+**何时产出**：Phase 4 / Phase 5。
+
+**11 个章节**：Difficulty Philosophy（4 种：受虐向/易上手/服务叙事/休闲）/ Difficulty Axes（执行/知识/资源/时间/决策复杂度表）/ Difficulty Curve Overview（1-10 scale 按阶段）/ Onboarding Ramp / Difficulty Spikes and Valleys（sawtooth pattern + 恢复设计）/ Balancing Levers / Player Skill Assumptions / Accessibility Considerations / Cross-System Difficulty Interactions / Validation Checklist / Open Questions。
+
+#### G2. `economy-model.md` —— 经济模型
+
+**作用**：定义游戏内经济——货币、产出（faucet）、消耗（sink）、平衡目标、进度曲线、掉落表、健康指标。
+
+**谁产出**：economy-designer。
+**何时产出**：Phase 4 / Phase 5。
+
+**11 个章节**：Overview / Currencies / Sources (Faucets) / Sinks (Drains) / Balance Targets（含 sink-to-source ratio、首购时间等）/ Progression Curves（等级 XP 表 + 物品价格缩放，含公式）/ Loot Tables（掉落源 + 保底系统）/ Economy Health Metrics（含 Gini coefficient、触顶玩家比例、付费转化率）/ Ethical Guardrails / Simulation Results / Dependencies。
+
+### H. `design/player-journey.md` —— 玩家旅程（根目录级）
+
+**作用**：定义玩家从第一次接触到长期游玩的完整体验旅程——6 个阶段、关键时刻、留存钩子。
+
+**谁产出**：ux-designer 协作。
+**何时产出**：Phase 1 末 / Phase 4 初。
+
+**9 个章节**：Journey Overview / Target Player Archetype / Journey Phases（6 个：First Contact 0-5min / Orientation 5-30min / First Mastery 30min-2hr / Depth Discovery 2-10hr / Habitual Play 10-50hr / Long-Term Engagement 50+hr）/ Critical Moments（8-15 个）/ Retention Hooks / Player Progression Feel / Anti-Patterns to Avoid / Validation Questions / Open Questions。
+
+### I. 关联但不在 `design/` 下的文档
+
+这些文档由设计流程触发，但存放在别处：
+
+| 文档 | 存放路径 | 触发技能 | 说明 |
+|------|---------|---------|------|
+| 架构总文档 | `docs/architecture/architecture.md` | `/create-architecture` | 读所有 GDD 产出，含 System Layer Map |
+| ADR | `docs/architecture/adr-NNNN-*.md` | `/architecture-decision` | 每个技术决策一份 |
+| TR 注册表 | `docs/architecture/tr-registry.yaml` | `/architecture-review` | TR-ID 编号表 |
+| 技术设计文档 | `docs/architecture/[system]-tdd.md` | technical-director | 复杂系统的实现规格 |
+| 声音圣经 | `docs/sound-bible.md` | audio-director + sound-designer | 音频方向统一规范 |
+| 垂直切片报告 | `prototypes/[concept]-vertical-slice/` | `/vertical-slice` | 含 PROCEED/PIVOT/KILL 判决 |
+| 投售文档 | `design/pitch-document.md` | brainstorm 阶段 | 外部沟通用 |
+| 反思日志 | `docs/consistency-failures.md` | `/consistency-check` | 记录跨系统冲突的反复模式 |
+
+---
+
+## 文档之间的依赖关系
+
+这些文档不是孤立产出的，有严格的依赖链。理解依赖关系，才知道"为什么必须先写 A 才能写 B"。
+
+### 依赖总图
+
+```
+game-concept.md（Phase 1，源头）
+    │
+    ├──> game-pillars.md（嵌入或独立）
+    │
+    ├──> art-bible.md（/art-bible 必读 concept 的 Visual Identity Anchor）
+    │       │
+    │       └──> GDD 的 Visual/Audio Requirements 章节（视觉类系统强制引用）
+    │
+    ├──> player-journey.md（ux-designer 协作）
+    │       │
+    │       └──> hud.md（必读 player-journey 来 ground HUD 决策）
+    │
+    └──> systems-index.md（/map-systems 必读 concept）
+            │
+            └──> 每个 [system-slug].md GDD（按 Recommended Design Order 顺序）
+                    │
+                    ├── 双向引用其他 GDD（Dependencies 章节强制 bidirectional）
+                    │
+                    └── 写入 entities.yaml（Phase 5 后台）
+                            │
+                            └──> 后续 GDD 必读 entities.yaml 做 conflict check
+```
+
+### GDD 内部依赖（5 层从底到顶）
+
+来自 `systems-index.md` 的 Dependency Map：
+
+| 层 | 例子 | 依赖 |
+|----|------|------|
+| **Foundation Layer** | 事件总线、save/load、场景管理、service locator | 无上游 |
+| **Core Layer** | movement / combat / inventory | 依赖 Foundation |
+| **Feature Layer** | progression / economy / crafting / dialogue | 依赖 Core |
+| **Presentation Layer** | UI / HUD / audio feedback | 依赖 Feature |
+| **Polish Layer** | VFX / juice / final feel tuning | 依赖 Presentation |
+
+**双向一致规则**：A 的 Dependencies 引用 B，则 B 的 Dependencies 必须反向引用 A。`/review-all-gdds` 会机器检查这个。
+
+### GDD → UX 文档依赖
+
+```
+[system].md GDD 含 UI Requirements 章节
+        │
+        v
+/ux-design 触发 UX Flag
+        │
+        ├──> hud.md（必读：GDD UI Requirements / game-concept / player-journey /
+        │              interaction-patterns / art-bible / accessibility-requirements /
+        │              technical-preferences）
+        │
+        ├──> [screen].md（每个 UI 屏幕）
+        │
+        └──> interaction-patterns.md（/team-ui 后续追加新模式）
+```
+
+### GDD → 关卡 / 叙事 / 平衡依赖
+
+```
+combat GDD + progression GDD + economy GDD
+        │
+        v
+balance/difficulty-curve.md（引用上述 GDD）
+        │
+        v
+balance/economy-model.md
+        │
+        v
+levels/[level].md（level-designer 必读 combat/progression/narrative GDD）
+
+narrative GDD + world-builder 产出
+        │
+        v
+narrative/characters/[character].md（引用 GDD 中 Gameplay Function）
+        │
+        v
+narrative/factions/[faction].md
+```
+
+### Vertical Slice 的关键依赖
+
+垂直切片是 Phase 4 的"大考"，它的前置条件最多：
+
+```
+所有 MVP 系统 GDD + architecture.md + 至少 3 个 Foundation ADR +
+accessibility-requirements.md + UX specs + HUD + interaction-patterns
+        │
+        v
+/vertical-slice
+        │
+        v
+vertical-slice-report.md（PROCEED / PIVOT / KILL）
+        │
+        ├── PROCEED → /gate-check pre-production → Phase 5 Production
+        ├── PIVOT   → /design-system 修订受影响 GDD + /architecture-decision 修订 ADR
+        └── KILL    → /brainstorm 重新探索
+```
+
+---
+
 ## 在开发流程中何时碰到 `design/`
 
-把上面所有文件映射到 7 阶段开发流程：
+把所有设计文档映射到 7 阶段开发流程，每个阶段列出会产出哪些文档、用什么技能、谁负责。
 
-| 阶段 | 主要碰到的 `design/` 文件 | 干什么 |
-|------|--------------------------|--------|
-| **Phase 1 概念** | `gdd/game-concept.md`、`gdd/systems-index.md` | `/brainstorm` 产概念文档；`/map-systems` 产系统索引 |
-| **Phase 2 系统设计** | `gdd/[system].md`、[registry/entities.yaml](file:///workspace/design/registry/entities.yaml)、[CLAUDE.md](file:///workspace/design/CLAUDE.md)、`narrative/` | `/design-system` 逐个写 GDD（遵守 CLAUDE.md 格式）；每写一个就更新 entities 注册表；有叙事就建 narrative |
-| **Phase 3 技术搭建** | `ux/accessibility-requirements.md` | 定无障碍等级（这是 UX 的前置，但归在 Phase 3） |
-| **Phase 4 预制作** | `ux/*.md`、`quick-specs/` | `/ux-design` 写各屏幕 UX 规范；小改动用 `/quick-design` |
-| **Phase 5 生产** | `gdd/`、`levels/`、`balance/`、[registry/entities.yaml](file:///workspace/design/registry/entities.yaml) | 实现时反复查 GDD；做关卡产出 levels/；调数值产出 balance/；`/consistency-check` 跨 GDD 查一致性 |
-| **Phase 6 打磨** | `balance/`、`quick-specs/` | `/balance-check` 分析平衡；微调用 quick-spec |
-| **Phase 7 发布** | （不直接碰 `design/`） | 发布主要靠技能和 `docs/`，设计文档这时已稳定 |
-| **全程** | [CLAUDE.md](file:///workspace/design/CLAUDE.md) | 写任何设计文档都受它约束 |
+### Phase 1：Concept（概念阶段）—— 立项
 
-**一句话总结**：`design/` 在 **Phase 2（系统设计）最密集**——这是 GDD 集中产出、entities 注册表最活跃的阶段。Phase 4 写 UX，Phase 5-6 做关卡和平衡。
+| 顺序 | 产出文档 | 技能 | 负责人 | Gate 要求 |
+|------|---------|------|--------|-----------|
+| 1.1 | `design/gdd/game-concept.md`（含 Visual Identity Anchor） | `/brainstorm` | creative-director + art-director | 必须 |
+| 1.2 | `design/gdd/game-pillars.md`（可选独立） | `/brainstorm` | creative-director | pillars 必须存在（嵌入或独立） |
+| 1.3 | `design/art/art-bible.md` | `/art-bible` | art-director | Technical Setup gate 前必须存在 |
+| 1.4 | `design/gdd/systems-index.md` | `/map-systems` | game-designer | 必须，含依赖排序 |
+| 1.5 | `design/player-journey.md`（可在 Phase 1 末或 Phase 4 初） | ux-designer 协作 | ux-designer | 推荐 Phase 1 末完成 |
+| 1.6 | （可选）`prototypes/[mechanic]-prototype/` + 报告 | `/prototype` | prototyper | 概念未验证时走 Path B |
+
+**Phase 1 Gate（`/gate-check systems-design`）要求**：引擎配置于 technical-preferences / game-concept.md 存在且含 pillars / systems-index.md 存在且含依赖排序。
+
+### Phase 2：Systems Design（系统设计阶段）—— GDD 集中产出
+
+| 顺序 | 产出文档 | 技能 | 负责人 |
+|------|---------|------|--------|
+| 2.1 | 每个 MVP 系统一份 `design/gdd/[system-slug].md` | `/design-system [system]` 或 `/map-systems next` | 按 Specialist Agent Routing 表（见附录） |
+| 2.2 | 每个 GDD 后写入 `design/registry/entities.yaml` | `/design-system` 自动 | 主会话写入 |
+| 2.3 | `design/quick-specs/[title]-[date].md`（小改动） | `/quick-design` | game-designer |
+| 2.4 | `design/gdd/gdd-cross-review-[date].md`（所有 MVP GDD 完成后） | `/review-all-gdds` | game-designer + systems-designer + creative-director |
+| 2.5 | `design/narrative/characters/[character].md` 角色卡 | narrative-director + writer | narrative-director |
+| 2.6 | `design/narrative/factions/[faction].md` 阵营文档 | world-builder | world-builder |
+| 2.7 | `docs/consistency-failures.md`（反思日志，持续维护） | `/consistency-check` | 主会话 |
+
+**关键约束**：
+
+- GDD 必须按 systems-index 的 Recommended Design Order 顺序产出（Foundation → Core → Feature → Presentation → Polish）
+- 每个 GDD 完成后**必须在新会话**运行 `/design-review`（不能同会话，否则丧失独立评审）
+- creative-director 的 CD-GDD-ALIGN gate 在 GDD 完成后强制 spawn（full 模式）
+
+**Phase 2 Gate（`/gate-check technical-setup`）要求**：所有 MVP 系统 GDD 完成 + `/review-all-gdds` PASS。
+
+### Phase 3：Technical Setup（技术搭建阶段）—— 设计转技术
+
+| 顺序 | 产出文档 | 技能 | 负责人 |
+|------|---------|------|--------|
+| 3.1 | `design/ux/accessibility-requirements.md` | producer + ux-designer 协作 | producer + ux-designer |
+| 3.2 | （关联）`docs/architecture/architecture.md` | `/create-architecture` | technical-director |
+| 3.3 | （关联）`docs/architecture/adr-NNNN-*.md`（至少 3 个 Foundation ADR） | `/architecture-decision` | technical-director |
+| 3.4 | （关联）`docs/architecture/tr-registry.yaml` | `/architecture-review` | technical-director |
+
+> 💡 Phase 3 主要在 `docs/` 下产出，但 `accessibility-requirements.md` 是设计文档，归 `design/ux/`，且它是后续所有 UX 规范的前置。
+
+**Phase 3 Gate（`/gate-check pre-production`）要求**：architecture.md + 至少 3 个 Foundation ADR + accessibility-requirements + tr-registry。
+
+### Phase 4：Pre-Production（预制作阶段）—— UX + 垂直切片
+
+| 顺序 | 产出文档 | 技能 | 负责人 |
+|------|---------|------|--------|
+| 4.1 | `design/ux/hud.md` | `/ux-design hud` | ux-designer |
+| 4.2 | `design/ux/interaction-patterns.md` | `/ux-design patterns` | ux-designer |
+| 4.3 | `design/ux/[screen-slug].md`（每个 UI 屏幕） | `/ux-design screen [name]` | ux-designer |
+| 4.4 | UX 评审报告（对话中输出 APPROVED / NEEDS REVISION） | `/ux-review` | ux-designer（独立会话） |
+| 4.5 | `design/levels/[level-name].md`（首个垂直切片关卡） | level-designer（在 `/team-level` 中） | level-designer |
+| 4.6 | （关联）`prototypes/[concept]-vertical-slice/` + `vertical-slice-report.md` | `/vertical-slice` | 全 team 协作 |
+| 4.7 | （关联）`production/playtests/[date]-[session].md` | `/playtest-report` | qa-lead |
+| 4.8 | （关联）`production/epics/` + `production/stories/` | `/create-epics` → `/create-stories` | producer |
+
+**Phase 4 Gate（`/gate-check production`）要求**：UX specs 完成 + `/ux-review` APPROVED + vertical-slice PROCEED + epics/stories 已规划。
+
+### Phase 5：Production（制作阶段）—— 实现 + 补文档
+
+| 顺序 | 产出文档 | 技能 | 负责人 |
+|------|---------|------|--------|
+| 5.1 | `design/quick-specs/`（实现中发现的小改动，大量） | `/quick-design` | game-designer |
+| 5.2 | 修订版 `design/gdd/[system].md`（如 vertical slice 揭示问题） | `/design-system retrofit` | game-designer |
+| 5.3 | `design/balance/difficulty-curve.md` | game-designer / systems-designer | game-designer |
+| 5.4 | `design/balance/economy-model.md` | economy-designer | economy-designer |
+| 5.5 | `design/narrative/characters/` 全角色卡 | narrative-director + writer | narrative-director |
+| 5.6 | `design/narrative/factions/` 全阵营 | world-builder | world-builder |
+| 5.7 | `design/levels/` 全关卡 | level-designer | level-designer |
+| 5.8 | `design/art/art-bible.md` 修订（如发现视觉不一致） | `/art-bible` 增量更新 | art-director |
+| 5.9 | （关联）`docs/sound-bible.md` 声音圣经 | audio-director + sound-designer | audio-director |
+| 5.10 | （关联）`docs/architecture/[system]-tdd.md`（复杂系统） | technical-director | technical-director |
+
+### Phase 6：Polish（打磨阶段）—— 调参 + 修文档
+
+| 顺序 | 产出文档 | 技能 | 负责人 |
+|------|---------|------|--------|
+| 6.1 | `design/quick-specs/`（Tuning 变体，大量调参） | `/quick-design` | game-designer |
+| 6.2 | 修订版 GDD 的 Tuning Knobs 章节 | `/design-system retrofit` | game-designer |
+| 6.3 | `design/balance/economy-model.md` 持续平衡 | `/balance-check` 验证 | economy-designer |
+| 6.4 | `design/balance/difficulty-curve.md` 持续调整 | game-designer | game-designer |
+
+### Phase 7：Release（发布阶段）—— 设计文档已稳定
+
+Phase 7 主要靠技能和 `docs/`，设计文档这时已稳定，不再大量产出。仅可能做本地化交付（从设计文档提取字符串）。
+
+### 全景速查
+
+| 阶段 | `design/` 最活跃的子目录 | 一句话 |
+|------|------------------------|--------|
+| Phase 1 | `gdd/`（concept, index）、`art/` | 立项，定全局方向 |
+| Phase 2 | `gdd/`（各系统 GDD）、`narrative/`、`registry/` | **最密集**——GDD 集中产出 |
+| Phase 3 | `ux/`（仅 accessibility） | 设计转技术，定无障碍等级 |
+| Phase 4 | `ux/`（全量）、`levels/`（首个） | UX 规范 + 垂直切片 |
+| Phase 5 | `balance/`、`levels/`、`narrative/`、`gdd/`（修订） | 实现 + 补平衡/关卡/叙事 |
+| Phase 6 | `balance/`、`quick-specs/` | 调参打磨 |
+| Phase 7 | （稳定） | 设计文档冻结 |
 
 ---
 
@@ -302,6 +794,54 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 **误区 5："概念文档（game-concept.md）也是 GDD。"**
 ⚠️ 不完全是。它放在 `design/gdd/` 下，但它是"立项文档"——定义游戏 pillars、核心循环、目标受众，不是某个系统的 8 章节 GDD。系统的 GDD 是 `combat-system.md` 这种。
 
+**误区 6："GDD 想先写哪个就先写哪个。"**
+❌ 不行。必须按 systems-index 的 Recommended Design Order，从 Foundation 层往 Polish 层写。因为上层 GDD 的 Dependencies 章节要引用下层——下层没写，上层没法填依赖。
+
+**误区 7："art-bible 是 Phase 4 才需要的，可以晚点写。"**
+❌ 不行。art-bible 在 Phase 1 末 / Phase 2 初就要产出，在 Technical Setup gate 前必须存在。因为 Phase 2 写视觉类系统的 GDD 时，Visual/Audio Requirements 章节要强制引用 art-bible。art-bible 晚了会卡住 GDD。
+
+**误区 8："`/design-review` 可以和 `/design-system` 在同一个会话跑。"**
+❌ 不行。评审必须独立于创作上下文——同一会话跑会让评审智能体"既当运动员又当裁判"，丧失独立性。每个 GDD 写完后**必须开新会话**跑 `/design-review`。
+
+**误区 9："vertical slice 失败了就得推倒重来。"**
+⚠️ 不一定。vertical-slice-report 给三档判决：PROCEED（继续进生产）/ PIVOT（改设计/架构后再切片）/ KILL（项目不可行，重新 brainstorm）。PIVOT 是最常见的——只改受影响的 GDD 和 ADR，不是全推倒。
+
+**误区 10："entities.yaml 只是参考，写 GDD 时不用管它。"**
+❌ 必须管。`/design-system` 在 Phase 2（gather context）必读 entities.yaml，写完 Section C（Detailed Design）和 Section D（Formulas）后还要再查一次冲突。值冲突必须立即暴露，不能静默用不同数字。
+
+---
+
+## 附录：智能体与文档产出对应关系
+
+写 GDD 时不是 game-designer 一个人干，不同系统会叫不同专家。这张表来自 `/design-system` 技能的 Specialist Agent Routing：
+
+| 系统类别 | Primary Agent | Supporting Agent(s) |
+|---------|---------------|---------------------|
+| Foundation/Infrastructure | systems-designer | gameplay-programmer（可行性）、engine-programmer（引擎集成） |
+| Combat / damage / health | game-designer | systems-designer（公式）、ai-programmer（敌人 AI）、art-director（受击反馈 VFX） |
+| Economy / loot / crafting | economy-designer | systems-designer（曲线）、game-designer（循环） |
+| Progression / XP / skills | game-designer | systems-designer（曲线）、economy-designer（sink） |
+| Dialogue / quests / lore | game-designer | narrative-director（故事）、writer（内容）、art-director（角色视觉） |
+| UI systems (HUD/menus) | game-designer | ux-designer（流程）、ui-programmer（可行性）、art-director（视觉）、technical-artist（渲染约束） |
+| Audio systems | game-designer | audio-director（方向）、sound-designer（规格） |
+| AI / pathfinding | game-designer | ai-programmer（实现）、systems-designer（评分） |
+| Level/world systems | game-designer | level-designer（空间）、world-builder（lore） |
+| Camera / input / controls | game-designer | ux-designer（手感）、gameplay-programmer（可行性） |
+| Animation / character movement | game-designer | art-director（动画风格）、technical-artist（rig/blend）、gameplay-programmer（手感） |
+| VFX / particles / shaders | game-designer | art-director（VFX 方向）、technical-artist（性能/着色器）、systems-designer（触发集成） |
+
+各智能体分工边界（来自智能体定义）：
+
+| 智能体 | 汇报给 | 产出文档 | 不产出 |
+|--------|--------|---------|--------|
+| **game-designer** | creative-director | GDD、game-concept、systems-index、difficulty-curve、quick-specs | 实现代码、美术/音频方向、架构选型 |
+| **systems-designer** | creative-director + technical-director | GDD 的 Formulas/Edge Cases/Tuning Knobs 章节、economy-model 的曲线 | 高层设计方向、代码、关卡、叙事 |
+| **narrative-director** | creative-director | story bible、character arcs、narrative GDD、faction overview | 单行 dialogue（委托 writer）、玩法机制决策 |
+| **level-designer** | game-designer | `levels/[level].md`（layout/encounter/pacing） | 游戏级系统、故事决策、引擎实现 |
+| **ux-designer** | art-director + game-designer | `ux/hud.md`、`ux/[screen].md`、`ux/interaction-patterns.md`、player-journey、accessibility | 视觉风格决策、UI 代码、玩法机制 |
+| **world-builder** | narrative-director | `narrative/factions/`、lore 数据库、历史时间线 | 玩家面向文本（委托 writer）、玩法机制 |
+| **writer** | narrative-director | dialogue、lore entries、item descriptions、barks | 故事/角色弧决策、代码、quest 设计 |
+
 ---
 
 ## 小测验
@@ -311,7 +851,7 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 <details>
 <summary>答案</summary>
 
-[design/CLAUDE.md](file:///workspace/design/CLAUDE.md)——它规定 GDD 必须包含 8 个必填章节（Overview / Player Fantasy / Detailed Rules / Formulas / Edge Cases / Dependencies / Tuning Knobs / Acceptance Criteria）且顺序固定。`/design-review` 会校验，缺章节判 NEEDS REVISION。
+[design/CLAUDE.md](file:///workspace/design/CLAUDE.md)——它规定 GDD 必须包含 8 个必填章节（Overview / Player Fantasy / Detailed Design / Formulas / Edge Cases / Dependencies / Tuning Knobs / Acceptance Criteria）且顺序固定。`/design-review` 会校验，缺章节判 NEEDS REVISION。
 
 </details>
 
@@ -329,7 +869,7 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 <details>
 <summary>答案</summary>
 
-用 `/quick-design "侧翼攻击加 10% 伤害"`，产物放在 `design/quick-specs/` 下。这是轻量规范，用于调数值、小机制、微调，不用走完整 8 章节 GDD 流程。
+用 `/quick-design "侧翼攻击加 10% 伤害"`，产物放在 `design/quick-specs/` 下，文件名如 `flanking-bonus-2026-06-30.md`。这是 Tuning 变体的 quick-spec，含 Change 表（参数/旧值/新值/理由）+ 验收标准。
 
 </details>
 
@@ -345,6 +885,56 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 
 </details>
 
+**Q5**：你在 Phase 2 写 movement GDD 时，Dependencies 章节引用了 inventory GDD。但 inventory GDD 还没写。这违反了什么规则？
+
+<details>
+<summary>答案</summary>
+
+违反了 **5 层依赖顺序**和 **Recommended Design Order**。movement 属于 Core 层，inventory 也属于 Core 层——同层之间引用可以，但 systems-index 会排好顺序，不能跳着写。如果 inventory 排在 movement 后面，说明 movement 不该依赖 inventory（或者依赖关系画反了，该改 systems-index）。`/review-all-gdds` 会机器检查 Cross-References 表的双向一致性。
+
+</details>
+
+**Q6**：你的游戏概念里写了"核心幻想是孤独的太空探险者"，但玩法系统却强推多人组队。这违反了哪个设计原则？
+
+<details>
+<summary>答案</summary>
+
+违反了 **Ludonarrative Harmony（玩法-叙事和谐）**。故事说"孤独探险"，玩法奖励"组队"——这是 ludonarrative dissonance（不和谐）。也间接违反了 Pillars——如果"孤独"是支柱之一，多人玩法就直接违反支柱，game-designer 写 GDD 时该被 CD-GDD-ALIGN gate 挡下。
+
+</details>
+
+**Q7**：你跑完 `/vertical-slice`，报告判了 PIVOT。接下来该做什么？
+
+<details>
+<summary>答案</summary>
+
+PIVOT 意味着"改设计或架构后再切片"。具体步骤：
+
+1. 看 vertical-slice-report 里指出的"Pipeline blockers / Architecture surprises / Critical fun blockers"
+2. 对受影响的系统跑 `/design-system retrofit design/gdd/[system].md` 修订 GDD
+3. 对受影响的技术决策跑 `/architecture-decision` 修订 ADR
+4. 修订后重跑 `/vertical-slice` 验证
+
+不是推倒重来——只改受影响的部分。
+
+</details>
+
+**Q8**：写 combat GDD 时，谁负责写公式？谁负责写敌人 AI？谁负责写受击 VFX 方向？
+
+<details>
+<summary>答案</summary>
+
+来自 Specialist Agent Routing 表：
+
+- **公式**：systems-designer（Supporting）
+- **敌人 AI**：ai-programmer（Supporting）
+- **受击 VFX 方向**：art-director（Supporting）
+- **Primary**：game-designer（主导整个 GDD）
+
+`/design-system` 会按系统类别自动 spawn 这些 Supporting agent。
+
+</details>
+
 ---
 
 ## 动手
@@ -353,9 +943,13 @@ GDD 必须包含 **8 个必填章节**，且顺序固定：
 2. 打开 [design/registry/entities.yaml](file:///workspace/design/registry/entities.yaml)，读注释里的示例条目（goblin、goblin_arm、damage_formula、gold_carry_limit），理解"source 是权威 GDD，referenced_by 是引用方"的关系。
 3. 对比 [design/registry/entities.yaml](file:///workspace/design/registry/entities.yaml) 和 [docs/registry/architecture.yaml](file:///workspace/docs/registry/architecture.yaml)——看它们的注释结构有多像，体会"设计事实"和"技术约束"的分工。
 4. 翻 [docs/WORKFLOW-GUIDE.md](file:///workspace/docs/WORKFLOW-GUIDE.md) 的 Phase 2 部分，看 `/design-system` 怎么一节一节产出 GDD 并更新 entities 注册表。
+5. 打开 [.claude/docs/templates/game-concept.md](file:///workspace/.claude/docs/templates/game-concept.md)，看概念文档的 16 个章节，特别是 Core Loop（嵌套循环）和 MVP Definition（Scope Tiers）。
+6. 打开 [.claude/docs/templates/game-design-document.md](file:///workspace/.claude/docs/templates/game-design-document.md)，对照 8 个必填章节的详细要求，注意 Formulas 章节强制四要素（表达式 + 变量表 + 输出范围 + Worked Example）。
+7. 读 [docs/examples/session-design-system-skill.md](file:///workspace/docs/examples/session-design-system-skill.md)，看一个真实的 GDD 产出会话——验证 skeleton-first、section cycle、崩溃恢复怎么落地。
+8. 读 [docs/examples/session-ux-pipeline.md](file:///workspace/docs/examples/session-ux-pipeline.md)，看 `/ux-design` → `/ux-review` → `/team-ui` 三段式流程，理解"BLOCKING vs ADVISORY"区分。
 
 ---
 
 ## 一句话带走
 
-> **`design/` = 游戏的"设计大脑"。现在只有写作规范（CLAUDE.md）和实体登记册（entities.yaml）两个骨架文件，将来会按需长出 GDD、UX 规范、quick-specs、叙事、关卡、平衡等子目录。规范先行、内容后填——规则立好了，技能产出内容时才不会跑偏。**
+> **`design/` = 游戏的"设计大脑"。现在只有写作规范（CLAUDE.md）和实体登记册（entities.yaml）两个骨架文件，将来会按需长出 GDD、UX 规范、quick-specs、叙事、关卡、平衡等子目录。规范先行、内容后填——规则立好了，技能产出内容时才不会跑偏。实际做游戏时，Phase 1 产概念和系统索引，Phase 2 集中产 GDD（最密集），Phase 4 产 UX 和垂直切片，Phase 5-6 产关卡/平衡/叙事并持续修订。所有文档有严格依赖链——从 game-concept 一路倒推到关卡和平衡数据。**
