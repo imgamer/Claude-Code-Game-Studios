@@ -55,6 +55,7 @@
 | 20 | [.claude/docs 目录指南](file:///workspace/study-docs/20-claude-docs目录指南.md) | `.claude/docs/` 里每个文件干什么？ | 17 个主文件 + 2 子目录逐个讲、6 大分组、术语速查、开发流程映射 |
 | 21 | [游戏开发流程与软件工程实践](file:///workspace/study-docs/21-游戏开发流程与软件工程实践.md) | 游戏开发完整流程？每个实践解决什么问题、原理是什么？ | 7 阶段流程、15 个软件工程实践（GDD/ADR/门禁/单一事实源/数据驱动/验证驱动等）每个的问题与原理 |
 | 22 | [Claude Code Memory 机制与 active.md 分工](file:///workspace/study-docs/22-Claude-Code-Memory机制与active.md分工.md) | 为什么不用 Auto Memory 而用 active.md？ | CLAUDE.md + Auto Memory 双轨、Auto Memory 六条局限、三层分工模型、契约 vs 背景、迁移指南 |
+| 23 | [上下文体系与逻辑流程总览](file:///workspace/study-docs/23-上下文体系与逻辑流程总览.md) | 数据体系长什么样？skill 怎么消费数据、派 agent？ | 9 环文档链、每 skill 读写派总表、按图索骥双向索引、4 条数据设计原则 |
 
 ---
 
