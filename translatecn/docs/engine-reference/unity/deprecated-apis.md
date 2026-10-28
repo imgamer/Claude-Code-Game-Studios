@@ -6,6 +6,7 @@
 
 Quick lookup table for deprecated APIs and their replacements.
 Format: **Don't use X** → **Use Y instead**
+
 弃用 API 及其替代方案的快速查询表。
 格式：**不要使用 X** → **改用 Y**
 
@@ -31,6 +32,7 @@ Format: **Don't use X** → **Use Y instead**
 | `Input.mousePosition` | `Mouse.current.position.ReadValue()` | 新 Input System |
 
 **Migration:** Install `com.unity.inputsystem` package.
+
 **迁移：** 安装 `com.unity.inputsystem` 包。
 
 ---
@@ -46,12 +48,13 @@ Format: **Don't use X** → **Use Y instead**
 
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
-| `Canvas` (UGUI) | `UIDocument` (UI Toolkit) | UI Toolkit 现已生产就绪 |
-| `Text` 组件 | `TextMeshPro` 或 UI Toolkit `Label` | 更好的渲染，更少绘制调用 |
-| `Image` 组件 | UI Toolkit `VisualElement` 加背景 | 更灵活的样式 |
+| `Canvas`（UGUI） | `UIDocument`（UI Toolkit） | UI Toolkit 现已生产就绪 |
+| `Text` 组件 | `TextMeshPro` 或 UI Toolkit 的 `Label` | 渲染效果更好，绘制调用更少 |
+| `Image` 组件 | 带背景的 UI Toolkit `VisualElement` | 样式更灵活 |
 
 **Migration:** UGUI still works, but UI Toolkit is recommended for new projects.
-**迁移：** UGUI 仍可使用，但新项目推荐使用 UI Toolkit。
+
+**迁移：** UGUI 仍然可用，但新项目推荐使用 UI Toolkit。
 
 ---
 
@@ -69,13 +72,14 @@ Format: **Don't use X** → **Use Y instead**
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
 | `ComponentSystem` | `ISystem`（非托管） | Entities 1.0+ 完全重写 |
-| `JobComponentSystem` | `ISystem` 配合 `IJobEntity` | Burst 兼容 |
+| `JobComponentSystem` | 配合 `IJobEntity` 的 `ISystem` | 兼容 Burst |
 | `GameObjectEntity` | 纯 ECS 工作流 | 无需 GameObject 转换 |
-| `EntityManager.CreateEntity()`（旧签名） | `EntityManager.CreateEntity(EntityArchetype)` | 显式原型 |
-| `ComponentDataFromEntity<T>` | `ComponentLookup<T>` | Entities 1.0+ 重命名 |
+| `EntityManager.CreateEntity()`（旧签名） | `EntityManager.CreateEntity(EntityArchetype)` | 显式指定原型 |
+| `ComponentDataFromEntity<T>` | `ComponentLookup<T>` | Entities 1.0+ 中的重命名 |
 
 **Migration:** See Entities package migration guide. Major refactor required.
-**迁移：** 见 Entities 包迁移指南。需要重大重构。
+
+**迁移：** 参见 Entities 包迁移指南。需要进行重大重构。
 
 ---
 
@@ -91,7 +95,7 @@ Format: **Don't use X** → **Use Y instead**
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
 | `CommandBuffer.DrawMesh()` | RenderGraph API | URP/HDRP 渲染通道 |
-| `OnPreRender()` / `OnPostRender()` | `RenderPipelineManager` 回调 | SRP 兼容 |
+| `OnPreRender()` / `OnPostRender()` | `RenderPipelineManager` 回调 | 兼容 SRP |
 | `Camera.SetReplacementShader()` | 自定义渲染通道 | SRP 中不支持 |
 
 ---
@@ -107,7 +111,7 @@ Format: **Don't use X** → **Use Y instead**
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
 | `Physics.RaycastAll()` | `Physics.RaycastNonAlloc()` | 避免 GC 分配 |
-| `Rigidbody.velocity`（直接写入） | `Rigidbody.AddForce()` | 更好的物理稳定性 |
+| `Rigidbody.velocity`（直接赋值） | `Rigidbody.AddForce()` | 更好的物理稳定性 |
 
 ---
 
@@ -121,7 +125,7 @@ Format: **Don't use X** → **Use Y instead**
 
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
-| `Resources.Load()` | Addressables | 更好的内存控制，异步加载 |
+| `Resources.Load()` | Addressables | 更好的内存控制、异步加载 |
 | 同步资源加载 | `Addressables.LoadAssetAsync()` | 非阻塞 |
 
 ---
@@ -150,7 +154,7 @@ Format: **Don't use X** → **Use Y instead**
 
 | 弃用 | 替代方案 | 备注 |
 |------------|-------------|-------|
-| 旧版 Particle System | Visual Effect Graph | GPU 加速，性能更好 |
+| 旧版粒子系统 | Visual Effect Graph | GPU 加速，性能更佳 |
 
 ---
 
@@ -230,6 +234,9 @@ rootVisualElement.Q<Label>("score-label").text = "Score: 100";
 ---
 
 **Sources:**
+- https://docs.unity3d.com/6000.0/Documentation/Manual/deprecated-features.html
+- https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Migration.html
+
 **来源：**
 - https://docs.unity3d.com/6000.0/Documentation/Manual/deprecated-features.html
 - https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/Migration.html

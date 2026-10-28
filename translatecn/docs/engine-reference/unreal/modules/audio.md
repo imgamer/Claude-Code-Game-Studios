@@ -1,33 +1,50 @@
-# Unreal Engine 5.7 — Audio Module Reference
-# Unreal Engine 5.7 — 音频模块参考
+# Unreal Engine 5.8 — Audio Module Reference
+# Unreal Engine 5.8 — 音频模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 MetaSounds production-ready
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 MetaSounds 生产就绪
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7 MetaSounds production-ready; UE 5.8 WASAPI default on Windows
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7 MetaSounds 生产就绪；UE 5.8 Windows 上默认使用 WASAPI
+
+> **UE 5.8 changes:** The default Windows audio backend is now WASAPI
+> (XAudio2 is an opt-in fallback; Epic: "No changes are required on the
+> developers end"). `au.EnableRelativeRenderCostVoiceLimit` is on by default,
+> so fewer sounds may play under the same voice count — revisit voice-count
+> tuning. Attenuation submix sends that were implicitly disabled by
+> `bEnableSubmixSends` may now be audible. Audio Insights is production-ready;
+> Audio Subtitles is Beta; MetaSound Node Configuration and Templates are
+> Experimental. Custom MetaSound nodes: `FNodeClassMetadata::DefaultInterface`
+> now takes `FClassInterface`. Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** Windows 默认音频后端现在为 WASAPI
+> （XAudio2 为可选的回退方案；Epic 表示："开发者端无需任何改动"）。`au.EnableRelativeRenderCostVoiceLimit` 默认开启，
+> 因此在相同声道数下可播放的声音可能更少 — 请重新评估声道数调优。此前被 `bEnableSubmixSends` 隐式禁用的衰减子混音发送现在可能变为可听见。Audio Insights 为生产就绪；
+> Audio Subtitles 为 Beta；MetaSound Node Configuration 与 Templates 为实验性。自定义 MetaSound 节点：`FNodeClassMetadata::DefaultInterface`
+> 现在接受 `FClassInterface`。来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 audio systems:
+UE 5.8 audio systems:
 - **MetaSounds**: Node-based procedural audio (RECOMMENDED, production-ready)
 - **Sound Cues**: Legacy node-based audio (use for simple cases)
 - **Audio Component**: Play sounds on actors
 
-UE 5.7 音频系统：
+UE 5.8 音频系统：
 - **MetaSounds**：基于节点的程序化音频（推荐，生产就绪）
 - **Sound Cues**：旧版基于节点的音频（用于简单场景）
-- **Audio Component**：在 actor 上播放声音
+- **Audio Component**：在 Actor 上播放声音
 
 ---
 
 ## Basic Audio Playback
-## 基本音频播放
+## 基础音频播放
 
 ### Play Sound at Location
-### 在位置播放声音
+### 在指定位置播放声音
 
 ```cpp
 #include "Kismet/GameplayStatics.h"
@@ -48,7 +65,7 @@ UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocati
 ## Audio Component
 
 ### Audio Component (Persistent Sound)
-### Audio Component（持续声音）
+### Audio Component（常驻声音）
 
 ```cpp
 // Create audio component
@@ -123,11 +140,11 @@ AudioComp->bOverrideAttenuation = true;
 1. Content Browser > Sounds > MetaSound Source
 2. 打开 MetaSound 编辑器
 3. 构建节点图：
-   - **输入**：触发器、参数
-   - **生成器**：振荡器、噪声、采样
-   - **调制器**：包络、LFO
-   - **效果**：滤波器、混响、延迟
-   - **输出**：音频输出
+   - **输入（Inputs）**：触发器、参数
+   - **生成器（Generators）**：振荡器、噪声、采样
+   - **调制器（Modulators）**：包络、LFO
+   - **效果（Effects）**：滤波器、混响、延迟
+   - **输出（Output）**：音频输出
 
 ### Play MetaSound
 ### 播放 MetaSound
@@ -182,7 +199,7 @@ UGameplayStatics::PlaySound2D(GetWorld(), SoundCue);
 ## Sound Class 与 Sound Mix
 
 ### Sound Class (Volume Groups)
-### Sound Class（音量组）
+### Sound Class（音量分组）
 
 ```cpp
 // Create Sound Class: Content Browser > Sounds > Sound Class
@@ -226,7 +243,7 @@ AudioComp->bEnableOcclusion = true;
 ```
 
 ### Reverb Volumes
-### Reverb Volume
+### 混响体积
 
 ```cpp
 // Add Audio Volume to level (Volumes > Audio Volume)
@@ -254,7 +271,7 @@ void PlayFootstep() {
 ```
 
 ### Music Crossfade
-### 音乐交叉淡入淡出
+### 音乐交叉淡化
 
 ```cpp
 UAudioComponent* MusicA;
@@ -298,7 +315,7 @@ if (AudioComp->IsPlaying()) {
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Audio Optimization
 ### 音频优化
@@ -338,5 +355,6 @@ if (Distance > MaxAudibleDistance) {
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/audio-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/metasounds-in-unreal-engine/

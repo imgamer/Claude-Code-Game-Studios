@@ -15,7 +15,8 @@
 
 **Addressables** is Unity's advanced asset management system that replaces `Resources.Load()`
 with async loading, remote content delivery, and better memory control.
-**Addressables** 是 Unity 的高级资源管理系统，用异步加载、远程内容分发和更好的内存控制替代了 `Resources.Load()`。
+
+**Addressables** 是 Unity 的高级资源管理系统，它以异步加载、远程内容分发和更好的内存控制取代 `Resources.Load()`。
 
 **Use Addressables for:**
 - Async asset loading (non-blocking)
@@ -26,17 +27,17 @@ with async loading, remote content delivery, and better memory control.
 
 **使用 Addressables 的场景：**
 - 异步资源加载（非阻塞）
-- DLC 和远程内容
+- DLC 与远程内容
 - 内存优化（按需加载/卸载）
 - 资源依赖管理
-- 包含大量资源的大型项目
+- 资源众多的大型项目
 
 **DON'T use Addressables for:**
 - Tiny projects (overhead not worth it)
 - Assets needed immediately at startup (use direct references)
 
 **不要使用 Addressables 的场景：**
-- 小型项目（开销不值得）
+- 极小的项目（开销不值得）
 - 启动时立即需要的资源（使用直接引用）
 
 ---
@@ -61,27 +62,27 @@ with async loading, remote content delivery, and better memory control.
 ## 核心概念
 
 ### 1. **Addressable Assets**
-### 1. **可寻址资源**
+### 1. **可寻址资源（Addressable Assets）**
 - Assets marked as "Addressable" (assigned unique keys)
 - Can be loaded by key at runtime
 
-- 标记为 "Addressable" 的资源（分配唯一键）
-- 可在运行时通过键加载
+- 标记为"可寻址（Addressable）"的资源（分配唯一键）
+- 可在运行时按键加载
 
 ### 2. **Asset Groups**
-### 2. **资源组**
+### 2. **资源组（Asset Groups）**
 - Organize assets (e.g., "UI", "Weapons", "Level1")
 - Groups determine build settings (local vs remote)
 
 - 组织资源（例如 "UI"、"Weapons"、"Level1"）
-- 组决定构建设置（本地 vs 远程）
+- 资源组决定构建设置（本地还是远程）
 
 ### 3. **Async Loading**
 ### 3. **异步加载**
 - All loading is async (non-blocking)
 - Returns `AsyncOperationHandle`
 
-- 所有加载都是异步的（非阻塞）
+- 所有加载均为异步（非阻塞）
 - 返回 `AsyncOperationHandle`
 
 ### 4. **Reference Counting**
@@ -89,8 +90,8 @@ with async loading, remote content delivery, and better memory control.
 - Addressables tracks asset usage
 - Must manually release assets when done
 
-- Addressables 跟踪资源使用情况
-- 完成时必须手动释放资源
+- Addressables 跟踪资源的使用情况
+- 用完后必须手动释放资源
 
 ---
 
@@ -122,7 +123,9 @@ AddressableAssetSettings.AddAssetEntry(guid, "MyAssetKey", "Default Local Group"
 ---
 
 ### 2. Create Groups
-### 2. 创建组
+### 2. 创建资源组
+
+`Window > Asset Management > Addressables > Groups`
 
 `Window > Asset Management > Addressables > Groups`
 
@@ -130,7 +133,7 @@ AddressableAssetSettings.AddAssetEntry(guid, "MyAssetKey", "Default Local Group"
 - **Remote Group**: Hosted on server (CDN)
 
 - **Default Local Group**：随构建打包
-- **Remote Group**：托管在服务器上（CDN）
+- **Remote Group**：托管在服务器（CDN）上
 
 ---
 
@@ -204,7 +207,7 @@ async void LoadAllWeapons() {
 ---
 
 ## Asset Labels (Tags)
-## 资源标签
+## 资源标签（Tags）
 
 ### Assign Labels
 ### 分配标签
@@ -226,18 +229,18 @@ Addressables.LoadAssetsAsync<GameObject>("Level1", null);
 ---
 
 ## Remote Content (DLC)
-## 远程内容 (DLC)
+## 远程内容（DLC）
 
 ### Setup Remote Groups
-### 设置远程组
+### 设置远程资源组
 
 1. Create new group: `Window > Addressables > Groups > Create New Group > Packed Assets`
 2. Group Settings:
    - **Build Path**: `ServerData/[BuildTarget]`
    - **Load Path**: `http://yourcdn.com/content/[BuildTarget]`
 
-1. 创建新组：`Window > Addressables > Groups > Create New Group > Packed Assets`
-2. 组设置：
+1. 创建新资源组：`Window > Addressables > Groups > Create New Group > Packed Assets`
+2. 资源组设置：
    - **Build Path**：`ServerData/[BuildTarget]`
    - **Load Path**：`http://yourcdn.com/content/[BuildTarget]`
 
@@ -258,7 +261,7 @@ Addressables.LoadAssetsAsync<GameObject>("Level1", null);
 ## 预加载 / 缓存
 
 ### Download Dependencies
-### 下载依赖
+### 下载依赖项
 
 ```csharp
 async void PreloadLevel() {
@@ -313,7 +316,7 @@ Addressables.ReleaseInstance(gameObject);
 ---
 
 ## Asset References (Inspector-Assigned)
-## 资源引用（Inspector 分配）
+## 资源引用（在检视面板中指派）
 
 ### Use AssetReference
 ### 使用 AssetReference
@@ -366,7 +369,7 @@ async void LoadScene() {
 ## 常见模式
 
 ### Lazy Loading (Load on Demand)
-### 懒加载（按需加载）
+### 延迟加载（按需加载）
 
 ```csharp
 Dictionary<string, AsyncOperationHandle<GameObject>> loadedAssets = new();
@@ -429,7 +432,7 @@ async void CheckForUpdates() {
 - **Cache** remote content for offline use
 
 - 在启动时**预加载**常用资源
-- 不需要时立即**释放**资源
+- 不再需要时立即**释放**资源
 - 使用**标签**批量加载相关资源
 - **缓存**远程内容以供离线使用
 
@@ -443,24 +446,28 @@ async void CheckForUpdates() {
 
 `Window > Asset Management > Addressables > Event Viewer`
 
+`Window > Asset Management > Addressables > Event Viewer`
+
 - Shows all load/release operations
 - Memory usage per asset
 - Reference counts
 
 - 显示所有加载/释放操作
-- 每个资源的内存使用情况
+- 每个资源的内存占用
 - 引用计数
 
 ### Addressables Profiler
-### Addressables Profiler
+### Addressables 性能分析器
+
+`Window > Asset Management > Addressables > Profiler`
 
 `Window > Asset Management > Addressables > Profiler`
 
 - Real-time asset usage
 - Bundle loading stats
 
-- 实时资源使用情况
-- Bundle 加载统计
+- 实时的资源使用情况
+- 包（Bundle）加载统计
 
 ---
 
@@ -471,9 +478,11 @@ async void CheckForUpdates() {
 // ❌ OLD: Resources.Load (synchronous, blocks frame)
 GameObject prefab = Resources.Load<GameObject>("Enemies/Goblin");
 
-// ✅ NEW: Addressables (async, non-blocking)
-var handle = await Addressables.LoadAssetAsync<GameObject>("Enemies/Goblin").Task;
-GameObject prefab = handle.Result;
+// ✅ NEW: Addressables (async, non-blocking) — keep the handle so it can be released
+AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>("Enemies/Goblin");
+GameObject prefab = await handle.Task;
+// ... when the asset is no longer needed:
+Addressables.Release(handle);
 ```
 
 ---

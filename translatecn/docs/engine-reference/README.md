@@ -13,7 +13,7 @@ Claude's training data has a knowledge cutoff (currently May 2025). Game engines
 like Godot, Unity, and Unreal ship updates that introduce breaking API changes,
 new features, and deprecated patterns. Without these reference files, agents will
 suggest outdated code.
-Claude 的训练数据存在知识截止时间（目前为 2025 年 5 月）。Godot、Unity 和 Unreal 等游戏引擎发布的更新会引入破坏性 API 变更、新功能以及被弃用的模式。如果没有这些参考文件，智能体会建议使用过时的代码。
+Claude 的训练数据存在知识截止时间（目前为 2025 年 5 月）。Godot、Unity 和 Unreal 等游戏引擎发布的更新会引入破坏性 API 变更、新功能以及被弃用的模式。如果没有这些参考文件，智能体就会建议使用过时的代码。
 
 ## Structure
 ## 结构
@@ -63,8 +63,8 @@ Engine-specialist agents are instructed to:
 - When the LLM model is updated (new knowledge cutoff)
 - LLM 模型更新时（新的知识截止时间）
 
-- After running `/refresh-docs` (if available)
-- 运行 `/refresh-docs` 之后（如果可用）
+- After running `/setup-engine refresh`
+- 运行 `/setup-engine refresh` 之后
 
 - When you discover an API the model gets wrong
 - 当你发现某个 API 模型回答错误时

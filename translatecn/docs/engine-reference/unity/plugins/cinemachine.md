@@ -15,6 +15,7 @@
 
 **Cinemachine** is Unity's virtual camera system that enables professional, dynamic camera
 behavior without manual scripting. It's the industry standard for Unity camera work.
+
 **Cinemachine** 是 Unity 的虚拟摄像机系统，无需手动编写脚本即可实现专业、动态的摄像机行为。它是 Unity 摄像机工作的行业标准。
 
 **Use Cinemachine for:**
@@ -33,7 +34,8 @@ behavior without manual scripting. It's the industry standard for Unity camera w
 
 **⚠️ Knowledge Gap:** Cinemachine 3.0 (Unity 6) is a major rewrite from 2.x.
 Many API names and components changed.
-**⚠️ 知识盲区：** Cinemachine 3.0（Unity 6）相比 2.x 是重大重写。
+
+**⚠️ 知识盲区：** Cinemachine 3.0（Unity 6）相比 2.x 是一次重大重写。
 许多 API 名称和组件已变更。
 
 ---
@@ -75,7 +77,7 @@ Many API names and components changed.
 - 在虚拟摄像机之间混合
 - 将虚拟摄像机设置应用到 Unity Camera
 
-### 3. **Priorities**
+### 3. **Priorit**ies**
 ### 3. **优先级**
 - Virtual cameras have priority values
 - Highest priority camera is active
@@ -103,8 +105,11 @@ Many API names and components changed.
 
 `GameObject > Cinemachine > Cinemachine Camera`
 
+`GameObject > Cinemachine > Cinemachine Camera`
+
 This creates a **CinemachineCamera** GameObject with default settings.
-这会创建一个具有默认设置的 **CinemachineCamera** GameObject。
+
+这会创建一个带有默认设置的 **CinemachineCamera** GameObject。
 
 ---
 
@@ -139,7 +144,7 @@ public class CameraController : MonoBehaviour {
 ## 跟随模式（Body 组件）
 
 ### 3rd Person Follow (Orbital Follow)
-### 第三人称跟随（轨道跟随）
+### 第三人称跟随（Orbital Follow）
 
 ```csharp
 // In Inspector:
@@ -152,7 +157,7 @@ public class CameraController : MonoBehaviour {
 ```
 
 ### Framing Transposer (Smooth Follow)
-### Framing Transposer（平滑跟随）
+### 构图移调器（Framing Transposer，平滑跟随）
 
 ```csharp
 // CinemachineCamera > Body > Position Composer
@@ -164,7 +169,7 @@ public class CameraController : MonoBehaviour {
 ```
 
 ### Hard Lock (Exact Follow)
-### Hard Lock（精确跟随）
+### 硬锁定（Hard Lock，精确跟随）
 
 ```csharp
 // CinemachineCamera > Body > Hard Lock to Target
@@ -177,7 +182,7 @@ public class CameraController : MonoBehaviour {
 ## 瞄准模式（Aim 组件）
 
 ### Composer (Frame Target)
-### Composer（取景目标）
+### Composer（构图目标）
 
 ```csharp
 // CinemachineCamera > Aim > Composer
@@ -189,7 +194,7 @@ public class CameraController : MonoBehaviour {
 ```
 
 ### Look At Target
-### Look At Target
+### 看向目标（Look At Target）
 
 ```csharp
 // CinemachineCamera > Aim > Rotate With Follow Target
@@ -199,7 +204,7 @@ public class CameraController : MonoBehaviour {
 ---
 
 ## Blending Between Cameras
-## 摄像机之间混合
+## 摄像机之间的混合
 
 ### Priority-Based Blending
 ### 基于优先级的混合
@@ -237,7 +242,7 @@ void StopAiming() {
 ## 摄像机震动
 
 ### Impulse Source (Trigger Shake)
-### Impulse Source（触发震动）
+### 冲量源（Impulse Source，触发震动）
 
 ```csharp
 using Unity.Cinemachine;
@@ -253,7 +258,7 @@ public class ExplosionShake : MonoBehaviour {
 ```
 
 ### Impulse Listener (Receive Shake)
-### Impulse Listener（接收震动）
+### 冲量监听器（Impulse Listener，接收震动）
 
 ```csharp
 // Add to CinemachineCamera:
@@ -265,7 +270,7 @@ public class ExplosionShake : MonoBehaviour {
 ---
 
 ## Freelook Camera (Third Person with Mouse Look)
-## Freelook 摄像机（带鼠标视角的第三人称）
+## 自由视角摄像机（Freelook Camera，带鼠标视角的第三人称）
 
 ### Cinemachine Free Look
 ### Cinemachine Free Look
@@ -282,8 +287,8 @@ public class ExplosionShake : MonoBehaviour {
 
 ---
 
-## State-Driven Camera (Animator-Based)
-## 状态驱动摄像机（基于 Animator）
+## State-Driven Camera (Anim ator-Based)
+## 状态驱动摄像机（State-Driven Camera，基于 Animator）
 
 ### Cinemachine State-Driven Camera
 ### Cinemachine State-Driven Camera
@@ -302,7 +307,7 @@ public class ExplosionShake : MonoBehaviour {
 ---
 
 ## Dolly Tracks (Cutscenes)
-## Dolly 轨道（过场动画）
+## 推轨（Dolly Tracks，过场动画）
 
 ### Cinemachine Dolly Track
 ### Cinemachine Dolly Track
@@ -336,7 +341,7 @@ public class ExplosionShake : MonoBehaviour {
 ---
 
 ### Aiming Camera (Zoom In)
-### 瞄准摄像机（放大）
+### 瞄准摄像机（拉近）
 
 ```csharp
 // Normal Camera (Priority 10):
@@ -355,7 +360,7 @@ void StartAiming() {
 ---
 
 ### Cutscene Camera Sequence
-### 过场摄像机序列
+### 过场动画摄像机序列
 
 ```csharp
 // Use Timeline:
@@ -368,7 +373,7 @@ void StartAiming() {
 ---
 
 ## Migration from Cinemachine 2.x (Unity 2021)
-## 从 Cinemachine 2.x 迁移（Unity 2021）
+## 从 Cinemachine 2.x（Unity 2021）迁移
 
 ### API Changes (Unity 6 / Cinemachine 3.0)
 ### API 变更（Unity 6 / Cinemachine 3.0）
@@ -391,8 +396,8 @@ vcam.Follow = target; // Cleaner API
 
 **主要变更：**
 - `CinemachineVirtualCamera` → `CinemachineCamera`
-- `m_Follow`、`m_LookAt` → `Follow`、`LookAt`（无 "m_" 前缀）
-- 组件重命名以提升清晰度
+- `m_Follow`、`m_LookAt` → `Follow`、`LookAt`（去除 "m_" 前缀）
+- 为提升清晰度重命名了组件
 - 更好的性能
 
 ---
@@ -404,7 +409,7 @@ vcam.Follow = target; // Cleaner API
 - Use lower-priority cameras instead of destroying/creating
 - Disable virtual cameras when far from player
 
-- 限制活动虚拟摄像机数量（仅在需要时激活）
+- 限制活动的虚拟摄像机数量（仅在需要时激活）
 - 使用较低优先级的摄像机，而不是销毁/创建
 - 远离玩家时禁用虚拟摄像机
 

@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 uses new Input System (legacy Input deprecated)
-**知识盲区：** Unity 6 使用新 Input System（旧版 Input 已弃用）
+**知识盲区：** Unity 6 使用新的 Input System（旧版 Input 已弃用）
 
 ---
 
@@ -16,16 +16,16 @@ Unity 6 input systems:
 - **Legacy Input Manager**: Deprecated, avoid for new projects
 
 Unity 6 输入系统：
-- **Input System 包**（推荐）：跨平台、可重绑定、现代
-- **Legacy Input Manager**：已弃用，新项目应避免使用
+- **Input System 包（推荐）**：跨平台、可重绑定、现代化
+- **旧版 Input Manager**：已弃用，新项目应避免使用
 
 ---
 
 ## Key Changes from 2022 LTS
-## 相比 2022 LTS 的关键变更
+## 相对 2022 LTS 的关键变更
 
 ### Legacy Input Deprecated in Unity 6
-### 旧版 Input 在 Unity 6 中已弃用
+### Unity 6 中旧版输入已弃用
 
 ```csharp
 // ❌ DEPRECATED: Input class
@@ -37,6 +37,7 @@ if (Keyboard.current.spaceKey.wasPressedThisFrame) { }
 ```
 
 **Migration Required:** Install `com.unity.inputsystem` package.
+
 **需要迁移：** 安装 `com.unity.inputsystem` 包。
 
 ---
@@ -54,7 +55,7 @@ if (Keyboard.current.spaceKey.wasPressedThisFrame) { }
 1. `Window > Package Manager`
 2. 搜索 "Input System"
 3. 安装包
-4. 出现提示时重启 Unity
+4. 按提示重启 Unity
 
 ### Enable New Input System
 ### 启用新 Input System
@@ -64,7 +65,7 @@ if (Keyboard.current.spaceKey.wasPressedThisFrame) { }
 
 `Edit > Project Settings > Player > Active Input Handling`：
 - **Input System Package (New)** ✅ 推荐
-- **Both**（用于迁移期）
+- **Both**（迁移期间使用）
 
 ---
 
@@ -80,7 +81,7 @@ if (Keyboard.current.spaceKey.wasPressedThisFrame) { }
 
 1. `Assets > Create > Input Actions`
 2. 命名（例如 "PlayerControls"）
-3. 打开资源，定义动作：
+3. 打开资源，定义动作（action）：
 
 ```
 Action Maps:
@@ -94,8 +95,9 @@ Action Maps:
 
 4. **Generate C# Class**: Check "Generate C# Class" in Inspector
 5. Click "Apply"
+
 4. **生成 C# 类**：在 Inspector 中勾选 "Generate C# Class"
-5. 点击 "Apply"
+5. 单击 "Apply"
 
 ### Use Generated Input Class
 ### 使用生成的 Input 类
@@ -140,7 +142,7 @@ public class PlayerController : MonoBehaviour {
 ---
 
 ## Direct Device Access (Quick & Dirty)
-## 直接设备访问（快速但粗糙）
+## 直接访问设备（快速简易方式）
 
 ### Keyboard
 ### 键盘
@@ -326,15 +328,15 @@ controls.LoadBindingOverridesFromJson(rebinds);
 ## 动作类型
 
 ### Button (Press/Release)
-### Button（按下/释放）
+### Button（按下/松开）
 - Single press/release
 - Example: Jump, Fire
 
-- 单次按下/释放
+- 单次按下/松开
 - 示例：Jump、Fire
 
 ### Value (Continuous)
-### Value（连续）
+### Value（连续值）
 - Continuous value (float, Vector2)
 - Example: Move, Look, Aim
 
@@ -342,20 +344,20 @@ controls.LoadBindingOverridesFromJson(rebinds);
 - 示例：Move、Look、Aim
 
 ### Pass-Through (Immediate)
-### Pass-Through（立即）
+### Pass-Through（即时）
 - No processing, immediate value
 - Example: Mouse position
 
-- 无处理，立即值
+- 不经处理，即时取值
 - 示例：鼠标位置
 
 ---
 
 ## Processors (Input Modifiers)
-## 处理器（输入修饰符）
+## 处理器（输入修饰器）
 
 ### Scale
-### Scale
+### Scale（缩放）
 
 ```csharp
 // In Input Actions asset: Action > Properties > Processors > Add > Scale
@@ -363,7 +365,7 @@ controls.LoadBindingOverridesFromJson(rebinds);
 ```
 
 ### Invert
-### Invert
+### Invert（反转）
 
 ```csharp
 // In Input Actions asset: Action > Properties > Processors > Add > Invert
@@ -371,7 +373,7 @@ controls.LoadBindingOverridesFromJson(rebinds);
 ```
 
 ### Dead Zone
-### Dead Zone
+### Dead Zone（死区）
 
 ```csharp
 // In Input Actions asset: Action > Properties > Processors > Add > Stick Deadzone
@@ -389,7 +391,7 @@ controls.LoadBindingOverridesFromJson(rebinds);
 ```csharp
 // Add Component: Player Input
 // Assign Input Actions asset
-// Behavior: SendMessages / Invoke Unity Events / Invoke C# Events
+// Behavior: Send Messages / Invoke Unity Events / Invoke C# Events
 
 // Send Messages example:
 public class Player : MonoBehaviour {
@@ -412,7 +414,7 @@ public class Player : MonoBehaviour {
 ## 调试
 
 ### Input Debugger
-### 输入调试器
+### Input 调试器
 - `Window > Analysis > Input Debugger`
 - See active devices, input values, action states
 

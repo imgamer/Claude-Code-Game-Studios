@@ -1,32 +1,57 @@
-# Unreal Engine 5.7 — Networking Module Reference
-# Unreal Engine 5.7 — 网络模块参考
+# Unreal Engine 5.8 — Networking Module Reference
+# Unreal Engine 5.8 — 网络模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 networking improvements
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 网络改进
+**Last verified:** 2026-10-18 (Iris status: release notes and plugin flag); 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7-5.8 networking improvements (Iris production-ready in 5.8)
+
+**最后验证：** 2026-10-18（Iris 状态：发行说明与插件标记）；2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7-5.8 的网络改进（Iris 在 5.8 中生产就绪）
+
+> **UE 5.8 changes:** Iris "is now production-ready for licensees in UE
+> 5.8" (the `Iris.uplugin` in a 5.8.1 install still carries a Beta flag), with
+> clearer protocol-mismatch errors and RPC DoS detection re-enabled. Thread-safety
+> primitives were added for parallel `NetConnection::Tick`; a target that does
+> not need them can drop them with `ExcludeParallelIrisSupport` in
+> `TargetRules.cs`. Network Prediction gained optional Iris support. Source: UE
+> 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+>
+> **The notes and the plugin flag disagree.** Treat Iris as production-ready,
+> as the release notes say ("Iris is now production-ready for licensees in UE
+> 5.8", Framework > "Iris: Production-Ready Replication System"), and expect
+> the editor's plugin list to show it as Beta: `Engine/Plugins/Experimental/Iris/Iris.uplugin`
+> in a 5.8.1 install (CL 56057345) has `"IsBetaVersion": true`. Both read
+> 2026-10-18.
+
+> **UE 5.8 变更：** Iris "在 UE 5.8 中已对授权方生产就绪"（5.8.1 安装中的 `Iris.uplugin` 仍带有 Beta 标记），
+> 协议不匹配错误更清晰，RPC DoS 检测已重新启用。为并行 `NetConnection::Tick` 增加了线程安全原语；
+> 不需要这些原语的目标可以在 `TargetRules.cs` 中通过 `ExcludeParallelIrisSupport` 将其去掉。Network Prediction 获得了可选的 Iris 支持。
+> 来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+>
+> **发行说明与插件标记并不一致。** 请按发行说明的说法将 Iris 视为生产就绪（"Iris is now production-ready for licensees in UE
+> 5.8"，Framework > "Iris: Production-Ready Replication System"），同时预期编辑器的插件列表会将其显示为 Beta：5.8.1 安装（CL 56057345）中的 `Engine/Plugins/Experimental/Iris/Iris.uplugin`
+> 含有 `"IsBetaVersion": true`。两者均于 2026-10-18 读取。
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 networking:
+UE 5.8 networking:
 - **Client-Server Architecture**: Server-authoritative (RECOMMENDED)
 - **Replication**: Automatic state synchronization
 - **RPCs (Remote Procedure Calls)**: Call functions across network
 - **Relevancy**: Optimize bandwidth by only replicating relevant actors
 
-UE 5.7 网络：
+UE 5.8 网络：
 - **客户端-服务器架构**：服务器权威（推荐）
-- **复制**：自动状态同步
+- **复制（Replication）**：自动状态同步
 - **RPC（远程过程调用）**：跨网络调用函数
-- **相关性**：仅复制相关 actor 以优化带宽
+- **相关性（Relevancy）**：仅复制相关 Actor 以优化带宽
 
 ---
 
 ## Basic Multiplayer Setup
-## 基本多人游戏设置
+## 基础多玩家设置
 
 ### Enable Replication on Actor
 ### 在 Actor 上启用复制
@@ -69,7 +94,7 @@ if (GetRemoteRole() == ROLE_SimulatedProxy) {
 ## 复制变量
 
 ### Basic Replication
-### 基本复制
+### 基础复制
 
 ```cpp
 UPROPERTY(Replicated)
@@ -123,11 +148,11 @@ void OnRep_Health() {
 ## RPC（远程过程调用）
 
 ### Server RPC (Client → Server)
-### 服务器 RPC（客户端 → 服务器）
+### Server RPC（客户端 → 服务器）
 
 ```cpp
-// Client calls, server executes
-UFUNCTION(Server, Reliable)
+// Client calls, server executes. WithValidation declares Server_TakeDamage_Validate.
+UFUNCTION(Server, Reliable, WithValidation)
 void Server_TakeDamage(int32 Damage);
 
 void AMyCharacter::Server_TakeDamage_Implementation(int32 Damage) {
@@ -146,7 +171,7 @@ bool AMyCharacter::Server_TakeDamage_Validate(int32 Damage) {
 ```
 
 ### Client RPC (Server → Client)
-### 客户端 RPC（服务器 → 客户端）
+### Client RPC（服务器 → 客户端）
 
 ```cpp
 // Server calls, client executes
@@ -160,7 +185,7 @@ void AMyCharacter::Client_ShowDeathScreen_Implementation() {
 ```
 
 ### Multicast RPC (Server → All Clients)
-### 多播 RPC（服务器 → 所有客户端）
+### Multicast RPC（服务器 → 所有客户端）
 
 ```cpp
 // Server calls, all clients execute
@@ -408,10 +433,10 @@ void FindSessions() {
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Reduce Bandwidth
-### 减少带宽
+### 降低带宽占用
 
 ```cpp
 // Use unreliable RPCs for frequent updates
@@ -448,6 +473,7 @@ UE_LOG(LogNet, Warning, TEXT("Replicating Health: %d"), Health);
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/networking-and-multiplayer-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/actor-replication-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/rpcs-in-unreal-engine/

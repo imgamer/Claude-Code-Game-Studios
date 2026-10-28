@@ -1,138 +1,113 @@
 # Art Bible: [Game Title]
 # 美术风格指南：[游戏标题]
 
-## Document Status
-## 文档状态
-- **Version**: 1.0
-- **Last Updated**: [Date]
-- **Owned By**: art-director
-- **Status**: [Draft / Under Review / Approved]
-- **版本**：1.0
-- **最后更新**：[Date]
-- **负责人**：art-director
-- **状态**：[草稿 / 审核中 / 已批准]
+> **Status**: [Draft / Under Review / Approved]
+> **Owned By**: art-director
+> **Last Updated**: [Date]
+> **Art Director Sign-Off (AD-ART-BIBLE)**: [Not yet reviewed]
+> **状态**：[草稿 / 审核中 / 已批准]
+> **负责人**：art-director
+> **最后更新**：[Date]
+> **美术总监签核（AD-ART-BIBLE）**：[尚未评审]
 
-## Visual Identity Summary
-## 视觉身份摘要
-[2-3 sentences describing the overall visual identity]
-[2-3 句描述整体视觉身份]
+`/art-bible` writes these nine sections in this order and replaces each
+section's `[To be designed]` line as that section is approved. A section still
+holding its placeholder is incomplete; a later run fills only those.
+`/art-bible` 按此顺序撰写这九个章节，并在每个章节获批时替换该章节的
+`[To be designed]` 行。仍保留占位符的章节即为未完成；后续运行只填充这些章节。
 
-## Reference Board
-## 参考板
-[List reference games, films, art, and what specific visual quality each represents]
-[列出参考游戏、电影、艺术，以及每个代表什么特定视觉品质]
+## 1. Visual Identity Statement
+## 1. 视觉身份声明
 
-| Reference | Medium | What We're Taking |
-| --------- | ------ | ----------------- |
-| [Name] | [Game/Film/Art] | [Specific quality] |
-| 参考 | 媒介 | 我们采用之处 |
-| --------- | ------ | ----------------- |
-| [名称] | [游戏/电影/艺术] | [具体品质] |
+[To be designed] — a one-line visual rule that resolves any visual ambiguity,
+plus 2–3 supporting principles, each with a design test ("when X is ambiguous,
+choose Y") and the pillar it serves.
+[待设计] — 一条能解决任何视觉歧义的视觉规则，
+外加 2-3 条支撑原则，每条都配有设计测试（"当 X 有歧义时，
+选择 Y"）及其所服务的支柱。
 
-## Color Palette
-## 配色
+## 2. Mood & Atmosphere
+## 2. 情绪与氛围
 
-### Primary Palette
-### 主调色板
-| Name | Hex | Usage |
-| ---- | --- | ----- |
-| [Color Name] | #XXXXXX | [Where and when to use] |
-| 名称 | Hex | 用法 |
-| ---- | --- | ----- |
-| [颜色名] | #XXXXXX | [何处及何时使用] |
+[To be designed] — for each major game state (exploration, combat, victory,
+defeat, menus — whichever this game has): the emotional target, lighting
+character (time of day, colour temperature, contrast), 3–5 atmospheric
+descriptors, and energy level. Each state must look distinct from the others.
+[待设计] — 针对每个主要游戏状态（探索、战斗、胜利、
+失败、菜单——以此游戏实际拥有的为准）：情感目标、光照
+特征（一天中的时段、色温、对比度）、3-5 个氛围
+描述词，以及能量水平。每个状态必须在视觉上与其他状态区分开来。
 
-### Emotional Color Mapping
-### 情感颜色映射
-| Game State | Dominant Colors | Mood |
-| ---------- | --------------- | ---- |
-| Exploration | [Colors] | [Feeling] |
-| Combat | [Colors] | [Feeling] |
-| Safe zones | [Colors] | [Feeling] |
-| Danger | [Colors] | [Feeling] |
-| 游戏状态 | 主色 | 氛围 |
-| ---------- | --------------- | ---- |
-| 探索 | [颜色] | [感觉] |
-| 战斗 | [颜色] | [感觉] |
-| 安全区 | [颜色] | [感觉] |
-| 危险 | [颜色] | [感觉] |
+## 3. Shape Language
+## 3. 形状语言
 
-## Art Style
-## 美术风格
+[To be designed] — character silhouette philosophy (readable at thumbnail
+size, one distinguishing trait per archetype), environment geometry, UI shape
+grammar, and hero versus supporting shapes.
+[待设计] — 角色剪影理念（在缩略图尺寸下可读，
+每个原型一个显著特征）、环境几何、UI 形状
+语法，以及主角形状与辅助形状。
 
-### Rendering Style
-### 渲染风格
-[Realistic / Stylized / Pixel / Cel-shaded / etc.]
-[写实 / 风格化 / 像素 / 卡通渲染 / 等]
+## 4. Color System
+## 4. 色彩系统
 
-### Proportions
-### 比例
-[Character proportions, environment scale, UI scale relationships]
-[角色比例、环境尺度、UI 尺度关系]
+[To be designed] — a primary palette of 5–7 colours with their meaning in this
+world, semantic colour usage, per-area colour temperature rules, the UI palette
+and where it diverges, and colourblind safety: which semantic colours need a
+shape, icon or sound backup.
+[待设计] — 5-7 种颜色的主调色板及其在此
+世界中的含义、语义化颜色用法、按区域的色温规则、UI 调色板
+及其背离之处，以及色盲安全：哪些语义颜色需要
+形状、图标或声音作为备用。
 
-### Level of Detail
-### 细节级别
-[How detailed are characters, environments, UI elements?]
-[角色、环境、UI 元素多详细？]
+## 5. Character Design Direction
+## 5. 角色设计方向
 
-### Visual Hierarchy
-### 视觉层级
-[How do we guide the player's eye? What's always most prominent?]
-[我们如何引导玩家视线？什么始终最突出？]
+[To be designed] — the player character's visual archetype, how players tell
+enemies, NPCs and allies apart at a glance, expression and pose style, and how
+much detail survives at game camera distance (LOD philosophy).
+[待设计] — 玩家角色的视觉原型、玩家如何一眼
+区分敌人、NPC 和盟友、表情与姿态风格，以及
+在游戏相机距离下能保留多少细节（LOD 理念）。
 
-## Character Art Standards
-## 角色美术标准
-[Silhouette requirements, color coding, animation style, proportions]
-[剪影要求、颜色编码、动画风格、比例]
+## 6. Environment Design Language
+## 6. 环境设计语言
 
-## Environment Art Standards
-## 环境美术标准
-[Tilesets, modularity, lighting, atmospheric effects, scale]
-[瓦片集、模块化、光照、大气效果、尺度]
+[To be designed] — architectural style and its tie to the world's culture,
+texture philosophy (painted, PBR or stylised, and why), prop density rules per
+area type, and environmental storytelling guidelines.
+[待设计] — 建筑风格及其与世界文化的关联、
+纹理理念（手绘、PBR 或风格化，以及原因）、按
+区域类型的道具密度规则，以及环境叙事指南。
 
-## UI Art Standards
-## UI 美术标准
-[Button styles, typography, icon style, menu layout principles, HUD density]
-[按钮样式、字体排印、图标风格、菜单布局原则、HUD 密度]
+## 7. UI/HUD Visual Direction
+## 7. UI/HUD 视觉方向
 
-## VFX Standards
-## VFX 标准
-[Particle style, screen effects, impact feedback, color coding]
-[粒子风格、屏幕效果、撞击反馈、颜色编码]
+[To be designed] — diegetic versus screen-space HUD, typography (personality,
+weight, size hierarchy, minimum readable size), iconography style, UI animation
+feel, and any art-direction versus readability conflict and how it was decided.
+[待设计] — 叙事内 HUD 与屏幕空间 HUD 的取舍、排版（个性、
+字重、大小层级、最小可读尺寸）、图标风格、UI 动画
+手感，以及任何美术方向与可读性之间的冲突及其决策方式。
 
-## Asset Production Standards
-## 资产制作标准
+## 8. Asset Standards
+## 8. 资产标准
 
-### Naming Convention
-### 命名规范
-`[category]_[name]_[variant]_[size].[ext]`
+[To be designed] — file formats, naming convention, texture resolution tiers,
+LOD levels, export settings, and the engine's hard limits (poly budgets per
+asset category, texture memory, material slots). Where an art preference and a
+technical limit disagree, record both and the trade-off chosen.
+[待设计] — 文件格式、命名约定、纹理分辨率层级、
+LOD 级别、导出设置，以及引擎的硬性限制（按
+资产类别的多边形预算、纹理内存、材质槽位）。当美术偏好与
+技术限制不一致时，记录两者以及所选的权衡。
 
-### Texture Standards
-### 纹理标准
-| Category | Max Resolution | Format | Color Space |
-| -------- | -------------- | ------ | ----------- |
-| Characters | [Size] | [Format] | [Space] |
-| Environments | [Size] | [Format] | [Space] |
-| UI | [Size] | [Format] | [Space] |
-| VFX | [Size] | [Format] | [Space] |
-| 类别 | 最大分辨率 | 格式 | 色彩空间 |
-| -------- | -------------- | ------ | ----------- |
-| 角色 | [尺寸] | [格式] | [空间] |
-| 环境 | [尺寸] | [格式] | [空间] |
-| UI | [尺寸] | [格式] | [空间] |
-| VFX | [尺寸] | [格式] | [空间] |
+## 9. Reference Direction
+## 9. 参考方向
 
-### Animation Standards
-### 动画标准
-[Frame rates, blend times, animation graph structure]
-[帧率、混合时间、动画图结构]
-
-## Accessibility
-## 无障碍
-- Colorblind-safe UI elements required
-- Minimum text size: [X]px at 1080p
-- High contrast mode specifications
-- Icon + color (never color alone) for game state
-- 需要色盲安全的 UI 元素
-- 最小文本尺寸：1080p 下 [X]px
-- 高对比度模式规格
-- 游戏状态用图标 + 颜色（绝不仅颜色）
+[To be designed] — 3–5 references (games, films, art styles or artists). For
+each: the specific element to take from it, and what to avoid so the result
+does not read as a copy.
+[待设计] — 3-5 个参考（游戏、电影、艺术风格或艺术家）。对于
+每个参考：要从中借鉴的具体元素，以及应避免什么，
+以免结果看起来像复制品。

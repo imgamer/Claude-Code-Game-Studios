@@ -23,6 +23,7 @@
 | Goal | Target | Result | Status |
 | ---- | ------ | ------ | ------ |
 | [Goal 1] | [Metric] | [Actual] | [Met / Partially / Missed] |
+
 | 目标 | 指标 | 结果 | 状态 |
 | ---- | ------ | ------ | ------ |
 | [目标 1] | [指标] | [实际] | [达成 / 部分 / 未达] |
@@ -33,6 +34,7 @@
 | Date | Event | Impact |
 | ---- | ----- | ------ |
 | [Date] | [What happened] | [How it affected the project] |
+
 | 日期 | 事件 | 影响 |
 | ---- | ----- | ------ |
 | [Date] | [发生了什么] | [它如何影响项目] |
@@ -69,13 +71,13 @@
 **Prevention**: [How to avoid next time]
 **什么**：[描述]
 **根本原因**：[为何发生]
-**影响**：[时间/质量/士气成本]
+**影响**：[时间/质量/士气代价]
 **预防**：[下次如何避免]
 
 ### [Category 2]
 ### [类别 2]
 [Same structure]
-[相同结构]
+[相同的结构]
 
 ## Key Metrics
 ## 关键指标
@@ -87,11 +89,12 @@
 | Bugs fixed | — | [N] | |
 | Estimation accuracy | 100% | [N%] | |
 | Scope changes | 0 | [N] | |
+
 | 指标 | 目标 | 实际 | 备注 |
 | ------ | ------ | ------ | ----- |
-| 完成任务 | [N] | [N] | |
-| 发现错误 | — | [N] | |
-| 修复错误 | — | [N] | |
+| 已完成任务 | [N] | [N] | |
+| 发现的缺陷 | — | [N] | |
+| 修复的缺陷 | — | [N] | |
 | 估算准确度 | 100% | [N%] | |
 | 范围变更 | 0 | [N] | |
 
@@ -99,8 +102,8 @@
 ## 经验教训
 
 1. **[Lesson]**: [Explanation and how it changes future work]
+1. **[教训]**：[解释以及它如何改变未来的工作]
 2. **[Lesson]**: [Explanation]
-1. **[教训]**：[解释以及它如何改变未来工作]
 2. **[教训]**：[解释]
 
 ## Action Items
@@ -109,11 +112,12 @@
 | # | Action | Owner | Deadline | Status |
 | - | ------ | ----- | -------- | ------ |
 | 1 | [Action] | [Who] | [When] | [Open/Done] |
+
 | # | 行动 | 负责人 | 截止日期 | 状态 |
 | - | ------ | ----- | -------- | ------ |
-| 1 | [行动] | [谁] | [何时] | [未完成/完成] |
+| 1 | [行动] | [谁] | [何时] | [未完成/已完成] |
 
 ## Acknowledgments
 ## 致谢
 [Call out exceptional contributions]
-[点名特别贡献]
+[点名表扬杰出贡献]

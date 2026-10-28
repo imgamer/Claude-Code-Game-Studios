@@ -17,13 +17,14 @@ Unity 6 networking options:
 - **Photon**: Third-party service (PUN2)
 - **Custom**: Low-level sockets
 
-Unity 6 网络选项：
-- **Netcode for GameObjects**（推荐）：Unity 官方多人游戏框架
-- **Mirror**：社区驱动（UNet 后继者）
+Unity 6 网络方案：
+- **Netcode for GameObjects（推荐）**：Unity 官方多人游戏框架
+- **Mirror**：社区驱动（UNet 的后继者）
 - **Photon**：第三方服务（PUN2）
-- **Custom**：低级套接字
+- **自定义（Custom）**：底层套接字
 
 **UNet (Legacy)**: Deprecated, do not use.
+
 **UNet（旧版）**：已弃用，请勿使用。
 
 ---
@@ -69,17 +70,17 @@ public class CustomNetworkManager : MonoBehaviour {
 ---
 
 ## NetworkObject (Networked GameObjects)
-## NetworkObject（联网 GameObject）
+## NetworkObject（联网的 GameObject）
 
 ### Mark GameObject as Networked
-### 将 GameObject 标记为联网
+### 将 GameObject 标记为联网对象
 
 1. Add `NetworkObject` component to GameObject
 2. Must be in root of prefab (not nested)
 3. Register prefab in `NetworkManager > NetworkPrefabs List`
 
 1. 向 GameObject 添加 `NetworkObject` 组件
-2. 必须在预制体根节点（不能嵌套）
+2. 必须位于预制体（prefab）的根节点（不能嵌套）
 3. 在 `NetworkManager > NetworkPrefabs List` 中注册预制体
 
 ### Spawn Network Objects
@@ -139,7 +140,7 @@ public class Player : NetworkBehaviour {
 ---
 
 ## Network Variables (Synchronized State)
-## Network Variables（同步状态）
+## 网络变量（Network Variables，同步状态）
 
 ### NetworkVariable<T>
 ### NetworkVariable<T>
@@ -374,7 +375,7 @@ void OnClientDisconnected(ulong clientId) {
 - Use delta compression for large data
 
 - 对不常变化的状态使用 `NetworkVariable`
-- 同步前批量处理多个变更
+- 在同步前批量合并多处变更
 - 对大数据使用增量压缩
 
 ### Prediction & Reconciliation
@@ -383,8 +384,8 @@ void OnClientDisconnected(ulong clientId) {
 - Reconcile with server authoritative state
 - Use interpolation for smooth movement
 
-- 在本地运行移动以提升响应性
-- 与服务器权威状态协调
+- 在本地运行移动逻辑以保证响应性
+- 与服务器权威状态进行协调（reconciliation）
 - 使用插值实现平滑移动
 
 ---
@@ -393,7 +394,7 @@ void OnClientDisconnected(ulong clientId) {
 ## 调试
 
 ### Network Profiler
-### 网络分析器
+### 网络性能分析器
 - `Window > Analysis > Network Profiler`
 - Monitor bandwidth, RPC calls, variable updates
 
@@ -406,7 +407,7 @@ void OnClientDisconnected(ulong clientId) {
 - Add artificial lag and packet loss for testing
 
 - `NetworkManager > Network Simulator`
-- 添加人为延迟和丢包用于测试
+- 添加人为延迟和丢包以进行测试
 
 ---
 

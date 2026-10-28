@@ -15,13 +15,13 @@ Automatically generates a retrospective starting point by analyzing the sprint
 data: what was planned vs completed, velocity changes, bug trends, and common
 blockers. This is not a git hook but a workflow hook invoked through the
 `producer` agent.
-通过分析冲刺数据自动生成回顾起点：计划与完成的对比、速率变化、缺陷趋势和常见阻碍项。这不是 git 钩子，而是通过 `producer` 智能体调用的工作流钩子。
+通过分析冲刺数据自动生成回顾的起点：计划与完成的对比、速率变化、缺陷趋势和常见阻碍项。这不是 git 钩子，而是通过 `producer` 智能体调用的工作流钩子。
 
 ## Implementation
 ## 实现
 
 This is a workflow hook, not a git hook. It is invoked by running:
-这是工作流钩子，而非 git 钩子。通过运行以下命令调用：
+这是工作流钩子，而不是 git 钩子。通过运行以下命令调用：
 
 ```
 @producer Generate sprint retrospective for Sprint [N]
@@ -41,15 +41,15 @@ producer 智能体应：
    - Carryover items from previous sprint
    - 上一冲刺的结转项
    - New tasks added mid-sprint
-   - 冲刺中途新增任务
+   - 冲刺中途新增的任务
    - Average task completion time
    - 平均任务完成时间
 3. **Analyze patterns**:
 3. **分析模式**：
    - Most common blockers
-   - 最常见阻碍项
+   - 最常见的阻碍项
    - Which agent/area had the most incomplete work
-   - 哪个智能体/领域有最多未完成工作
+   - 哪个智能体/领域有最多的未完成工作
    - Which estimates were most inaccurate
    - 哪些估算最不准确
 4. **Generate the retrospective**:

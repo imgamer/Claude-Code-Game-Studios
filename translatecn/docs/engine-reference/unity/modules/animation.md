@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 animation improvements, Timeline enhancements
-**知识盲区：** Unity 6 动画改进、Timeline 增强
+**知识盲区：** Unity 6 的动画改进、Timeline 增强
 
 ---
 
@@ -18,18 +18,18 @@ Unity 6.3 animation systems:
 - **Legacy Animation**: Deprecated, avoid
 
 Unity 6.3 动画系统：
-- **Animator Controller (Mecanim)**：基于状态机（推荐）
+- **Animator Controller（Mecanim）**：基于状态机（推荐）
 - **Timeline**：电影化序列、过场动画
 - **Animation Rigging**：程序化运行时动画
-- **Legacy Animation**：已弃用，应避免使用
+- **旧版动画（Legacy Animation）**：已弃用，应避免使用
 
 ---
 
 ## Key Changes from 2022 LTS
-## 相比 2022 LTS 的关键变更
+## 相对 2022 LTS 的关键变更
 
 ### Animation Rigging Package (Production-Ready in Unity 6)
-### Animation Rigging 包（Unity 6 中生产就绪）
+### Animation Rigging 包（在 Unity 6 中生产就绪）
 
 ```csharp
 // Install: Package Manager > Animation Rigging
@@ -49,7 +49,7 @@ Unity 6.3 动画系统：
 ---
 
 ## Animator Controller (Mecanim)
-## Animator Controller (Mecanim)
+## Animator Controller（Mecanim）
 
 ### Basic Setup
 ### 基本设置
@@ -61,7 +61,7 @@ Unity 6.3 动画系统：
 ```
 
 ### State Transitions
-### 状态转换
+### 状态过渡
 
 ```csharp
 Animator animator = GetComponent<Animator>();
@@ -85,9 +85,9 @@ animator.SetInteger("WeaponType", 2);
 - **Override Layers**: Replace base layer (e.g., weapon swap)
 - **Additive Layers**: Add on top of base (e.g., breathing, aim offset)
 
-- **Base Layer**：默认动画（移动）
-- **Override Layers**：替换基础层（例如换武器）
-- **Additive Layers**：叠加到基础层之上（例如呼吸、瞄准偏移）
+- **基础层（Base Layer）**：默认动画（移动）
+- **覆盖层（Override Layers）**：替换基础层（例如武器切换）
+- **叠加层（Additive Layers）**：在基础层之上叠加（例如呼吸、瞄准偏移）
 
 ```csharp
 // Set layer weight (0-1)
@@ -97,10 +97,10 @@ animator.SetLayerWeight(1, 0.5f); // 50% blend
 ---
 
 ## Blend Trees
-## 混合树
+## 混合树（Blend Trees）
 
 ### 1D Blend Tree (Speed blending)
-### 1D 混合树（速度混合）
+### 一维混合树（速度混合）
 
 ```csharp
 // Idle (Speed = 0) → Walk (Speed = 0.5) → Run (Speed = 1.0)
@@ -108,7 +108,7 @@ animator.SetFloat("Speed", moveSpeed);
 ```
 
 ### 2D Blend Tree (Directional movement)
-### 2D 混合树（方向移动）
+### 二维混合树（方向性移动）
 
 ```csharp
 // X-axis: Strafe (-1 to 1)
@@ -123,7 +123,7 @@ animator.SetFloat("MoveY", input.y);
 ## 动画事件
 
 ### Trigger Events from Animation Clips
-### 从动画片段触发事件
+### 从动画剪辑触发事件
 
 ```csharp
 // Add in Animation window: Right-click timeline > Add Animation Event
@@ -143,10 +143,10 @@ public void OnAttackHit() {
 ---
 
 ## Root Motion
-## Root Motion
+## 根运动（Root Motion）
 
 ### Character Movement via Animation
-### 通过动画进行角色移动
+### 通过动画驱动角色移动
 
 ```csharp
 Animator animator = GetComponent<Animator>();
@@ -162,10 +162,10 @@ void OnAnimatorMove() {
 ---
 
 ## Animation Rigging (Unity 6+)
-## Animation Rigging (Unity 6+)
+## Animation Rigging（Unity 6+）
 
 ### IK (Inverse Kinematics)
-### IK（逆向运动学）
+### IK（反向运动学）
 
 ```csharp
 // Install: Package Manager > Animation Rigging
@@ -183,7 +183,7 @@ ikConstraint.weight = 1f; // 0-1 blend
 ```
 
 ### Aim Constraint (Look At)
-### Aim Constraint（注视）
+### 瞄准约束（Aim Constraint，看向目标）
 
 ```csharp
 // Character looks at target
@@ -217,11 +217,11 @@ director.Play();
 - **Cinemachine Track**: Camera movement
 - **Signal Track**: Trigger events at specific times
 
-- **Activation Track**：启用/禁用 GameObject
-- **Animation Track**：在 Animator 上播放动画
-- **Audio Track**：同步音频播放
-- **Cinemachine Track**：摄像机移动
-- **Signal Track**：在特定时间触发事件
+- **激活轨道（Activation Track）**：启用/禁用 GameObject
+- **动画轨道（Animation Track）**：在 Animator 上播放动画
+- **音频轨道（Audio Track）**：同步音频播放
+- **Cinemachine 轨道（Cinemachine Track）**：摄像机运动
+- **信号轨道（Signal Track）**：在特定时间触发事件
 
 ### Signal System (Events)
 ### 信号系统（事件）
@@ -244,7 +244,7 @@ public class CutsceneEvents : MonoBehaviour {
 ## 动画播放控制
 
 ### Play Animation Directly (No State Machine)
-### 直接播放动画（无状态机）
+### 直接播放动画（不经过状态机）
 
 ```csharp
 // ✅ CrossFade (smooth transition)
@@ -291,17 +291,17 @@ public class WeaponTrail : MonoBehaviour {
   - **Cull Completely**: Stop all animation when off-screen
 
 - `Animator > Culling Mode`：
-  - **Always Animate**：始终更新（开销大）
-  - **Cull Update Transforms**：离屏时停止更新骨骼（推荐）
-  - **Cull Completely**：离屏时停止所有动画
+  - **Always Animate**：始终更新（开销较大）
+  - **Cull Update Transforms**：脱离屏幕时停止更新骨骼（推荐）
+  - **Cull Completely**：脱离屏幕时停止所有动画
 
 ### LOD (Level of Detail)
-### LOD（细节级别）
+### LOD（细节层次）
 - Simpler animations for distant characters
 - Reduce skeleton bone count for LOD meshes
 
-- 远处角色使用更简单的动画
-- 减少 LOD 网格的骨骼数量
+- 为远处角色使用更简单的动画
+- 为 LOD 网格减少骨骼数量
 
 ---
 
@@ -309,7 +309,7 @@ public class WeaponTrail : MonoBehaviour {
 ## 常见模式
 
 ### Check if Animation Finished
-### 检查动画是否完成
+### 检查动画是否结束
 
 ```csharp
 AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
@@ -344,7 +344,7 @@ string currentClip = clipInfo[0].clip.name;
 - Visualize state machine, see active state
 
 - `Window > Animation > Animator`
-- 可视化状态机，查看活动状态
+- 可视化状态机，查看当前活动状态
 
 ### Animation Window
 ### Animation 窗口
@@ -352,7 +352,7 @@ string currentClip = clipInfo[0].clip.name;
 - Edit animation clips, add events
 
 - `Window > Animation > Animation`
-- 编辑动画片段，添加事件
+- 编辑动画剪辑，添加事件
 
 ---
 

@@ -1,27 +1,43 @@
-# Unreal Engine 5.7 — Animation Module Reference
-# Unreal Engine 5.7 — 动画模块参考
+# Unreal Engine 5.8 — Animation Module Reference
+# Unreal Engine 5.8 — 动画模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 animation authoring improvements, Control Rig 2.0
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 动画创作改进、Control Rig 2.0
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.4-5.8 animation authoring improvements, Control Rig 2.0
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.4-5.8 的动画创作改进、Control Rig 2.0
+
+> **UE 5.8 changes:** Smart names are deprecated — `FSmartName`,
+> `FSmartNameMapping` and `FSmartNameContainer` carry `UE_DEPRECATED(5.8, "Smart
+> names and their mappings are no longer used")` (`Engine/Source/Runtime/Engine/Classes/Animation/SmartName.h`).
+> Non-reflected deprecated Animation, Control Rig, Persona and Live Link APIs
+> from 5.0-5.6 were removed (e.g. `UMotionWarpingComponent::GetCharacterOwner`
+> → `GetOwnerAdapter()->GetActor()`). Control Rig Physics and the RigMapper
+> retargeting tool are Beta; Animation Mixing in Sequencer and Direct Mesh
+> Controls are Experimental. Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** Smart name 已弃用 — `FSmartName`、
+> `FSmartNameMapping` 与 `FSmartNameContainer` 带有 `UE_DEPRECATED(5.8, "Smart
+> names and their mappings are no longer used")`（`Engine/Source/Runtime/Engine/Classes/Animation/SmartName.h`）。
+> 5.0-5.6 中非反射的已弃用 Animation、Control Rig、Persona 与 Live Link API 已被移除（例如 `UMotionWarpingComponent::GetCharacterOwner`
+> → `GetOwnerAdapter()->GetActor()`）。Control Rig Physics 与 RigMapper 重定向工具为 Beta；Sequencer 中的 Animation Mixing 与 Direct Mesh Controls 为实验性。来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 animation systems:
+UE 5.8 animation systems:
 - **Animation Blueprint**: State machine-based animation logic
 - **Control Rig**: Runtime procedural animation (production-ready in UE5)
 - **IK Rig + Retargeter**: Modern retargeting system
 - **Sequencer**: Cinematic animation
 
-UE 5.7 动画系统：
+UE 5.8 动画系统：
 - **Animation Blueprint**：基于状态机的动画逻辑
 - **Control Rig**：运行时程序化动画（UE5 中生产就绪）
 - **IK Rig + Retargeter**：现代重定向系统
-- **Sequencer**：电影级动画
+- **Sequencer**：过场动画
 
 ---
 
@@ -35,7 +51,7 @@ UE 5.7 动画系统：
 2. Select parent class: `AnimInstance`
 3. Select skeleton
 
-1. Content Browser > 右键 > Animation > Animation Blueprint
+1. Content Browser > Right Click > Animation > Animation Blueprint
 2. 选择父类：`AnimInstance`
 3. 选择骨架
 
@@ -55,10 +71,10 @@ AnimInstance->Montage_Play(AttackMontage);
 ---
 
 ## Play Animation Montages
-## 播放动画 Montage
+## 播放动画蒙太奇
 
 ### Animation Montage
-### 动画 Montage
+### Animation Montage
 
 ```cpp
 // Play montage
@@ -73,7 +89,7 @@ bool bIsPlaying = AnimInstance->Montage_IsPlaying(AttackMontage);
 ```
 
 ### Montage Notify Events
-### Montage Notify 事件
+### 蒙太奇通知事件
 
 ```cpp
 // Add notify event in Animation Montage (right-click timeline > Add Notify > New Notify)
@@ -95,10 +111,10 @@ public:
 ---
 
 ## Blend Spaces
-## Blend Space
+## 混合空间
 
 ### 1D Blend Space (Speed Blending)
-### 1D Blend Space（速度混合）
+### 1D 混合空间（速度混合）
 
 ```cpp
 // Create: Content Browser > Animation > Blend Space 1D
@@ -111,7 +127,7 @@ public:
 ```
 
 ### 2D Blend Space (Directional Movement)
-### 2D Blend Space（方向移动）
+### 2D 混合空间（方向性移动）
 
 ```cpp
 // Create: Content Browser > Animation > Blend Space
@@ -134,7 +150,7 @@ public:
 
 1. Content Browser > Animation > Control Rig
 2. 选择骨架
-3. 构建 rig 层级（骨骼、控制器、IK）
+3. 构建 Rig 层级（骨骼、控制器、IK）
 
 ### Use Control Rig in Animation Blueprint
 ### 在 Animation Blueprint 中使用 Control Rig
@@ -172,7 +188,7 @@ ControlRig->SetControlValue<FVector>(TEXT("IK_Hand_R"), TargetLocation);
 1. Content Browser > Animation > IK Rig
 2. 选择骨架
 3. 添加 IK 目标（手、脚）
-4. 设置求解器链
+4. 设置解算链
 
 ### Retarget Animations
 ### 重定向动画
@@ -186,7 +202,7 @@ ControlRig->SetControlValue<FVector>(TEXT("IK_Hand_R"), TargetLocation);
 1. 为源骨架创建 IK Rig
 2. 为目标骨架创建 IK Rig
 3. 创建 IK Retargeter 资产
-4. 分配源和目标 IK Rig
+4. 分配源与目标 IK Rig
 5. 批量重定向动画
 
 ### Retargeting in C++
@@ -200,10 +216,10 @@ ControlRig->SetControlValue<FVector>(TEXT("IK_Hand_R"), TargetLocation);
 ---
 
 ## Animation Notify States
-## 动画 Notify State
+## 动画通知状态
 
 ### Custom Notify State (Duration-Based Events)
-### 自定义 Notify State（基于持续时间的事件）
+### 自定义通知状态（基于持续时间的事件）
 
 ```cpp
 UCLASS()
@@ -228,10 +244,10 @@ public:
 ---
 
 ## Skeletal Mesh & Sockets
-## 骨骼网格与 Socket
+## 骨骼网格与插槽
 
 ### Attach Objects to Sockets
-### 将对象附加到 Socket
+### 将物体附加到插槽
 
 ```cpp
 // Create socket in Skeletal Mesh Editor (Skeleton Tree > Add Socket)
@@ -276,10 +292,10 @@ GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = true;
 ---
 
 ## Animation Layers (Linked Anim Graphs)
-## 动画层（Linked Anim Graph）
+## 动画层（Linked Anim Graphs）
 
-### Use Linked Animlayers
-### 使用 Linked Animlayer
+### Use Linked Anim Layers
+### 使用链接动画层
 
 ```cpp
 // Create separate Anim Blueprints for layers (e.g., upper body, lower body)
@@ -293,10 +309,10 @@ AnimInstance->LinkAnimClassLayers(NewLayerClass);
 ---
 
 ## Sequencer (Cinematic Animation)
-## Sequencer（电影级动画）
+## Sequencer（过场动画）
 
 ### Create Sequence
-### 创建 Sequence
+### 创建序列
 
 1. Content Browser > Cinematics > Level Sequence
 2. Add tracks: Camera, Character, Animation, etc.
@@ -305,7 +321,7 @@ AnimInstance->LinkAnimClassLayers(NewLayerClass);
 2. 添加轨道：Camera、Character、Animation 等
 
 ### Play Sequence from C++
-### 从 C++ 播放 Sequence
+### 从 C++ 播放序列
 
 ```cpp
 #include "LevelSequenceActor.h"
@@ -318,7 +334,7 @@ SequenceActor->GetSequencePlayer()->Play();
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Animation Optimization
 ### 动画优化
@@ -354,6 +370,7 @@ DrawDebugCoordinateSystem(GetWorld(), BoneLocation, BoneRotation, 50.0f, false, 
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/animation-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/control-rig-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/ik-rig-in-unreal-engine/

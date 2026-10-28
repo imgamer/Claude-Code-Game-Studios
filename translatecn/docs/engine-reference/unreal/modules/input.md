@@ -1,23 +1,41 @@
-# Unreal Engine 5.7 — Input Module Reference
-# Unreal Engine 5.7 — 输入模块参考
+# Unreal Engine 5.8 — Input Module Reference
+# Unreal Engine 5.8 — 输入模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 uses Enhanced Input as default (legacy input deprecated)
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 默认使用 Enhanced Input（旧版输入已弃用）
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7+ uses Enhanced Input as default (legacy input deprecated); UE 5.8 unifies it with Common UI input
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7+ 默认使用 Enhanced Input（旧版输入已弃用）；UE 5.8 将其与 Common UI 输入统一
+
+> **UE 5.8 changes:** Enhanced Input and Common Input/UI are unified,
+> which "removes the need for duplicate data assets"; there is a new Input
+> Debugger for Enhanced Input UI. Fixes ship behind CVars that "will be removed
+> in a future release": `EnhancedInput.IgnoreHeldKeysOnFlush` (default true) and
+> `EnhancedInput.CorrectTouchBoolActionKeys` (default on). The Raw Input plugin
+> is deprecated (`"DeprecatedEngineVersion": "5.8"`) in favour of the Game Input
+> for Windows plugin (`GameInputWindows`, Beta); the release notes say to set
+> `IncludeRedistFiles=True` in the Game Input section of `DefaultEngine.ini` so
+> packaging includes `GameInputRedist.msi`. Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** Enhanced Input 与 Common Input/UI 已统一，
+> 这"消除了对重复数据资产的需求"；并新增了面向 Enhanced Input UI 的 Input Debugger。若干修复置于"将在未来版本中移除"的 CVar 之后：`EnhancedInput.IgnoreHeldKeysOnFlush`（默认 true）与
+> `EnhancedInput.CorrectTouchBoolActionKeys`（默认开启）。Raw Input 插件已弃用（`"DeprecatedEngineVersion": "5.8"`），
+> 改用 Game Input for Windows 插件（`GameInputWindows`，Beta）；发行说明要求
+> 在 `DefaultEngine.ini` 的 Game Input 段中设置 `IncludeRedistFiles=True`，以便打包时包含 `GameInputRedist.msi`。
+> 来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 input systems:
+UE 5.8 input systems:
 - **Enhanced Input** (RECOMMENDED, default in UE5): Modular, rebindable, context-based
 - **Legacy Input**: Deprecated, avoid for new projects
 
-UE 5.7 输入系统：
+UE 5.8 输入系统：
 - **Enhanced Input**（推荐，UE5 默认）：模块化、可重绑定、基于上下文
-- **旧版输入**：已弃用，新项目避免使用
+- **旧版输入**：已弃用，新项目请避免使用
 
 ---
 
@@ -168,12 +186,12 @@ Input Actions can have triggers to control when they fire:
 - **Tap**: Quick press
 - **Pulse**: Repeated firing while held
 
-Input Action 可以有触发器来控制何时触发：
+Input Action 可带有触发器，用于控制其触发时机：
 - **Pressed**：输入开始时
 - **Released**：输入结束时
-- **Hold**：按住持续一段时间
-- **Tap**：快速按下
-- **Pulse**：按住时重复触发
+- **Hold**：持续按住一段时间
+- **Tap**：快速点按
+- **Pulse**：按住期间重复触发
 
 ### Add Trigger in Editor
 ### 在编辑器中添加触发器
@@ -189,10 +207,10 @@ Input Action 可以有触发器来控制何时触发：
 ---
 
 ## Input Modifiers
-## 输入修饰符
+## 输入修饰器
 
 ### Modifier Types
-### 修饰符类型
+### 修饰器类型
 
 Modifiers transform input values:
 - **Negate**: Flip sign (-1 ↔ 1)
@@ -200,21 +218,21 @@ Modifiers transform input values:
 - **Scalar**: Multiply by value
 - **Smooth**: Smoothing over time
 
-修饰符变换输入值：
+修饰器用于变换输入值：
 - **Negate**：翻转符号（-1 ↔ 1）
 - **Dead Zone**：忽略小幅输入
-- **Scalar**：乘以一个值
+- **Scalar**：乘以某个值
 - **Smooth**：随时间平滑
 
 ### Add Modifier in Editor
-### 在编辑器中添加修饰符
+### 在编辑器中添加修饰器
 
 1. Open Input Action asset
 2. Modifiers > Add > Select modifier (e.g., `Negate`)
 3. Configure
 
 1. 打开 Input Action 资产
-2. Modifiers > Add > 选择修饰符（例如 `Negate`）
+2. Modifiers > Add > 选择修饰器（例如 `Negate`）
 3. 配置
 
 ---
@@ -271,7 +289,7 @@ void MoveForward(float Value) {
 
 **Migration:** Use Enhanced Input instead.
 
-**迁移：** 改用 Enhanced Input。
+**迁移：** 请改用 Enhanced Input。
 
 ---
 
@@ -279,7 +297,7 @@ void MoveForward(float Value) {
 ## 手柄输入
 
 ### Gamepad with Enhanced Input
-### 使用 Enhanced Input 的手柄
+### 使用 Enhanced Input 的手柄输入
 
 ```cpp
 // Input Mapping Context:
@@ -350,7 +368,7 @@ UE_LOG(LogTemp, Warning, TEXT("Move Input: %s"), *MoveVector.ToString());
 ## 常见模式
 
 ### Check if Key Pressed (Quick & Dirty)
-### 检查按键是否按下（快捷方法）
+### 检查按键是否按下（快捷做法）
 
 ```cpp
 // For debugging only (not recommended for gameplay)
@@ -363,5 +381,6 @@ if (GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::SpaceBar)) {
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/enhanced-input-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/enhanced-input-action-and-input-mapping-context-in-unreal-engine/

@@ -1,5 +1,5 @@
 # Game Studio Agent Architecture -- Quick Start Guide
-# 游戏工作室智能体架构 — 快速入门指南
+# 游戏工作室智能体架构 -- 快速入门指南
 
 ## What Is This?
 ## 这是什么？
@@ -14,6 +14,33 @@ established game design theory (MDA Framework, Self-Determination Theory,
 Flow State, Bartle Player Types). Use whichever engine set matches your project.
 这是一套面向游戏开发的完整 Claude Code 智能体架构。它将 49 个专业 AI 智能体组织成镜像真实游戏开发团队的工作室层级，具有明确的职责、委派规则和协调协议。它包含 Godot、Unity 和 Unreal 的引擎专家智能体 — 每个都配备针对主要引擎子系统的专属子专家。所有设计智能体和模板都建立在成熟的游戏设计理论基础之上（MDA 框架、自我决定理论、心流状态、Bartle 玩家类型）。请使用与你项目匹配的引擎集。
 
+## The Default Path: Rigor Minimal
+## 默认路径：严谨度 Minimal
+
+`modes.rigor` defaults to `minimal` (`/start` infers it from what you describe and shows it
+before saving; `/settings` changes it any time). At `minimal` the path to code is four steps:
+`modes.rigor` 默认为 `minimal`（`/start` 根据你所描述的内容推断，并在保存前显示；`/settings` 可随时更改）。在 `minimal` 下，通往代码的路径有四个步骤：
+
+1. `/setup-engine` -- configure the engine
+1. `/setup-engine` -- 配置引擎
+2. `/brainstorm` -- writes the one-page `design/game-brief.md`, in place of the
+   concept doc, systems decomposition and per-system GDDs
+2. `/brainstorm` -- 编写单页 `design/game-brief.md`，替代概念文档、系统分解和逐系统 GDD
+3. `/create-stories` -- turns the brief's MVP list into stories under
+   `production/epics/<slug>/`; the brief's build order is the plan, so there is
+   no `/create-epics` or `/sprint-plan`
+3. `/create-stories` -- 将简报的 MVP 列表转换为 `production/epics/<slug>/` 下的故事；简报中的构建顺序就是计划，因此不需要 `/create-epics` 或 `/sprint-plan`
+4. `/dev-story` then `/story-done`, story by story -- `/story-done` names the
+   next story, and `/help` knows this route
+4. 然后逐个故事执行 `/dev-story` 与 `/story-done` -- `/story-done` 会指出下一个故事，`/help` 也了解这条路线
+
+Nothing at `minimal` runs `/gate-check`, so `project.stage` stays at Concept.
+Every skill still runs at any tier. The trade: no GDDs catch design problems
+before code. Raise rigor with `/settings` when the game outgrows the brief;
+`standard` and `full` are the longer pipelines under
+[First Steps for a New Project](#first-steps-for-a-new-project).
+`minimal` 下不会运行任何 `/gate-check`，因此 `project.stage` 保持在 Concept。每个技能在任何层级仍然可以运行。代价是：没有 GDD 在代码之前捕获设计问题。当游戏超出简报的承载能力时，用 `/settings` 提高严谨度；`standard` 和 `full` 是 [新项目的首要步骤](#first-steps-for-a-new-project) 下更长的流水线。
+
 ## How to Use
 ## 如何使用
 
@@ -23,26 +50,31 @@ Flow State, Bartle Player Types). Use whichever engine set matches your project.
 There are three tiers of agents:
 智能体分为三个层级：
 
-- **Tier 1 (Opus)**: Directors who make high-level decisions
-- **层级 1（Opus）**：做出高层决策的总监
+- **Tier 1 — Directors** who make high-level decisions (they run on Opus)
+- **层级 1 — 总监**，做出高层决策（运行于 Opus）
   - `creative-director` -- vision and creative conflict resolution
-  - `creative-director` — 愿景与创意冲突解决
+  - `creative-director` -- 愿景与创意冲突解决
   - `technical-director` -- architecture and technology decisions
-  - `technical-director` — 架构与技术决策
+  - `technical-director` -- 架构与技术决策
   - `producer` -- scheduling, coordination, and risk management
-  - `producer` — 排期、协调与风险管理
+  - `producer` -- 排期、协调与风险管理
 
-- **Tier 2 (Sonnet)**: Department leads who own their domain
-- **层级 2（Sonnet）**：负责各自领域的部门主管
+- **Tier 2 — Department leads** who own their domain
+- **层级 2 — 部门主管**，负责各自的领域
   - `game-designer`, `lead-programmer`, `art-director`, `audio-director`,
     `narrative-director`, `qa-lead`, `release-manager`, `localization-lead`
   - `game-designer`、`lead-programmer`、`art-director`、`audio-director`、
     `narrative-director`、`qa-lead`、`release-manager`、`localization-lead`
 
-- **Tier 3 (Sonnet/Haiku)**: Specialists who execute within their domain
-- **层级 3（Sonnet/Haiku）**：在各自领域内执行任务的专家
+- **Tier 3 — Specialists** who execute within their domain
+- **层级 3 — 专家**，在其领域内执行任务
   - Designers, programmers, artists, writers, testers, engineers
   - 设计师、程序员、美术师、编剧、测试员、工程师
+
+The tiers are seniority of role. Most agents run on your session's model; the
+agent file's own `model:` line says which do not
+(`.claude/docs/model-tiers.md`).
+这些层级是角色的资历。大多数智能体运行在你会话的模型上；智能体文件自己的 `model:` 行说明了哪些不是（`.claude/docs/model-tiers.md`）。
 
 ### 2. Pick the Right Agent for the Job
 ### 2. 为任务选择合适的智能体
@@ -166,24 +198,24 @@ Ask yourself: "What department would handle this in a real studio?"
 | `/create-architecture` | 游戏的主架构文档 |
 | `/architecture-decision` | Creates an ADR |
 | `/architecture-decision` | 创建 ADR |
-| `/architecture-review` | Validate all ADRs, dependency ordering, GDD traceability |
-| `/architecture-review` | 验证所有 ADR、依赖顺序、GDD 可追溯性 |
+| `/architecture-review` | Validate all ADRs, dependency ordering, GDD traceability — writes the index to `docs/architecture/requirements-traceability.md` |
+| `/architecture-review` | 验证所有 ADR、依赖顺序、GDD 可追溯性 — 将索引写入 `docs/architecture/requirements-traceability.md` |
 | `/create-control-manifest` | Flat programmer rules sheet from Accepted ADRs |
-| `/create-control-manifest` | 从已接受 ADR 生成的扁平程序员规则表 |
+| `/create-control-manifest` | 从已接受的 ADR 生成扁平程序员规则表 |
 | `/create-epics` | Translate GDDs + ADRs into epics (one per architectural module) |
-| `/create-epics` | 将 GDD + ADR 转换为 epic（每个架构模块一个） |
+| `/create-epics` | 将 GDD + ADR 转换为史诗（每个架构模块一个） |
 | `/create-stories` | Break a single epic into implementable story files |
-| `/create-stories` | 将单个 epic 拆分为可实现的 story 文件 |
+| `/create-stories` | 将单个史诗拆分为可实现的故事文件 |
 | `/dev-story` | Read a story and implement it — routes to the correct programmer agent |
-| `/dev-story` | 读取 story 并实现 — 路由至正确的程序员智能体 |
+| `/dev-story` | 读取故事并实现 — 路由至正确的程序员智能体 |
 | `/sprint-plan` | Creates or updates sprint plans |
 | `/sprint-plan` | 创建或更新冲刺计划 |
 | `/sprint-status` | Quick 30-line sprint snapshot |
 | `/sprint-status` | 快速 30 行冲刺快照 |
 | `/story-readiness` | Validate a story is implementation-ready before pickup |
-| `/story-readiness` | 在领取前验证 story 是否已准备好实现 |
+| `/story-readiness` | 在领取前验证故事是否已准备好实现 |
 | `/story-done` | End-of-story completion review — verifies acceptance criteria |
-| `/story-done` | story 完成时的收尾评审 — 验证验收标准 |
+| `/story-done` | 故事完成时的收尾评审 — 验证验收标准 |
 | `/estimate` | Produces structured effort estimates |
 | `/estimate` | 产出结构化工作量估算 |
 | `/design-review` | Reviews a design document |
@@ -202,8 +234,8 @@ Ask yourself: "What department would handle this in a real studio?"
 | `/perf-profile` | 性能分析和瓶颈识别 |
 | `/tech-debt` | Scan, track, and prioritize tech debt |
 | `/tech-debt` | 扫描、跟踪并优先处理技术债 |
-| `/gate-check` | Validate phase readiness (PASS/CONCERNS/FAIL) |
-| `/gate-check` | 验证阶段就绪度（PASS/CONCERNS/FAIL） |
+| `/gate-check` | Validate phase readiness (PASS/CONCERNS/NOT ASSESSED/FAIL) |
+| `/gate-check` | 验证阶段就绪度（PASS/CONCERNS/NOT ASSESSED/FAIL） |
 | `/consistency-check` | Scan all GDDs for cross-document inconsistencies (conflicting stats, names, rules) |
 | `/consistency-check` | 扫描所有 GDD 以发现跨文档不一致（冲突的数值、名称、规则） |
 | `/security-audit` | Audit for security vulnerabilities: save tampering, cheat vectors, network exploits, data exposure |
@@ -263,7 +295,7 @@ Ask yourself: "What department would handle this in a real studio?"
 | `/smoke-check` | Run critical path smoke test gate before QA hand-off (PASS/FAIL) |
 | `/smoke-check` | 在 QA 交接前运行关键路径冒烟测试门禁（PASS/FAIL） |
 | `/soak-test` | Generate a soak test protocol for extended play sessions |
-| `/soak-test` | 为长时间游玩会话生成压力测试协议 |
+| `/soak-test` | 为长时间游玩会话生成浸泡测试协议 |
 | `/regression-suite` | Map coverage to GDD critical paths, flag gaps, maintain regression suite |
 | `/regression-suite` | 将覆盖率映射到 GDD 关键路径，标记差距，维护回归测试套件 |
 | `/test-setup` | Scaffold test framework + CI pipeline for the project's engine (run once) |
@@ -286,83 +318,77 @@ Templates are in `.claude/docs/templates/`:
 模板位于 `.claude/docs/templates/`：
 
 - `game-design-document.md` -- for new mechanics and systems
-- `game-design-document.md` — 用于新机制和系统
+- `game-design-document.md` -- 用于新机制和系统
 - `architecture-decision-record.md` -- for technical decisions
-- `architecture-decision-record.md` — 用于技术决策
-- `architecture-traceability.md` -- maps GDD requirements to ADRs to story IDs
-- `architecture-traceability.md` — 将 GDD 需求映射到 ADR 再到 story ID
+- `architecture-decision-record.md` -- 用于技术决策
+- `architecture-traceability.md` -- sample layout for a GDD requirement to ADR to
+  story index (`/architecture-review` writes its own index to
+  `docs/architecture/requirements-traceability.md`)
+- `architecture-traceability.md` -- 从 GDD 需求到 ADR 再到故事索引的示例布局（`/architecture-review` 将自己的索引写入 `docs/architecture/requirements-traceability.md`）
 - `risk-register-entry.md` -- for new risks
-- `risk-register-entry.md` — 用于新风险
+- `risk-register-entry.md` -- 用于新风险
 - `narrative-character-sheet.md` -- for new characters
-- `narrative-character-sheet.md` — 用于新角色
+- `narrative-character-sheet.md` -- 用于新角色
 - `test-plan.md` -- for feature test plans
-- `test-plan.md` — 用于功能测试计划
+- `test-plan.md` -- 用于功能测试计划
 - `sprint-plan.md` -- for sprint planning
-- `sprint-plan.md` — 用于冲刺规划
+- `sprint-plan.md` -- 用于冲刺规划
 - `milestone-definition.md` -- for new milestones
-- `milestone-definition.md` — 用于新里程碑
+- `milestone-definition.md` -- 用于新里程碑
 - `level-design-document.md` -- for new levels
-- `level-design-document.md` — 用于新关卡
+- `level-design-document.md` -- 用于新关卡
 - `game-pillars.md` -- for core design pillars
-- `game-pillars.md` — 用于核心设计支柱
+- `game-pillars.md` -- 用于核心设计支柱
 - `art-bible.md` -- for visual style reference
-- `art-bible.md` — 用于视觉风格参考
+- `art-bible.md` -- 用于视觉风格参考
 - `technical-design-document.md` -- for per-system technical designs
-- `technical-design-document.md` — 用于逐系统技术设计
+- `technical-design-document.md` -- 用于逐系统技术设计
 - `post-mortem.md` -- for project/milestone retrospectives
-- `post-mortem.md` — 用于项目/里程碑回顾
+- `post-mortem.md` -- 用于项目/里程碑回顾
 - `sound-bible.md` -- for audio style reference
-- `sound-bible.md` — 用于音频风格参考
+- `sound-bible.md` -- 用于音频风格参考
 - `release-checklist-template.md` -- for platform release checklists
-- `release-checklist-template.md` — 用于平台发布检查清单
+- `release-checklist-template.md` -- 用于平台发布检查清单
 - `changelog-template.md` -- for player-facing patch notes
-- `changelog-template.md` — 用于面向玩家的补丁说明
+- `changelog-template.md` -- 用于面向玩家的补丁说明
 - `release-notes.md` -- for player-facing release notes
-- `release-notes.md` — 用于面向玩家的发布说明
+- `release-notes.md` -- 用于面向玩家的发布说明
 - `incident-response.md` -- for live incident response playbooks
-- `incident-response.md` — 用于线上事件响应手册
+- `incident-response.md` -- 用于线上事件响应手册
 - `game-concept.md` -- for initial game concepts (MDA, SDT, Flow, Bartle)
-- `game-concept.md` — 用于初始游戏概念（MDA、SDT、Flow、Bartle）
+- `game-concept.md` -- 用于初始游戏概念（MDA、SDT、Flow、Bartle）
+- `game-brief.md` -- for the one-page brief that replaces the concept doc at `rigor: minimal`
+- `game-brief.md` -- 用于在 `rigor: minimal` 下替代概念文档的单页简报
 - `pitch-document.md` -- for pitching the game to stakeholders
-- `pitch-document.md` — 用于向利益相关者推介游戏
+- `pitch-document.md` -- 用于向利益相关者推介游戏
 - `economy-model.md` -- for virtual economy design (sink/faucet model)
-- `economy-model.md` — 用于虚拟经济设计（sink/faucet 模型）
+- `economy-model.md` -- 用于虚拟经济设计（sink/faucet 模型）
 - `faction-design.md` -- for faction identity, lore, and gameplay role
-- `faction-design.md` — 用于阵营身份、设定和游戏玩法定位
+- `faction-design.md` -- 用于阵营身份、设定和游戏玩法定位
 - `systems-index.md` -- for systems decomposition and dependency mapping
-- `systems-index.md` — 用于系统分解和依赖映射
+- `systems-index.md` -- 用于系统分解和依赖映射
 - `project-stage-report.md` -- for project stage detection output
-- `project-stage-report.md` — 用于项目阶段检测输出
+- `project-stage-report.md` -- 用于项目阶段检测输出
 - `design-doc-from-implementation.md` -- for reverse-documenting existing code into GDDs
-- `design-doc-from-implementation.md` — 用于将现有代码反向文档化为 GDD
+- `design-doc-from-implementation.md` -- 用于将现有代码反向文档化为 GDD
 - `architecture-doc-from-code.md` -- for reverse-documenting code into architecture docs
-- `architecture-doc-from-code.md` — 用于将代码反向文档化为架构文档
+- `architecture-doc-from-code.md` -- 用于将代码反向文档化为架构文档
 - `concept-doc-from-prototype.md` -- for reverse-documenting prototypes into concept docs
-- `concept-doc-from-prototype.md` — 用于将原型反向文档化为概念文档
+- `concept-doc-from-prototype.md` -- 用于将原型反向文档化为概念文档
 - `ux-spec.md` -- for per-screen UX specifications (layout zones, states, events)
-- `ux-spec.md` — 用于逐屏幕 UX 规格（布局分区、状态、事件）
+- `ux-spec.md` -- 用于逐屏幕 UX 规格（布局分区、状态、事件）
 - `hud-design.md` -- for whole-game HUD philosophy, zones, and element specs
-- `hud-design.md` — 用于全游戏 HUD 理念、分区和元素规格
+- `hud-design.md` -- 用于全游戏 HUD 理念、分区和元素规格
 - `accessibility-requirements.md` -- for project-wide accessibility tier and feature matrix
-- `accessibility-requirements.md` — 用于全项目无障碍层级和功能矩阵
+- `accessibility-requirements.md` -- 用于全项目无障碍层级和功能矩阵
 - `interaction-pattern-library.md` -- for standard UI controls and game-specific patterns
-- `interaction-pattern-library.md` — 用于标准 UI 控件和游戏特定模式
+- `interaction-pattern-library.md` -- 用于标准 UI 控件和游戏特定模式
 - `player-journey.md` -- for 6-phase emotional arc and retention hooks by time scale
-- `player-journey.md` — 用于 6 阶段情感弧线和按时间尺度的留存钩子
+- `player-journey.md` -- 用于 6 阶段情感弧线和按时间尺度的留存钩子
 - `difficulty-curve.md` -- for difficulty axes, onboarding ramp, and cross-system interactions
-- `difficulty-curve.md` — 用于难度坐标轴、新手引导曲线和跨系统交互
+- `difficulty-curve.md` -- 用于难度坐标轴、新手引导曲线和跨系统交互
 - `test-evidence.md` -- template for recording manual test evidence (screenshots, walkthrough notes)
-- `test-evidence.md` — 记录手动测试证据的模板（截图、走查笔记）
-
-Also in `.claude/docs/templates/collaborative-protocols/` (used by agents, not typically edited directly):
-同样位于 `.claude/docs/templates/collaborative-protocols/`（由智能体使用，通常不直接编辑）：
-
-- `design-agent-protocol.md` -- question-options-draft-approval cycle for design agents
-- `design-agent-protocol.md` — 设计智能体的提问-选项-草稿-审批循环
-- `implementation-agent-protocol.md` -- story pickup through /story-done cycle for programming agents
-- `implementation-agent-protocol.md` — 编程智能体从领取 story 到 /story-done 的循环
-- `leadership-agent-protocol.md` -- cross-department delegation and escalation for director-tier agents
-- `leadership-agent-protocol.md` — 总监级智能体的跨部门委派和升级
+- `test-evidence.md` -- 记录手动测试证据的模板（截图、走查笔记）
 
 ### 5. Follow the Coordination Rules
 ### 5. 遵循协调规则
@@ -385,6 +411,10 @@ Also in `.claude/docs/templates/collaborative-protocols/` (used by agents, not t
 you to the right workflow. No assumptions about your game, engine, or experience level.
 **不知道从哪里开始？** 运行 `/start`。它会询问你当前所处阶段，并引导你到正确的工作流。不会对你的游戏、引擎或经验水平做任何假设。
 
+The paths below walk the `standard`/`full` pipeline. At `rigor: minimal` (the
+default), follow [The Default Path](#the-default-path-rigor-minimal) instead.
+下面的路径走的是 `standard`/`full` 流水线。在 `rigor: minimal`（默认）下，请改为遵循 [默认路径](#the-default-path-rigor-minimal)。
+
 If you already know what you need, jump directly to the relevant path:
 如果你已经知道需要什么，可直接跳到对应路径：
 
@@ -403,30 +433,27 @@ If you already know what you need, jump directly to the relevant path:
 2. **设置引擎** — 运行 `/setup-engine`（使用头脑风暴的推荐）
    - Configures CLAUDE.md, detects knowledge gaps, populates reference docs
    - 配置 CLAUDE.md，检测知识缺口，填充参考文档
-   - Creates `.claude/docs/technical-preferences.md` with naming conventions,
-     performance budgets, and engine-specific defaults
-   - 创建 `.claude/docs/technical-preferences.md`，包含命名约定、
-     性能预算和引擎特定默认值
+   - Writes engine, naming conventions, and performance budgets to `project.yaml`
+     (the source of truth), mirrored to `.claude/docs/technical-preferences.md`
+   - 将引擎、命名约定和性能预算写入 `project.yaml`（唯一事实来源），并镜像到 `.claude/docs/technical-preferences.md`
    - If the engine version is newer than the LLM's training data, it fetches
      current docs from the web so agents suggest correct APIs
-   - 如果引擎版本比 LLM 训练数据更新，它会从网络获取
-     最新文档，使智能体建议正确的 API
+   - 如果引擎版本比 LLM 的训练数据更新，它会从网络获取最新文档，使智能体建议正确的 API
 3. **Validate the concept** — Run `/design-review design/gdd/game-concept.md`
-3. **验证概念** — 运行 `/design-review design/gdd/game-concept.md`
-4. **Decompose into systems** — Run `/map-systems` to map all systems and dependencies
-4. **分解为系统** — 运行 `/map-systems` 映射所有系统和依赖
-5. **Design each system** — Run `/design-system [system-name]` (or `/map-systems next`)
-   to write GDDs in dependency order
-5. **设计每个系统** — 运行 `/design-system [system-name]`（或 `/map-systems next`）
-   按依赖顺序编写 GDD
-6. **Prototype the mechanic** — Run `/prototype [core-mechanic]` (1–3 days — before writing GDDs)
-6. **制作机制原型** — 运行 `/prototype [core-mechanic]`（1–3 天 — 在编写 GDD 之前）
-7. **Design each system** — Run `/design-system [system-name]` to write GDDs, informed by prototype findings
-7. **设计每个系统** — 运行 `/design-system [system-name]` 编写 GDD，并结合原型发现
-8. **Plan the first sprint** — After architecture and `/vertical-slice`, run `/sprint-plan new`
-8. **规划第一个冲刺** — 在架构完成和 `/vertical-slice` 之后，运行 `/sprint-plan new`
-9. Start building
-9. 开始构建
+   (or `design/game-brief.md`, if `/brainstorm` wrote the one-page brief)
+3. **验证概念** — 运行 `/design-review design/gdd/game-concept.md`（如果 `/brainstorm` 编写了单页简报，则为 `design/game-brief.md`）
+4. **Prototype the mechanic** — Run `/prototype [core-mechanic]` (1 day at most) to
+   test that the core idea is fun before you write GDDs
+4. **制作机制原型** — 运行 `/prototype [core-mechanic]`（最多 1 天），在编写 GDD 之前测试核心想法是否有趣
+5. **Decompose into systems** — Run `/map-systems` to map all systems and dependencies
+5. **分解为系统** — 运行 `/map-systems` 映射所有系统和依赖
+6. **Design each system** — Run `/design-system [system-name]` (or `/map-systems next`)
+   to write GDDs in dependency order, informed by the prototype findings
+6. **设计每个系统** — 运行 `/design-system [system-name]`（或 `/map-systems next`），按依赖顺序编写 GDD，并结合原型发现
+7. **Plan the first sprint** — After architecture and `/vertical-slice`, run `/sprint-plan new`
+7. **规划第一个冲刺** — 在架构完成和 `/vertical-slice` 之后，运行 `/sprint-plan new`
+8. Start building
+8. 开始构建
 
 ### Path B: "I know what I want to build"
 ### 路径 B："我知道要做什么"
@@ -435,9 +462,9 @@ If you already have a game concept and engine choice:
 如果你已有游戏概念和引擎选择：
 
 1. **Set up the engine** — Run `/setup-engine [engine] [version]`
-   (e.g., `/setup-engine godot 4.6`) — also creates technical preferences
+   (e.g., `/setup-engine godot 4.7`) — also creates technical preferences
 1. **设置引擎** — 运行 `/setup-engine [engine] [version]`
-   （例如 `/setup-engine godot 4.6`）— 同时创建技术偏好
+   （例如 `/setup-engine godot 4.7`）— 同时创建技术偏好
 2. **Write the Game Pillars** — delegate to `creative-director`
 2. **编写游戏支柱** — 委派给 `creative-director`
 3. **Decompose into systems** — Run `/map-systems` to enumerate systems and dependencies
@@ -480,7 +507,7 @@ If you have design docs, prototypes, or code already:
 2. **Run `/adopt`** if you have existing GDDs, ADRs, or stories — audits
    internal format compliance and builds a numbered migration plan to fill gaps
    without overwriting your existing work
-2. **运行 `/adopt`** 如果你已有 GDD、ADR 或 story — 审计内部格式合规性，
+2. **运行 `/adopt`** 如果你已有 GDD、ADR 或故事 — 审计内部格式合规性，
    构建带编号的迁移计划以填补差距，且不覆盖你现有的工作
 3. **Configure engine if needed** — Run `/setup-engine` if not yet configured
 3. **如需配置引擎** — 如果尚未配置，运行 `/setup-engine`
@@ -493,16 +520,17 @@ If you have design docs, prototypes, or code already:
 ## 文件结构参考
 
 ```
-CLAUDE.md                          -- Master config (read this first, ~60 lines)
+CLAUDE.md                          -- Master config (read this first, ~80 lines)
+project.yaml                       -- Machine-readable project config (engine, modes, stage) — source of truth
 .claude/
   settings.json                    -- Claude Code hooks and project settings
   agents/                          -- 49 agent definitions (YAML frontmatter)
-  skills/                          -- 73 slash command definitions (YAML frontmatter)
-  hooks/                           -- 12 hook scripts (.sh) wired by settings.json
-  rules/                           -- 11 path-specific rule files
+  skills/                          -- 74 slash command definitions (YAML frontmatter)
+  hooks/                           -- 15 event hooks (.sh, wired by settings.json) + yaml-helper.sh, update-check.sh
+  rules/                           -- 14 path-specific rule files
   docs/
     quick-start.md                 -- This file
-    technical-preferences.md       -- Project-specific standards (populated by /setup-engine)
+    technical-preferences.md       -- Legacy fallback for project.yaml config (mirror; see project.yaml at repo root)
     coding-standards.md            -- Coding and design doc standards
     coordination-rules.md          -- Agent coordination rules
     context-management.md          -- Context budgets and compaction instructions
@@ -510,5 +538,6 @@ CLAUDE.md                          -- Master config (read this first, ~60 lines)
     workflow-catalog.yaml          -- 7-phase pipeline definition (read by /help)
     setup-requirements.md          -- System prerequisites (Git Bash, jq, Python)
     settings-local-template.md     -- Personal settings.local.json guide
-    templates/                     -- 41 document templates
+    CLAUDE-local-template.md       -- Personal CLAUDE.local.md guide (gitignored overrides)
+    templates/                     -- 62 document templates (+ per-section guidance)
 ```

@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 NavMesh improvements
-**知识盲区：** Unity 6 NavMesh 改进
+**知识盲区：** Unity 6 的 NavMesh 改进
 
 ---
 
@@ -16,8 +16,8 @@ Unity 6 navigation systems:
 - **NavMeshComponents**: Package for runtime NavMesh building
 
 Unity 6 导航系统：
-- **NavMesh**：为 AI 智能体内置的寻路系统
-- **NavMeshComponents**：用于运行时 NavMesh 构建的包
+- **NavMesh**：内置的 AI 智能体寻路
+- **NavMeshComponents**：用于运行时构建 NavMesh 的包
 
 ---
 
@@ -33,8 +33,8 @@ Unity 6 导航系统：
    - Check "Navigation Static"
 
 1. 标记可行走表面：
-   - 选择 GameObject（地板/地形）
-   - Inspector > Navigation > Object 标签页
+   - 选择 GameObject（地面/地形）
+   - Inspector > Navigation > Object 选项卡
    - 勾选 "Navigation Static"
 
 2. Bake NavMesh:
@@ -44,8 +44,8 @@ Unity 6 导航系统：
 
 2. 烘焙 NavMesh：
    - `Window > AI > Navigation`
-   - Bake 标签页
-   - 点击 "Bake"
+   - Bake 选项卡
+   - 单击 "Bake"
 
 3. Configure settings:
    - **Agent Radius**: How wide the agent is (0.5m default)
@@ -54,10 +54,10 @@ Unity 6 导航系统：
    - **Step Height**: Maximum climbable step (0.4m default)
 
 3. 配置设置：
-   - **Agent Radius**：智能体宽度（默认 0.5m）
-   - **Agent Height**：智能体高度（默认 2m）
+   - **Agent Radius**：智能体的宽度（默认 0.5m）
+   - **Agent Height**：智能体的高度（默认 2m）
    - **Max Slope**：最大可行走坡度（默认 45°）
-   - **Step Height**：最大可攀爬台阶（默认 0.4m）
+   - **Step Height**：最大可攀爬台阶高度（默认 0.4m）
 
 ---
 
@@ -159,7 +159,7 @@ if (path.status == NavMeshPathStatus.PathComplete) {
 ---
 
 ## NavMesh Areas (Walkable Costs)
-## NavMesh 区域（可行走成本）
+## NavMesh 区域（可行走代价）
 
 ### Define Areas
 ### 定义区域
@@ -169,14 +169,14 @@ if (path.status == NavMeshPathStatus.PathComplete) {
 - **Jump**: Cost 2 (prefer other routes)
 - **Custom**: Define your own
 
-`Window > AI > Navigation > Areas 标签页`
-- **Walkable**：成本 1（默认）
+`Window > AI > Navigation > Areas 选项卡`
+- **Walkable**：代价 1（默认）
 - **Not Walkable**：不可行走
-- **Jump**：成本 2（优先选择其他路径）
-- **Custom**：自定义
+- **Jump**：代价 2（优先选择其他路线）
+- **Custom**：自行定义
 
 ### Assign Area Costs
-### 分配区域成本
+### 指派区域代价
 
 ```csharp
 // Prefer shorter paths over low-cost paths
@@ -202,7 +202,7 @@ agent.areaMask = 1 << NavMesh.GetAreaFromName("Walkable");
 ```
 
 ### Dynamic Carving (Moving Obstacles)
-### 动态雕刻（移动障碍）
+### 动态挖孔（移动障碍）
 
 ```csharp
 NavMeshObstacle obstacle = GetComponent<NavMeshObstacle>();
@@ -212,10 +212,10 @@ obstacle.carving = true; // Create dynamic hole in NavMesh
 ---
 
 ## Off-Mesh Links (Jumps, Teleports)
-## Off-Mesh Links（跳跃、传送）
+## 网格外链接（Off-Mesh Links，跳跃、传送）
 
 ### Create Off-Mesh Link
-### 创建 Off-Mesh Link
+### 创建网格外链接
 
 1. `GameObject > Create Empty` (at jump start)
 2. Add `Off Mesh Link` component
@@ -224,15 +224,15 @@ obstacle.carving = true; // Create dynamic hole in NavMesh
    - **Bi-Directional**: Can traverse both ways
    - **Cost Override**: Path cost for this link
 
-1. `GameObject > Create Empty`（在跳跃起点）
+1. `GameObject > Create Empty`（位于跳跃起点）
 2. 添加 `Off Mesh Link` 组件
-3. 设置 Start/End 变换
+3. 设置起点/终点 Transform
 4. 配置：
    - **Bi-Directional**：可双向通行
-   - **Cost Override**：此链接的路径成本
+   - **Cost Override**：该链接的寻路代价
 
 ### Detect Off-Mesh Link Traversal
-### 检测 Off-Mesh Link 通行
+### 检测网格外链接的穿越
 
 ```csharp
 void Update() {
@@ -272,7 +272,7 @@ IEnumerator TraverseOffMeshLink() {
 2. Add from Git URL: `com.unity.ai.navigation`
 
 1. `Window > Package Manager`
-2. 从 Git URL 添加：`com.unity.ai.navigation`
+2. 通过 Git URL 添加：`com.unity.ai.navigation`
 
 ### Runtime NavMesh Baking
 ### 运行时 NavMesh 烘焙
@@ -301,7 +301,7 @@ public class NavMeshBuilder : MonoBehaviour {
 ## 常见模式
 
 ### Patrol Between Waypoints
-### 在路径点之间巡逻
+### 在路点之间巡逻
 
 ```csharp
 public Transform[] waypoints;
@@ -317,7 +317,7 @@ void Update() {
 ```
 
 ### Chase Player
-### 追逐玩家
+### 追击玩家
 
 ```csharp
 public Transform player;
@@ -364,8 +364,8 @@ void Update() {
 - `Window > AI > Navigation > Bake tab`
 - Check "Show NavMesh" to visualize walkable areas
 
-- `Window > AI > Navigation > Bake 标签页`
-- 勾选 "Show NavMesh" 可视化可行走区域
+- `Window > AI > Navigation > Bake 选项卡`
+- 勾选 "Show NavMesh" 以可视化可行走区域
 
 ### Agent Path Gizmos
 ### 智能体路径 Gizmos
@@ -393,10 +393,10 @@ void OnDrawGizmos() {
 - **Area Masks**: Limit walkable areas to reduce pathfinding search space
 - **NavMesh Tiles**: Use tiled NavMesh for large worlds (NavMeshComponents package)
 
-- **限制障碍规避质量**：对远处智能体使用 `LowQualityObstacleAvoidance`
-- **更新频率**：如果目标未移动，不要每帧调用 `SetDestination()`
-- **区域掩码**：限制可行走区域以减少寻路搜索空间
-- **NavMesh 切片**：大型世界使用切片 NavMesh（NavMeshComponents 包）
+- **限制避障质量**：对远处的智能体使用 `LowQualityObstacleAvoidance`
+- **更新频率**：若目标未移动，不要每帧调用 `SetDestination()`
+- **区域掩码（Area Masks）**：限制可行走区域以缩小寻路搜索空间
+- **NavMesh 分块（NavMesh Tiles）**：大型世界使用分块 NavMesh（NavMeshComponents 包）
 
 ---
 

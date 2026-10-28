@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 physics improvements, solver changes
-**知识盲区：** Unity 6 物理改进、求解器变更
+**知识盲区：** Unity 6 的物理改进、求解器变更
 
 ---
 
@@ -16,20 +16,21 @@ Unity 6.3 uses **PhysX 5.1** (improved from PhysX 4.x in 2022 LTS):
 - Improved performance
 - Enhanced collision detection
 
-Unity 6.3 使用 **PhysX 5.1**（相比 2022 LTS 中的 PhysX 4.x 有改进）：
+Unity 6.3 使用 **PhysX 5.1**（相较 2022 LTS 的 PhysX 4.x 有所改进）：
 - 更好的求解器稳定性
-- 改进的性能
+- 更高的性能
 - 增强的碰撞检测
 
 ---
 
 ## Key Changes from 2022 LTS
-## 相比 2022 LTS 的关键变更
+## 相对 2022 LTS 的关键变更
 
 ### Default Solver Iterations Increased
-### 默认求解器迭代次数增加
+### 默认求解器迭代次数已提高
 Unity 6 increased default solver iterations for better stability:
-Unity 6 增加了默认求解器迭代次数以提升稳定性：
+
+Unity 6 提高了默认求解器迭代次数，以获得更好的稳定性：
 
 ```csharp
 // Default changed from 6 to 8 iterations
@@ -63,7 +64,7 @@ rb.velocity = new Vector3(0, 10, 0); // Only use when necessary
 ```
 
 ### Colliders
-### Colliders
+### 碰撞体（Colliders）
 
 ```csharp
 // Primitive colliders: Box, Sphere, Capsule (cheapest)
@@ -78,7 +79,7 @@ rb.velocity = new Vector3(0, 10, 0); // Only use when necessary
 ## 射线检测
 
 ### Efficient Raycasting (Avoid Allocations)
-### 高效射线检测（避免分配）
+### 高效的射线检测（避免分配）
 
 ```csharp
 // ✅ Non-allocating raycast
@@ -98,7 +99,7 @@ RaycastHit[] hits = Physics.RaycastAll(origin, direction); // GC allocation!
 ```
 
 ### LayerMask for Selective Raycasting
-### 用于选择性射线检测的 LayerMask
+### 使用 LayerMask 进行选择性射线检测
 
 ```csharp
 // ✅ Use LayerMask to filter collisions
@@ -124,7 +125,7 @@ for (int i = 0; i < count; i++) {
 ```
 
 ### SphereCast (Thick raycast)
-### SphereCast（粗射线）
+### SphereCast（粗射线检测）
 
 ```csharp
 // Useful for character controllers
@@ -193,7 +194,7 @@ controller.Move(velocity * Time.deltaTime);
 ## 物理材质
 
 ### Friction & Bounciness
-### 摩擦力与弹力
+### 摩擦力与弹性
 
 ```csharp
 // Create: Assets > Create > Physic Material
@@ -210,7 +211,7 @@ controller.Move(velocity * Time.deltaTime);
 ---
 
 ## Joints
-## 关节
+## 关节（Joints）
 
 ### Fixed Joint (Attach two rigidbodies)
 ### Fixed Joint（连接两个刚体）
@@ -242,8 +243,8 @@ hinge.limits = new JointLimits { min = -90, max = 90 };
 - Massive performance gain
 
 `Edit > Project Settings > Physics > Layer Collision Matrix`
-- 禁用层之间不必要的碰撞检查
-- 巨大的性能提升
+- 禁用层与层之间不必要的碰撞检测
+- 可带来大幅性能提升
 
 ### Fixed Timestep
 ### 固定时间步长
@@ -253,8 +254,8 @@ hinge.limits = new JointLimits { min = -90, max = 90 };
 - Match game's target framerate if possible
 
 `Edit > Project Settings > Time > Fixed Timestep`
-- 默认：0.02（50 FPS 物理）
-- 更低 = 更精确，CPU 开销更高
+- 默认值：0.02（50 FPS 物理）
+- 越小越精确，CPU 开销越高
 - 尽可能匹配游戏的目标帧率
 
 ### Simplified Collision Geometry
@@ -262,8 +263,8 @@ hinge.limits = new JointLimits { min = -90, max = 90 };
 - Use primitive colliders (box, sphere, capsule) over mesh colliders
 - Bake mesh colliders at build time, not runtime
 
-- 使用基元碰撞体（box、sphere、capsule）而非 mesh collider
-- 在构建时烘焙 mesh collider，而非运行时
+- 使用基元碰撞体（box、sphere、capsule）而非网格碰撞体
+- 在构建时烘焙网格碰撞体，而非运行时
 
 ---
 
@@ -271,7 +272,7 @@ hinge.limits = new JointLimits { min = -90, max = 90 };
 ## 常见模式
 
 ### Ground Check (Character Controller)
-### 地面检查（角色控制器）
+### 地面检测（Character Controller）
 
 ```csharp
 bool IsGrounded() {
@@ -301,7 +302,7 @@ void ApplyExplosion(Vector3 explosionPos, float radius, float force) {
 ## 调试
 
 ### Physics Debugger (Unity 6+)
-### Physics Debugger（Unity 6+）
+### 物理调试器（Physics Debugger，Unity 6+）
 - `Window > Analysis > Physics Debugger`
 - Visualize colliders, contacts, queries
 

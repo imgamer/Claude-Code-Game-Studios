@@ -1,20 +1,25 @@
 # Godot Navigation — Quick Reference
 # Godot 导航 — 快速参考
 
-Last verified: 2026-02-12 | Engine: Godot 4.6
-最后验证：2026-02-12 | 引擎：Godot 4.6
+Last verified: 2026-10-17 (4.7 changes); 2026-02-12 (rest) | Engine: Godot 4.7
+最后验证：2026-10-17（4.7 变更）；2026-02-12（其余部分） | 引擎：Godot 4.7
 
 ## What Changed Since ~4.3 (LLM Cutoff)
 ## 自约 4.3（LLM 截止）以来的变更
 
+### 4.7 Changes
+### 4.7 变更
+- **No navigation-specific changes** are listed in the 4.7 migration guide (4.7 migration guide: https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html)
+- 4.7 迁移指南中**未列出导航相关的变更**（4.7 迁移指南：https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html）
+
 ### 4.5 Changes
 ### 4.5 变更
 - **Dedicated 2D navigation server**: No longer a proxy to 3D NavigationServer
-- **专用 2D 导航服务器**：不再作为 3D NavigationServer 的代理
+- **专用 2D 导航服务器**：不再是 3D NavigationServer 的代理
   - Reduces export binary size for 2D-only games
-  - 减少 2D 专用游戏的导出二进制体积
+  - 减小纯 2D 游戏的导出二进制体积
   - API remains the same for both 2D and 3D
-  - 2D 和 3D 的 API 保持一致
+  - 2D 和 3D 的 API 保持不变
 
 ### 4.3 Changes (in training data)
 ### 4.3 变更（在训练数据中）
@@ -82,7 +87,7 @@ var path: PackedVector3Array = result.path
 ```
 
 ### Avoidance
-### 避让
+### 避障
 ```gdscript
 # Enable RVO2-based local avoidance
 nav_agent.avoidance_enabled = true
@@ -111,12 +116,12 @@ nav_agent.navigation_layers = 1 | 2  # Ground + Flying
 ## Common Mistakes
 ## 常见错误
 - Calling `get_next_path_position()` without checking `is_navigation_finished()`
-- 在未检查 `is_navigation_finished()` 的情况下调用 `get_next_path_position()`
+- 未检查 `is_navigation_finished()` 就调用 `get_next_path_position()`
 - Not setting `velocity` on the agent when avoidance is enabled (required for RVO2)
-- 启用避让时未在智能体上设置 `velocity`（RVO2 所需）
+- 启用避障时未在代理上设置 `velocity`（RVO2 需要此设置）
 - Using `NavigationRegion2D.avoidance_layers` (removed in 4.3)
-- 使用 `NavigationRegion2D.avoidance_layers`（在 4.3 中已移除）
+- 使用 `NavigationRegion2D.avoidance_layers`（4.3 中已移除）
 - Forgetting to bake navigation mesh after modifying geometry
 - 修改几何体后忘记烘焙导航网格
 - Not setting `navigation_layers` (defaults to all layers)
-- 未设置 `navigation_layers`（默认为所有层）
+- 未设置 `navigation_layers`（默认使用所有层）

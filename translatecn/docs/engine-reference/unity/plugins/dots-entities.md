@@ -1,5 +1,5 @@
 # Unity 6.3 — DOTS / Entities (ECS)
-# Unity 6.3 — DOTS / Entities (ECS)
+# Unity 6.3 — DOTS / Entities（ECS）
 
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
@@ -15,7 +15,8 @@
 
 **DOTS (Data-Oriented Technology Stack)** is Unity's high-performance ECS (Entity Component System)
 framework. It's designed for games with massive scale (1000s-10,000s of entities).
-**DOTS (Data-Oriented Technology Stack)** 是 Unity 的高性能 ECS（Entity Component System）框架。专为超大规模（上千至上万实体）的游戏设计。
+
+**DOTS（面向数据的技术栈，Data-Oriented Technology Stack）** 是 Unity 的高性能 ECS（实体组件系统，Entity Component System）框架。它专为超大规模的游戏（数千至数万个实体）而设计。
 
 **Use DOTS for:**
 - RTS games (1000s of units)
@@ -24,10 +25,10 @@ framework. It's designed for games with massive scale (1000s-10,000s of entities
 - Performance-critical systems
 
 **使用 DOTS 的场景：**
-- RTS 游戏（上千单位）
+- RTS 游戏（数千个单位）
 - 模拟（人群、交通、物理）
 - 程序化内容生成
-- 性能关键型系统
+- 性能关键的系统
 
 **DON'T use DOTS for:**
 - Small games (overhead not worth it)
@@ -36,13 +37,14 @@ framework. It's designed for games with massive scale (1000s-10,000s of entities
 
 **不要使用 DOTS 的场景：**
 - 小型游戏（开销不值得）
-- 需要频繁结构性变更的游戏玩法
-- 大量使用 UnityEngine API 的场景（MonoBehaviour 更简单）
+- 需要频繁进行结构性变更的玩法
+- 大量使用 UnityEngine API（MonoBehaviour 更简单）
 
 **⚠️ Knowledge Gap:** Entities 1.0+ (Unity 6) is a complete rewrite from 0.x.
 Many tutorials for Entities 0.x are now outdated.
-**⚠️ 知识盲区：** Entities 1.0+（Unity 6）相比 0.x 是完全重写。
-许多 Entities 0.x 的教程现已过时。
+
+**⚠️ 知识盲区：** Entities 1.0+（Unity 6）相比 0.x 是一次完全重写。
+许多针对 Entities 0.x 的教程现已过时。
 
 ---
 
@@ -74,7 +76,7 @@ Many tutorials for Entities 0.x are now outdated.
 ## 核心概念
 
 ### 1. **Entity**
-### 1. **Entity**
+### 1. **实体（Entity）**
 - Lightweight ID (int)
 - No behavior, just an identifier
 
@@ -82,28 +84,28 @@ Many tutorials for Entities 0.x are now outdated.
 - 没有行为，只是一个标识符
 
 ### 2. **Component**
-### 2. **Component**
+### 2. **组件（Component）**
 - Data only (no methods)
 - Struct implementing `IComponentData`
 
-- 仅数据（无方法）
-- 实现 `IComponentData` 的结构体
+- 仅含数据（无方法）
+- 实现 `IComponentData` 的结构体（struct）
 
 ### 3. **System**
-### 3. **System**
+### 3. **系统（System）**
 - Logic that operates on components
 - Struct implementing `ISystem`
 
-- 操作组件的逻辑
+- 对组件进行操作的逻辑
 - 实现 `ISystem` 的结构体
 
 ### 4. **Archetype**
-### 4. **Archetype**
+### 4. **原型（Archetype）**
 - Unique combination of component types
 - Entities with same components share archetype
 
 - 组件类型的唯一组合
-- 具有相同组件的实体共享原型
+- 拥有相同组件的实体共享同一原型
 
 ---
 
@@ -182,7 +184,7 @@ public partial class EntitySpawner : SystemBase {
 ## 混合 ECS（MonoBehaviour + ECS）
 
 ### Baker (Convert GameObject to Entity)
-### Baker（将 GameObject 转换为 Entity）
+### Baker（将 GameObject 转换为实体）
 
 ```csharp
 using Unity.Entities;
@@ -208,9 +210,9 @@ public class PlayerBaker : Baker<PlayerAuthoring> {
 3. Entity has Position + Velocity components
 
 **工作原理：**
-1. 在编辑器中将 `PlayerAuthoring` 添加到 GameObject
-2. Baker 在运行时自动转换为 Entity
-3. Entity 具有 Position + Velocity 组件
+1. 在编辑器中向 GameObject 添加 `PlayerAuthoring`
+2. Baker 在运行时自动转换为实体
+3. 该实体拥有 Position + Velocity 组件
 
 ---
 
@@ -218,7 +220,7 @@ public class PlayerBaker : Baker<PlayerAuthoring> {
 ## 查询
 
 ### Query All Entities with Components
-### 查询具有组件的所有实体
+### 查询所有拥有指定组件的实体
 
 ```csharp
 foreach (var (position, velocity) in
@@ -245,7 +247,7 @@ foreach (var (position, velocity, entity) in
 ---
 
 ### Query with Filters
-### 带过滤器的查询
+### 带筛选条件的查询
 
 ```csharp
 // Only entities with "Enemy" tag
@@ -258,7 +260,7 @@ foreach (var position in
 ---
 
 ## Jobs (Parallel Execution)
-## 作业（并行执行）
+## Job（并行执行）
 
 ### IJobEntity (Parallel Foreach)
 ### IJobEntity（并行 Foreach）
@@ -290,7 +292,7 @@ public partial struct MovementSystem : ISystem {
 
 ---
 
-## Burst compiler (Performance)
+## Burst Compiler (Performance)
 ## Burst 编译器（性能）
 
 ### Enable Burst
@@ -314,14 +316,14 @@ public partial struct MySystem : ISystem {
 - No exceptions
 
 **Burst 限制：**
-- 不能有托管引用（类、字符串等）
-- 只能使用 blittable 类型（结构体、基元、Unity.Mathematics 类型）
-- 不能有异常
+- 不能使用托管引用（类、字符串等）
+- 仅支持可直接复制类型（blittable 类型：结构体、基元类型、Unity.Mathematics 类型）
+- 不支持异常
 
 ---
 
 ## Entity Command Buffers (Structural Changes)
-## Entity Command Buffers（结构性变更）
+## 实体命令缓冲区（Entity Command Buffers，结构性变更）
 
 ### Deferred Structural Changes
 ### 延迟结构性变更
@@ -348,10 +350,10 @@ public partial struct SpawnSystem : ISystem {
 ---
 
 ## Dynamic Buffers (Array-Like Components)
-## Dynamic Buffers（类数组组件）
+## 动态缓冲区（Dynamic Buffers，类数组组件）
 
 ### Define Dynamic Buffer
-### 定义 Dynamic Buffer
+### 定义动态缓冲区
 
 ```csharp
 public struct PathWaypoint : IBufferElementData {
@@ -360,7 +362,7 @@ public struct PathWaypoint : IBufferElementData {
 ```
 
 ### Use Dynamic Buffer
-### 使用 Dynamic Buffer
+### 使用动态缓冲区
 
 ```csharp
 // Add buffer to entity
@@ -379,7 +381,7 @@ foreach (var buffer in SystemAPI.Query<DynamicBuffer<PathWaypoint>>()) {
 ---
 
 ## Tags (Zero-Size Components)
-## 标签（零大小组件）
+## 标签（Tags，零尺寸组件）
 
 ### Define Tag
 ### 定义标签
@@ -389,7 +391,7 @@ public struct EnemyTag : IComponentData { } // Empty component = tag
 ```
 
 ### Use Tag for Filtering
-### 使用标签进行过滤
+### 使用标签进行筛选
 
 ```csharp
 // Only process entities with EnemyTag
@@ -421,7 +423,7 @@ public partial struct RenderSystem : ISystem { }
 ## 性能模式
 
 ### Chunk Iteration (Maximum Performance)
-### 块迭代（最大性能）
+### 块（Chunk）迭代（最高性能）
 
 ```csharp
 public void OnUpdate(ref SystemState state) {
@@ -487,14 +489,18 @@ public partial struct EnemyMovementSystem : ISystem {
 
 `Window > Entities > Hierarchy`
 
+`Window > Entities > Hierarchy`
+
 - Shows all entities and their components
 - Filter by archetype, component type
 
 - 显示所有实体及其组件
-- 按原型、组件类型过滤
+- 按原型、组件类型筛选
 
 ### Entities Profiler
-### Entities Profiler
+### Entities 性能分析器
+
+`Window > Analysis > Profiler > Entities`
 
 `Window > Analysis > Profiler > Entities`
 
@@ -502,7 +508,7 @@ public partial struct EnemyMovementSystem : ISystem {
 - Memory usage per archetype
 
 - 系统执行时间
-- 每个原型的内存使用情况
+- 每个原型的内存占用
 
 ---
 

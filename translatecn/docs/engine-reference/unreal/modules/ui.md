@@ -1,30 +1,44 @@
-# Unreal Engine 5.7 — UI Module Reference
-# Unreal Engine 5.7 — UI 模块参考
+# Unreal Engine 5.8 — UI Module Reference
+# Unreal Engine 5.8 — UI 模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 UMG and CommonUI improvements
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 UMG 与 CommonUI 改进
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7-5.8 UMG and CommonUI improvements (Enhanced Input unified with Common UI in 5.8)
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7-5.8 的 UMG 与 CommonUI 改进（5.8 中 Enhanced Input 与 Common UI 统一）
+
+> **UE 5.8 changes:** Enhanced Input and Common Input/UI are unified (no
+> duplicate data assets; Input Debugger for Enhanced Input UI). Slate:
+> `EWindowType::GameWindow` → `EWindowType::Normal`; the "OnlyGameWindow" CVars
+> are renamed "OnlyProjectContent" and `bDebugGameWindowOnly` is now
+> `bDebugProjectContentOnly`; a module depending on `SlateRHIRender` may also
+> need `SlateBaseRenderer`. Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** Enhanced Input 与 Common Input/UI 已统一（无需重复数据资产；提供面向 Enhanced Input UI 的 Input Debugger）。Slate：
+> `EWindowType::GameWindow` → `EWindowType::Normal`；"OnlyGameWindow" 系列的 CVar
+> 重命名为 "OnlyProjectContent"，`bDebugGameWindowOnly` 现在为
+> `bDebugProjectContentOnly`；依赖 `SlateRHIRender` 的模块可能还需要
+> `SlateBaseRenderer`。来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 UI systems:
+UE 5.8 UI systems:
 - **UMG (Unreal Motion Graphics)**: Visual widget-based UI (RECOMMENDED)
 - **CommonUI**: Cross-platform input-aware UI framework (console/PC)
 - **Slate**: Low-level C++ UI (engine/editor UI)
 
-UE 5.7 UI 系统：
-- **UMG (Unreal Motion Graphics)**：可视化基于控件的 UI（推荐）
-- **CommonUI**：跨平台输入感知 UI 框架（主机/PC）
+UE 5.8 UI 系统：
+- **UMG（Unreal Motion Graphics）**：基于可视化控件的 UI（推荐）
+- **CommonUI**：跨平台、感知输入的 UI 框架（主机/PC）
 - **Slate**：底层 C++ UI（引擎/编辑器 UI）
 
 ---
 
 ## UMG (Unreal Motion Graphics)
-## UMG (Unreal Motion Graphics)
+## UMG（Unreal Motion Graphics）
 
 ### Create Widget Blueprint
 ### 创建 Widget Blueprint
@@ -40,7 +54,7 @@ UE 5.7 UI 系统：
 ---
 
 ## Basic UMG Setup in C++
-## C++ 中的基本 UMG 设置
+## C++ 中的基础 UMG 设置
 
 ### Create and Display Widget
 ### 创建并显示控件
@@ -75,7 +89,7 @@ HealthBarWidget->RemoveFromParent();
 ## 从 C++ 访问控件元素
 
 ### Bind to Widget Elements
-### 绑定到控件元素
+### 绑定控件元素
 
 ```cpp
 UCLASS()
@@ -175,7 +189,7 @@ void OnVolumeChanged(float Value) {
 ```
 
 ### EditableTextBox (Input Field)
-### EditableTextBox（输入字段）
+### EditableTextBox（输入框）
 
 ```cpp
 UPROPERTY(meta = (BindWidget))
@@ -366,7 +380,7 @@ public:
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Optimize UMG
 ### 优化 UMG
@@ -399,5 +413,6 @@ SetVisibility(ESlateVisibility::Collapsed); // Collapsed = not rendered
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/umg-ui-designer-for-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/commonui-plugin-for-advanced-user-interfaces-in-unreal-engine/
