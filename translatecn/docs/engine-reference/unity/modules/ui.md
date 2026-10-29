@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 UI Toolkit is production-ready for runtime UI
-**知识盲区：** Unity 6 UI Toolkit 已生产就绪用于运行时 UI
+**知识盲区：** Unity 6 的 UI Toolkit 已可用于生产环境的运行时 UI
 
 ---
 
@@ -17,8 +17,8 @@ Unity 6 UI systems:
 - **IMGUI**: Editor-only, deprecated for runtime UI
 
 Unity 6 UI 系统：
-- **UI Toolkit**（推荐）：现代、高性能、类 HTML/CSS（Unity 6 中生产就绪）
-- **UGUI (Canvas)**：旧版系统，仍受支持但不推荐用于新项目
+- **UI Toolkit（推荐）**：现代、性能良好、类 HTML/CSS（在 Unity 6 中已生产就绪）
+- **UGUI（Canvas）**：旧版系统，仍受支持但不推荐用于新项目
 - **IMGUI**：仅限编辑器，运行时 UI 已弃用
 
 ---
@@ -27,7 +27,7 @@ Unity 6 UI 系统：
 ## UI Toolkit（现代 UI）
 
 ### Setup UI Document
-### 设置 UI 文档
+### 设置 UI Document
 
 1. Create UXML (UI structure):
    - `Assets > Create > UI Toolkit > UI Document`
@@ -43,7 +43,7 @@ Unity 6 UI 系统：
    - `Assets > Create > UI Toolkit > StyleSheet`
 3. 添加到场景：
    - `GameObject > UI Toolkit > UI Document`
-   - 将 UXML 分配到 `UIDocument > Source Asset`
+   - 将 UXML 指派到 `UIDocument > Source Asset`
 
 ---
 
@@ -167,7 +167,7 @@ dropdown.value = "Normal";
 ---
 
 ### Dynamic UI Creation (No UXML)
-### 动态 UI 创建（无 UXML）
+### 动态创建 UI（不使用 UXML）
 
 ```csharp
 void CreateUI() {
@@ -220,7 +220,7 @@ void CreateUI() {
 ## UGUI（旧版 Canvas UI）
 
 ### Basic Setup (Still Works in Unity 6)
-### 基本设置（Unity 6 中仍可使用）
+### 基本设置（在 Unity 6 中仍然可用）
 
 ```csharp
 // GameObject > UI > Canvas (creates Canvas, EventSystem)
@@ -290,7 +290,7 @@ tmpText.color = Color.white;
 ---
 
 ## Canvas Settings (UGUI)
-## Canvas 设置 (UGUI)
+## Canvas 设置（UGUI）
 
 ### Render Modes
 ### 渲染模式
@@ -318,10 +318,10 @@ tmpText.color = Color.white;
 ---
 
 ## Layout Groups (UGUI)
-## 布局组 (UGUI)
+## 布局组（Layout Groups，UGUI）
 
 ### Horizontal Layout Group
-### Horizontal Layout Group
+### Horizontal Layout Group（水平布局组）
 
 ```csharp
 // Auto-arranges children horizontally
@@ -329,14 +329,14 @@ tmpText.color = Color.white;
 ```
 
 ### Vertical Layout Group
-### Vertical Layout Group
+### Vertical Layout Group（垂直布局组）
 
 ```csharp
 // Auto-arranges children vertically
 ```
 
 ### Grid Layout Group
-### Grid Layout Group
+### Grid Layout Group（网格布局组）
 
 ```csharp
 // Arranges children in a grid
@@ -345,29 +345,29 @@ tmpText.color = Color.white;
 ---
 
 ## Performance (UI Toolkit vs UGUI)
-## 性能（UI Toolkit vs UGUI）
+## 性能（UI Toolkit 与 UGUI 对比）
 
 ### UI Toolkit Advantages
-### UI Toolkit 优势
+### UI Toolkit 的优势
 - ✅ Faster rendering (retained mode)
 - ✅ Better for complex UIs with many elements
 - ✅ Easier styling (CSS-like)
 - ✅ Better for dynamic UIs
 
-- ✅ 更快的渲染（保留模式）
-- ✅ 更适合包含大量元素的复杂 UI
-- ✅ 更容易的样式设置（类 CSS）
+- ✅ 渲染更快（保留模式，retained mode）
+- ✅ 更适合元素众多的复杂 UI
+- ✅ 样式更简单（类 CSS）
 - ✅ 更适合动态 UI
 
 ### UGUI Advantages
-### UGUI 优势
+### UGUI 的优势
 - ✅ More mature, widely documented
 - ✅ Better integration with Unity Editor
 - ✅ Easier for beginners
 
-- ✅ 更成熟，文档广泛
+- ✅ 更成熟，文档更丰富
 - ✅ 与 Unity 编辑器集成更好
-- ✅ 对初学者更简单
+- ✅ 对初学者更友好
 
 ---
 
@@ -420,7 +420,7 @@ IEnumerator FadeIn(VisualElement element, float duration) {
 - Inspect element hierarchy, styles, layout
 
 - `Window > UI Toolkit > Debugger`
-- 检查元素层级、样式、布局
+- 检视元素层级、样式、布局
 
 ### UGUI Event System Debugger
 ### UGUI 事件系统调试器
@@ -428,7 +428,7 @@ IEnumerator FadeIn(VisualElement element, float duration) {
 - Inspector shows active input module, raycast info
 
 - 在 Hierarchy 中选择 EventSystem
-- Inspector 显示活动输入模块、射线检测信息
+- Inspector 会显示活动的输入模块、射线检测信息
 
 ---
 

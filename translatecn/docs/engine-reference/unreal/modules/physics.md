@@ -1,10 +1,21 @@
-# Unreal Engine 5.7 — Physics Module Reference
-# Unreal Engine 5.7 — 物理模块参考
+# Unreal Engine 5.8 — Physics Module Reference
+# Unreal Engine 5.8 — 物理模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 Chaos Physics improvements
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 Chaos Physics 改进
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7-5.8 Chaos Physics improvements
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7-5.8 的 Chaos 物理改进
+
+> **UE 5.8 changes:** PhysicsMover / NetworkPhysicsLiaison code was removed
+> from the Mover plugin; use the ChaosMover plugin ("Equivalent functionality
+> is there for every PhysicsMover feature"). Mover and ChaosMover are still
+> flagged Experimental. Floor queries: move `FloorQueryUtil` calls to the new
+> `FFloorCheckSettings` variants. Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** PhysicsMover / NetworkPhysicsLiaison 代码已从 Mover 插件中移除；
+> 请使用 ChaosMover 插件（"每个 PhysicsMover 功能都有等效实现"）。Mover 与 ChaosMover 仍标记为 Experimental。地面查询：将 `FloorQueryUtil` 调用迁移到新的
+> `FFloorCheckSettings` 变体。来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
@@ -16,9 +27,9 @@ UE 5 uses **Chaos Physics** (replaced PhysX in UE 4):
 - Destruction support
 - Vehicle physics improvements
 
-UE 5 使用 **Chaos Physics**（在 UE 4 中取代了 PhysX）：
+UE 5 使用 **Chaos 物理**（在 UE 4 中取代了 PhysX）：
 - 更好的性能
-- 支持破坏
+- 破坏支持
 - 载具物理改进
 
 ---
@@ -106,10 +117,10 @@ void AMyActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Other
 ---
 
 ## Raycasting (Line Traces)
-## 射线检测（线追踪）
+## 射线检测（线段追踪）
 
 ### Single Line Trace
-### 单线追踪
+### 单次线段追踪
 
 ```cpp
 FHitResult HitResult;
@@ -135,7 +146,7 @@ if (bHit) {
 ```
 
 ### Multi Line Trace
-### 多线追踪
+### 多次线段追踪
 
 ```cpp
 TArray<FHitResult> HitResults;
@@ -153,7 +164,7 @@ for (const FHitResult& Hit : HitResults) {
 ```
 
 ### Sweep (Thick Trace)
-### 扫描（粗追踪）
+### 扫掠（有厚度的追踪）
 
 ```cpp
 FHitResult HitResult;
@@ -221,7 +232,7 @@ void AMyCharacter::MoveRight(float Value) {
    - Friction: 0.0 - 1.0
    - Restitution (bounciness): 0.0 - 1.0
 
-1. Content Browser > 右键 > Physics > Physical Material
+1. Content Browser > Right Click > Physics > Physical Material
 2. 配置属性：
    - Friction：0.0 - 1.0
    - Restitution（弹性）：0.0 - 1.0
@@ -269,7 +280,7 @@ Constraint->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 45.0f);
 ```
 
 ### Destroy Geometry Collection
-### 销毁 Geometry Collection
+### 破坏 Geometry Collection
 
 ```cpp
 // Fracture mesh in Chaos editor
@@ -281,7 +292,7 @@ GeoComp->ApplyPhysicsField(/* Field parameters */);
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Physics Optimization
 ### 物理优化
@@ -320,5 +331,6 @@ DrawDebugBox(GetWorld(), Location, Extent, FColor::Red, false, 2.0f);
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/physics-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/chaos-physics-overview-in-unreal-engine/

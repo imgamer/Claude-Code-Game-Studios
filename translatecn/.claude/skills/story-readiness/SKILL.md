@@ -1,563 +1,529 @@
 ---
 name: story-readiness
-description: "Validate that a story file is implementation-ready. Checks for embedded GDD requirements, ADR references, engine notes, clear acceptance criteria, and no open design questions. Produces READY / NEEDS WORK / BLOCKED verdict with specific gaps. Use when user says 'is this story ready', 'can I start on this story', 'is story X ready to implement'."
-argument-hint: "[story-file-path or 'all' or 'sprint']"
+description: "Checks whether a story is ready to implement: clear acceptance criteria, no open questions, valid ADR and dependencies. Use when the user asks if a story, or the sprint's stories, are ready to start or build."
+argument-hint: "[story-file-path or 'all' or 'sprint'] [--review full|lean|solo]"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Glob, Grep, AskUserQuestion, Agent, Bash(bash "*/.claude/skills/story-readiness/../../hooks/yaml-helper.sh" resolve_config *), Bash(bash .claude/scripts/story-facts.sh *), Bash(bash .claude/scripts/adr-status.sh *)
 model: sonnet
 ---
 ---
-名称：story-readiness
-描述："验证故事文件是否准备好实施。检查嵌入的 GDD 要求、ADR 引用、引擎说明、明确的验收标准以及没有未解决的设计问题。生成 READY / NEEDS WORK / BLOCKED 结论，并附具体差距。当用户说'这个故事准备好了吗'、'我可以开始这个故事吗'、'故事 X 准备好实施了吗'时使用。"
-argument-hint："[story-file-path 或 'all' 或 'sprint']"
-user-invocable：true
-allowed-tools：Read, Glob, Grep, AskUserQuestion, Task
-model：sonnet
+name: story-readiness
+description: "检查一个故事是否已可实施：验收标准清晰、无未决问题、ADR 与依赖有效。当用户询问某个故事或本冲刺的故事是否已可开始或构建时使用。"
+argument-hint: "[story-file-path or 'all' or 'sprint'] [--review full|lean|solo]"
+user-invocable: true
+allowed-tools: Read, Glob, Grep, AskUserQuestion, Agent, Bash(bash "*/.claude/skills/story-readiness/../../hooks/yaml-helper.sh" resolve_config *), Bash(bash .claude/scripts/story-facts.sh *), Bash(bash .claude/scripts/adr-status.sh *)
+model: sonnet
 ---
+
+!`bash "${CLAUDE_SKILL_DIR}/../../hooks/yaml-helper.sh" resolve_config --keys review_mode,review_gate,automation,workflow,qa.level,gate_level,story_granularity,system_overrides`
+
+Resolved above — use as-is; `--review` overrides `review_mode`. No block →
+defaults in `.claude/docs/config-resolution.md`.
+
+以上已解析 — 直接使用；`--review` 覆盖 `review_mode`。无配置块 →
+使用 `.claude/docs/config-resolution.md` 中的默认值。
+
+Ask with the question tool. Without one, list the options numbered and end your turn
+to wait. A skipped or dismissed question is not an answer: ask again in plain text.
+
+用询问工具提问。若无该工具，将选项编号列出并结束回合等待。被跳过或关闭的问题不算回答：
+请用纯文本再次询问。
 
 # Story Readiness
-# 故事就绪性
 
-This skill validates that a story file contains everything a developer needs
-to begin implementation — no mid-sprint design interruptions, no guessing,
-no ambiguous acceptance criteria. Run it before assigning a story.
-此技能验证故事文件包含开发者开始实施所需的一切 —— 没有冲刺中途的设计中断、没有猜测、没有模糊的验收标准。在分配故事前运行。
+# 故事就绪检查
 
-**This skill is read-only.** It never edits story files. It reports findings
-and asks whether the user wants help filling gaps.
-**此技能是只读的。** 它从不编辑故事文件。它报告发现并询问用户是否需要帮助填补差距。
+Checks that a story file holds everything a developer needs before writing code:
+no design questions mid-build, no guessing, no vague acceptance criteria.
 
-**Output:** Verdict per story (READY / NEEDS WORK / BLOCKED) with a specific
-gap list for each non-ready story.
-**输出：** 每个故事的结论（READY / NEEDS WORK / BLOCKED），并为每个未就绪的故事附具体差距列表。
+检查故事文件是否已包含开发者在写代码前所需的一切：构建过程中没有设计问题、无需猜测、
+没有含糊的验收标准。
 
----
+**Read-only.** It never writes or edits a file. It reports, and offers to draft
+fixes in the conversation.
 
-## Phase 0: Resolve Review Mode
-## 阶段 0：解析评审模式
+**只读。** 它绝不写入或编辑文件。它只报告，并提议在对话中起草修正。
 
-Resolve the review mode once at startup (store for all gate spawns this run):
-在启动时解析一次评审模式（存储用于本次运行的所有关卡生成）：
+**Verdicts**, one per story. The first that matches wins, in this order:
 
-1. If skill was called with `--review [full|lean|solo]` → use that value
-1. 如果技能以 `--review [full|lean|solo]` 调用 → 使用该值
-2. Else read `production/review-mode.txt` → use that value
-2. 否则读取 `production/review-mode.txt` → 使用该值
-3. Else → default to `lean`
-3. 否则 → 默认为 `lean`
+**判定**，每个故事一个。按此顺序，首个匹配者胜出：
 
-See `.claude/docs/director-gates.md` for the full check pattern and mode definitions.
-有关完整检查模式和模式定义，请参阅 `.claude/docs/director-gates.md`。
+1. **BLOCKED**: a finding the reader can clear. A referenced ADR is missing,
+   `Proposed`, `Deprecated` or `Superseded`; a dependency story is missing or
+   `Draft`; or a criterion holds an UNRESOLVED design question with no owner.
+2. **NEEDS WORK**: a blocking checklist item fails. The story can be fixed now.
+3. **NOT ASSESSED**: the story could not be evaluated. The file is unreadable,
+   a referenced ADR has no readable `## Status`, or the design document it names
+   cannot be found. Name what could not be read. It is never READY: a story
+   nobody could check has not been shown ready. It ranks below the two failures,
+   because a known blocker is more useful than an unknown.
+4. **READY**: every item passes, is N/A with a reason, or is advisory. Advisory
+   gaps are still listed.
 
----
+1. **BLOCKED**：发现了一项读者可以清除的问题。所引用的 ADR 缺失、为 `Proposed`、`Deprecated`
+   或 `Superseded`；依赖故事缺失或为 `Draft`；或某条标准含有无人负责的 UNRESOLVED 设计问题。
+2. **NEEDS WORK**：某项阻塞性清单条目未通过。该故事现在即可修复。
+3. **NOT ASSESSED**：该故事无法评估。文件不可读、所引用的 ADR 没有可读的 `## Status`，
+   或其所指名的设计文档找不到。点明无法读取的内容。它绝不为 READY：无人能检查的故事
+   并未被证明就绪。它排在前两者之后，因为已知的阻塞比未知更有用。
+4. **READY**：每一项都通过、以理由记为 N/A，或为提示性。提示性缺口仍会列出。
 
-## 1. Parse Arguments
-## 1. 解析参数
+Asks follow `.claude/docs/automation-modes.md` (collaborative always asks, guided
+asks on major choices, autonomous logs and goes on; `automation_always_ask`
+categories always ask).
 
-**Scope:** `$ARGUMENTS[0]` (blank = ask user via AskUserQuestion)
-**范围：** `$ARGUMENTS[0]`（空白 = 通过 AskUserQuestion 询问用户）
+询问遵循 `.claude/docs/automation-modes.md`（协作模式始终询问，引导模式就重大选择询问，
+自主模式记录并继续；`automation_always_ask` 类别始终询问）。
 
-- **Specific path** (e.g., `/story-readiness production/epics/combat/story-001-basic-attack.md`):
-  validate that single story file.
-- **特定路径**（例如，`/story-readiness production/epics/combat/story-001-basic-attack.md`）：
-  验证该单个故事文件。
-- **`sprint`**: read the current sprint plan from `production/sprints/` (most
-  recent file), extract every story path it references, validate each one.
-- **`sprint`**：从 `production/sprints/` 读取当前冲刺计划（最新文件），提取其引用的每个故事路径，验证每一个。
-- **`all`**: glob `production/epics/**/*.md`, exclude `EPIC.md` index files,
-  validate every story file found.
-- **`all`**：通配 `production/epics/**/*.md`，排除 `EPIC.md` 索引文件，验证找到的每个故事文件。
-- **No argument**: ask the user which scope to validate.
-- **无参数**：询问用户要验证哪个范围。
+## Phase 1: Scope
 
-If no argument is given, use `AskUserQuestion`:
-如果没有给出参数，使用 `AskUserQuestion`：
-- "What would you like to validate?"
-  - Options: "A specific story file", "All stories in the current sprint",
-    "All stories in production/epics/", "Stories for a specific epic"
-- "您想验证什么？"
-  - 选项："一个特定故事文件"、"当前冲刺中的所有故事"、
-    "production/epics/ 中的所有故事"、"特定 Epic 的故事"
+## 阶段 1：范围
 
-Report the scope before proceeding: "Validating [N] story files."
-在继续之前报告范围："正在验证 [N] 个故事文件。"
+The scope is the text typed after the skill name, with any `--review <mode>` pair
+removed. What remains is one value; a path may contain spaces. With nothing typed,
+the story, epic or sprint the user's request names is the scope.
 
----
+范围是技能名之后输入的文本，去除任何 `--review <mode>` 对。剩下的就是一个值；路径可能含空格。
+未输入任何内容时，范围即用户请求中所指的故事、史诗或冲刺。
 
-## 2. Load Supporting Context
-## 2. 加载支持上下文
+- **A story path**: that story.
+- **`sprint`**: the stories the current sprint lists (Phase 2 reads them).
+- **`all`**: every `story-*.md` under `production/epics/`.
+- **An epic** (a slug or its folder): the `story-*.md` files in that folder.
+- **Blank**: Ask: "What would you like to check?" Options: A specific story file /
+  All stories in the current sprint / All stories in production/epics/ / The
+  stories of one epic.
 
-Before checking any stories, load reference documents once (not per-story):
-在检查任何故事之前，加载参考文档一次（不是每个故事）：
+- **一个故事路径**：该故事。
+- **`sprint`**：当前冲刺列出的故事（阶段 2 读取它们）。
+- **`all`**：`production/epics/` 下所有 `story-*.md`。
+- **一个史诗**（slug 或其文件夹）：该文件夹中的 `story-*.md` 文件。
+- **留空**：询问：“你想检查什么？”选项：A specific story file /
+  All stories in the current sprint / All stories in production/epics/ /
+  The stories of one epic。
 
-- `design/gdd/systems-index.md` — to know which systems have approved GDDs
-- `design/gdd/systems-index.md` —— 了解哪些系统有已批准的 GDD
-- `docs/architecture/control-manifest.md` — to know which manifest rules exist
-  (if the file does not exist, note it as missing once; do not re-flag per story)
-  Also extract the `Manifest Version:` date from the header block if the file exists.
-- `docs/architecture/control-manifest.md` —— 了解存在哪些清单规则
-  （如果文件不存在，注明一次；不要对每个故事重复标记）
-  如果文件存在，还要从标题块中提取 `Manifest Version:` 日期。
-- `docs/architecture/tr-registry.yaml` — index all entries by `id`. Used to
-  validate TR-IDs in stories. If the file does not exist, note it once; TR-ID
-  checks will auto-pass for all stories (registry predates stories, so missing
-  registry means stories are from before TR tracking was introduced).
-- `docs/architecture/tr-registry.yaml` —— 按 `id` 索引所有条目。用于验证
-  故事中的 TR-ID。如果文件不存在，注明一次；TR-ID 检查将对所有故事自动通过
-  （注册表早于故事存在，因此缺失的注册表意味着故事来自 TR 跟踪引入之前）。
-- All ADR status fields — for each unique ADR referenced across the stories being
-  checked, read the ADR file and note its `Status:` field. Cache these so you
-  don't re-read the same ADR for every story.
-- 所有 ADR 状态字段 —— 对于被检查故事中引用的每个唯一 ADR，
-  读取 ADR 文件并记录其 `Status:` 字段。缓存这些以便不为每个故事重新读取同一个 ADR。
-- The current sprint file (if scope is `sprint`) — to identify Must Have /
-  Should Have priority for escalation decisions
-- 当前冲刺文件（如果范围是 `sprint`）—— 用于识别 Must Have /
-  Should Have 优先级以进行升级决策
+**Zero stories in scope: stop with `NOT ASSESSED — no stories in scope`.** Name the
+scope and the path that was empty, and route to `/create-stories` (at `standard`
+and `full`, `/create-epics` first). Never print a `Ready: 0 / Needs Work: 0` summary
+over an empty list: it reads as a clean result. For `sprint`, "no sprint plan
+found" and "the sprint plan lists no stories" are different reports; say which.
 
----
+**范围内零个故事：以 `NOT ASSESSED — no stories in scope` 停止。** 点明范围与为空的路径，
+并引导至 `/create-stories`（在 `standard` 与 `full` 下，先 `/create-epics`）。绝不在一份空列表上
+打印 `Ready: 0 / Needs Work: 0` 摘要：那读起来像一个干净的结果。对 `sprint`，
+“未找到冲刺计划”与“冲刺计划未列出故事”是两种不同报告；说明是哪一种。
 
-## 3. Story Readiness Checklist
-## 3. 故事就绪性检查清单
+Say "Checking [N] story files." before going on.
 
-For each story file, evaluate every item below. A story is READY only if all
-items pass or are explicitly marked N/A with a stated reason.
-对于每个故事文件，评估以下每一项。只有当所有项通过或明确标记为 N/A 并附理由时，故事才 READY。
+在继续之前说“正在检查 [N] 个故事文件。”
+
+## Phase 2: Facts, read once for the run
+
+## 阶段 2：事实，本次运行只读一次
+
+1. **Stories.** Run the story helper over the scope, with the `story_granularity`
+   resolved above:
+   ```
+   bash .claude/scripts/story-facts.sh --lint --granularity <story_granularity> [--sprint | --all | <path> ...]
+   ```
+   Each `STORY` row gives a story's status, type, layer, estimate, TR-IDs, ADRs,
+   acceptance-criteria count, test-evidence line and dependencies. Each `LINT` row
+   is a rule the story trips. Rows are observations; the verdict is yours. Exit 3
+   means a file was not found. With `NOT_FOUND` rows, each names a sprint `file:`
+   entry or a path that is not a file: report each as a missing story and check
+   the rest. With no `NOT_FOUND` row and `--sprint`, there is no
+   `production/sprint-status.yaml`: report "no sprint plan found". Read each story file too: the testability, scope and
+   asset items below need its words.
+2. **ADRs.** One call gives every ADR's status and layer:
+   `bash .claude/scripts/adr-status.sh`. A `no_status` or `UNFILLED` status is a
+   malformed ADR: never treat an absent status as a failed one (route:
+   `/architecture-decision retrofit [file]`). An ADR a story cites with no row is missing.
+3. **Control manifest.** Only its `Manifest Version` line in
+   `docs/architecture/control-manifest.md`. Missing file: note it once.
+4. **TR registry.** Look up each story's TR-IDs, with their `status`, in
+   `docs/architecture/tr-registry.yaml`. Missing file: note it once; the TR-ID
+   item passes for every story.
+5. **Sprint priority** (`sprint` scope): which stories are Must Have and Should
+   Have, from the newest plan in `production/sprints/`.
+
+1. **故事。** 在范围内运行故事辅助脚本，使用上面解析的 `story_granularity`：
+   ```
+   bash .claude/scripts/story-facts.sh --lint --granularity <story_granularity> [--sprint | --all | <path> ...]
+   ```
+   每个 `STORY` 行给出故事的状态、类型、分层、估算、TR-ID、ADR、验收标准数量、测试证据行与依赖。
+   每个 `LINT` 行是故事触犯的一条规则。行是观察结果；判定由你给出。退出码 3 表示未找到文件。
+   若有 `NOT_FOUND` 行，每行点名一个冲刺 `file:` 条目或一个不是文件的路径：将每个报告为缺失故事，
+   并检查其余部分。若无 `NOT_FOUND` 行且使用 `--sprint`，则不存在
+   `production/sprint-status.yaml`：报告“未找到冲刺计划”。也要读取每个故事文件：下面的可测试性、范围与
+   资产条目需要其原文。
+2. **ADR。** 一次调用给出每个 ADR 的状态与分层：
+   `bash .claude/scripts/adr-status.sh`。`no_status` 或 `UNFILLED` 状态是格式错误的 ADR：
+   绝不可将缺失状态当作失败状态（路由：`/architecture-decision retrofit [file]`）。
+   故事引用却无对应行的 ADR 为缺失。
+3. **控制清单。** 只读 `docs/architecture/control-manifest.md` 中的 `Manifest Version` 行。
+   文件缺失：记录一次。
+4. **TR 注册表。** 在 `docs/architecture/tr-registry.yaml` 中查找每个故事的 TR-ID 及其 `status`。
+   文件缺失：记录一次；TR-ID 条目对所有故事均通过。
+5. **冲刺优先级**（`sprint` 范围）：从 `production/sprints/` 中最新的计划确定哪些故事是 Must Have
+   与 Should Have。
+
+**Tier per story.** `workflow` is resolved per story: use the `system_overrides`
+row for the story's system (the GDD filename stem of its `GDD:` path; the `[system]`
+of a `TR-[system]-NNN` ID only when there is no GDD path), else the project value.
+Stories in one run can sit at different tiers.
+
+**每个故事的层级。** `workflow` 按故事解析：使用该故事所属系统的 `system_overrides`
+行（其 `GDD:` 路径的 GDD 文件名主干；仅在没有 GDD 路径时，才用 `TR-[system]-NNN` ID 中的 `[system]`），
+否则用项目取值。一次运行中的故事可能处于不同层级。
+
+## Phase 3: The checklist
+
+## 阶段 3：清单
+
+Check every item for every story. The tier decides which groups block:
+
+对每个故事检查每一项。层级决定哪些组构成阻塞：
+
+| Group | `full` | `standard` | `minimal` |
+|---|---|---|---|
+| Design Completeness | blocks | blocks | blocks; `design/game-brief.md` stands in for the GDD |
+| Architecture Completeness | blocks | the ADR status item blocks; the rest advisory unless it concerns a critical ADR | N/A, except the ADR status item |
+| Scope Clarity | blocks | blocks | blocks, except Estimate: advisory (no sprint plan to size for) |
+| Open Questions | blocks | blocks | blocks |
+| Asset References | blocks | blocks | blocks |
+| Definition of Done | blocks | blocks | blocks; the test evidence item follows `qa.level` |
+
+| 分组 | `full` | `standard` | `minimal` |
+|---|---|---|---|
+| 设计完整性 | 阻塞 | 阻塞 | 阻塞；`design/game-brief.md` 代替 GDD |
+| 架构完整性 | 阻塞 | ADR 状态项阻塞；其余为提示，除非涉及关键 ADR | N/A，但 ADR 状态项除外 |
+| 范围清晰度 | 阻塞 | 阻塞 | 阻塞，但 Estimate 除外：提示性（没有冲刺计划可据以定尺寸） |
+| 未决问题 | 阻塞 | 阻塞 | 阻塞 |
+| 资产引用 | 阻塞 | 阻塞 | 阻塞 |
+| 完成定义 | 阻塞 | 阻塞 | 阻塞；测试证据项遵循 `qa.level` |
+
+An **advisory** item that fails is listed under Gaps with its Fix, and never
+lowers READY by itself.
+
+未通过的**提示性**条目会连同其 Fix 列在 Gaps 下，且本身绝不下调 READY。
 
 ### Design Completeness
+
 ### 设计完整性
 
-- [ ] **GDD requirement referenced**: The story includes a `design/gdd/` path
-  and quotes or links a specific requirement, acceptance criterion, or rule from
-  that GDD — not just the GDD filename. A link to the document without tracing
-  to a specific requirement does not pass.
-- [ ] **引用了 GDD 要求**：故事包含 `design/gdd/` 路径
-  并引用或链接了该 GDD 中的特定要求、验收标准或规则 ——
-  不仅仅是 GDD 文件名。仅链接到文档而未追踪到特定要求的不通过。
-- [ ] **Requirement is self-contained**: The acceptance criteria in the story
-  are understandable without opening the GDD. A developer should not need to
-  read a separate document to understand what DONE means.
-- [ ] **要求自包含**：故事中的验收标准无需打开 GDD 即可理解。
-  开发者不应需要阅读单独的文档来理解 DONE 的含义。
-- [ ] **Acceptance criteria are testable**: Each criterion is a specific,
-  observable condition — not "implement X" or "the system works correctly".
-  Bad example: "Implement the jump mechanic." Good example: "Jump reaches
-  max height of 5 units within 0.3 seconds when jump is held."
-- [ ] **验收标准可测试**：每个标准是一个特定的、
-  可观察的条件 —— 而不是"实现 X"或"系统正常工作"。
-  反例："实现跳跃机制。"正例："按住跳跃时在 0.3 秒内达到 5 单位的最大高度。"
-- [ ] **No acceptance criteria require judgment calls** *(auto-pass for `Type: Visual/Feel`)*: Criteria like
-  "feels responsive" or "looks good" are not testable without a defined
-  benchmark. For Logic, Integration, UI, and Config/Data stories, these must be
-  replaced with specific observable conditions. For Visual/Feel stories, subjective
-  criteria are expected and this check auto-passes — instead verify that each
-  subjective criterion has a paired playtest protocol or evidence requirement
-  (e.g., "evidence doc required at `production/qa/evidence/[slug]-evidence.md`").
-  PASS if the acceptance criterion ends with or is accompanied by an explicit reference to a file path such as `production/qa/evidence/[slug]-evidence.md`. NEEDS WORK if the criterion is purely subjective with no evidence file path specified.
-- [ ] **没有需要主观判断的验收标准** *（对 `Type: Visual/Feel` 自动通过）*：诸如
-  "感觉响应灵敏"或"看起来不错"的标准在没有定义
-  基准的情况下不可测试。对于 Logic、Integration、UI 和 Config/Data 故事，这些必须
-  替换为特定的可观察条件。对于 Visual/Feel 故事，主观
-  标准是预期的，此检查自动通过 —— 而是验证每个
-  主观标准都有配对的游戏测试协议或证据要求
-  （例如，"需要证据文档，位于 `production/qa/evidence/[slug]-evidence.md`"）。
-  如果验收标准以文件路径（如 `production/qa/evidence/[slug]-evidence.md`）的显式引用结尾或伴随，则通过。如果标准纯粹主观且未指定证据文件路径，则 NEEDS WORK。
+- [ ] **Requirement traced**: the story names its `design/gdd/` file and quotes or
+  links a specific rule or criterion from it, not just the file name. At
+  `minimal`: `design/game-brief.md` and the MVP feature the story implements.
+  A named design document that does not exist: NOT ASSESSED.
+- [ ] **Self-contained**: the acceptance criteria say what done means without
+  opening the GDD.
+- [ ] **Testable**: each criterion is a specific, observable condition. Not:
+  "Implement the jump mechanic." Yes: "Jump reaches 5 units within 0.3 seconds
+  when held." A criterion a unit test can set up (any input values) is testable,
+  even when the shipped data never reaches that case.
+- [ ] **No judgement calls**: "feels responsive" or "looks good" fails for Logic,
+  Integration, UI and Config/Data. For Visual/Feel such criteria are expected:
+  pass when the criterion names an evidence file such as
+  `production/qa/evidence/[slug]-evidence.md`, NEEDS WORK when it names none.
+
+- [ ] **需求可追溯**：故事点名其 `design/gdd/` 文件，并引用或链接其中某条具体规则或标准，
+  而不只是文件名。在 `minimal` 下：`design/game-brief.md` 与故事实现的 MVP 功能。
+  所指名的设计文档不存在：NOT ASSESSED。
+- [ ] **自包含**：验收标准无需打开 GDD 即可说明“完成”意味着什么。
+- [ ] **可测试**：每条标准都是具体、可观察的条件。不是：“实现跳跃机制。”而是：“按住时，
+  跳跃在 0.3 秒内达到 5 个单位。”单元测试能构造出（任意输入值）的标准就是可测试的，
+  即使发布数据永远到不了该情形。
+- [ ] **无主观判断**：“感觉灵敏”或“看起来不错”对 Logic、Integration、UI 与 Config/Data 不通过。
+  对 Visual/Feel，这类标准是预期的：当标准点名证据文件（如
+  `production/qa/evidence/[slug]-evidence.md`）时通过，未点名时 NEEDS WORK。
 
 ### Architecture Completeness
+
 ### 架构完整性
 
-- [ ] **ADR referenced or N/A stated**: The story references at least one ADR,
-  OR explicitly states "No ADR applies" with a brief reason.
-  A story with no ADR reference and no explicit N/A note fails this check.
-- [ ] **引用了 ADR 或声明了 N/A**：故事引用至少一个 ADR，
-  或明确声明"不适用 ADR"并附简短理由。
-  没有 ADR 引用且没有明确 N/A 注释的故事未通过此检查。
-- [ ] **ADR is Accepted (not Proposed)**: For each referenced ADR, check its
-  `Status:` field using the cached ADR statuses loaded in Section 2.
-  - If `Status: Accepted` → pass.
-  - If `Status: Proposed` → **BLOCKED**: the ADR may change before it is accepted,
-    and the story's implementation guidance could be wrong.
-    Fix: `BLOCKED: ADR-NNNN is Proposed — wait for acceptance before implementing.`
-  - If the ADR file does not exist → **BLOCKED**: referenced ADR is missing.
-  - Auto-pass if story has an explicit "No ADR applies" N/A note.
-- [ ] **ADR 已接受（非 Proposed）**：对于每个引用的 ADR，使用第 2 节加载的缓存 ADR 状态检查其
-  `Status:` 字段。
-  - 如果 `Status: Accepted` → 通过。
-  - 如果 `Status: Proposed` → **BLOCKED**：ADR 在接受前可能更改，
-    故事的实施指导可能错误。
-    修复：`BLOCKED: ADR-NNNN is Proposed — 等待接受后再实施。`
-  - 如果 ADR 文件不存在 → **BLOCKED**：引用的 ADR 缺失。
-  - 如果故事有明确的"不适用 ADR" N/A 注释则自动通过。
-- [ ] **TR-ID is valid and active**: If the story contains a `TR-[system]-NNN`
-  reference, look it up in the TR registry loaded in Section 2.
-  - If the ID exists and `status: active` → pass.
-  - If the ID exists and `status: deprecated` or `status: superseded-by: ...` →
-    NEEDS WORK: the requirement was removed or replaced.
-    Fix: update the story to reference the current requirement ID or remove if no longer applicable.
-  - If the ID does not exist in the registry → NEEDS WORK: ID was not registered
-    (story may predate registry, or registry needs an `/architecture-review` run).
-  - Auto-pass if the story has no TR-ID reference OR if the registry does not exist.
-- [ ] **TR-ID 有效且活跃**：如果故事包含 `TR-[system]-NNN`
-  引用，在第 2 节加载的 TR 注册表中查找它。
-  - 如果 ID 存在且 `status: active` → 通过。
-  - 如果 ID 存在且 `status: deprecated` 或 `status: superseded-by: ...` →
-    NEEDS WORK：要求已被移除或替换。
-    修复：更新故事以引用当前要求 ID，或如果不再适用则移除。
-  - 如果 ID 在注册表中不存在 → NEEDS WORK：ID 未注册
-    （故事可能早于注册表，或注册表需要运行 `/architecture-review`）。
-  - 如果故事没有 TR-ID 引用或注册表不存在则自动通过。
-- [ ] **Manifest version is current**: If the story has a `Manifest Version:` date
-  in its header AND `docs/architecture/control-manifest.md` exists:
-  - If story version matches current manifest `Manifest Version:` → pass.
-  - If story version is older than current manifest → NEEDS WORK: new rules may
-    apply. Fix: review changed manifest rules, update story if any forbidden/required
-    entries changed, then update the story's `Manifest Version:` to current.
-  - Auto-pass if either the story has no `Manifest Version:` field OR the manifest
-    does not exist.
-- [ ] **清单版本是当前的**：如果故事标题中有 `Manifest Version:` 日期
-  且 `docs/architecture/control-manifest.md` 存在：
-  - 如果故事版本与当前清单 `Manifest Version:` 匹配 → 通过。
-  - 如果故事版本早于当前清单 → NEEDS WORK：可能
-    适用新规则。修复：审查更改的清单规则，如果任何禁止/必填
-    条目已更改则更新故事，然后将故事的 `Manifest Version:` 更新为当前。
-  - 如果故事没有 `Manifest Version:` 字段或清单不存在则自动通过。
-- [ ] **Engine notes present**: For any post-cutoff engine API this story
-  is likely to touch, implementation notes or a verification requirement are
-  included. If the story clearly does not touch engine APIs (e.g., it is a
-  pure data/config change), "N/A — no engine API involved" is acceptable.
-- [ ] **存在引擎说明**：对于此故事
-  可能触及的任何截止日期后的引擎 API，应包含实施说明或验证要求。
-  如果故事明显不触及引擎 API（例如，它是
-  纯数据/配置变更），"N/A — 不涉及引擎 API"是可接受的。
-- [ ] **Control manifest rules noted**: Relevant layer rules from the control
-  manifest are referenced, OR "N/A — manifest not yet created" is stated.
-  This item auto-passes if `docs/architecture/control-manifest.md` does not
-  exist yet (do not penalize stories written before the manifest was created).
-- [ ] **注明了控制清单规则**：引用了控制
-  清单中相关的层规则，或声明"N/A — 清单尚未创建"。
-  如果 `docs/architecture/control-manifest.md` 尚不存在则此项自动通过（不要惩罚在清单创建前编写的故事）。
+- [ ] **ADR status**, at every tier: each ADR the story cites, by the Phase 2
+  table.
+  - `Accepted`: pass.
+  - `Proposed`: BLOCKED. Fix: `BLOCKED: ADR-NNNN is Proposed — accept it with
+    /architecture-decision accept ADR-NNNN once decided`.
+  - `Deprecated` or `Superseded`: BLOCKED. Fix: `BLOCKED: ADR-NNNN is [status] —
+    point the story at [successor] (edit its ADR field;
+    /create-stories never rewrites an existing story)`.
+  - No such ADR file: BLOCKED.
+  - No readable status: NOT ASSESSED for this item; name the file.
+  At `standard`, a **critical** ADR (its `layer` is Foundation, or missing) that
+  is missing or Proposed blocks; for other ADRs the items below are advisory.
+- [ ] **ADR cited or N/A stated**: an ADR, or an explicit N/A with a reason
+  (`ADR: N/A — [reason]`, or `N/A (minimal — no ADRs)`). Blank fails.
+- [ ] **TR-ID valid**: each `TR-[system]-NNN` is in the registry with `status:
+  active`. `deprecated` or `superseded-by` (quoted or not): NEEDS WORK, Fix: point
+  the story at the current requirement. Not in the registry: NEEDS WORK (the story
+  may predate it, or the registry needs `/architecture-review`). Passes with no
+  TR-ID, or no registry.
+- [ ] **Manifest Version current**: the story's `Manifest Version` against the
+  manifest's. Older: a gap, because rules added since may apply. It stays a gap
+  even when the new rules look unrelated: say what changed, and leave the call to
+  the user. At `full` it is NEEDS WORK whatever the new rules cover; at
+  `standard` it is advisory. Fix, all three steps: "Review the manifest rules added since
+  [story's date]; update the story's rules if any apply; then set its Manifest
+  Version to [current date]." Passes with no `Manifest Version` field, or no
+  manifest.
+- [ ] **Engine notes**: post-cutoff engine APIs the story touches have notes or a
+  verification step, or the story states "N/A — no engine API involved".
+- [ ] **Manifest rules noted**: the layer's rules are listed, or "N/A — manifest
+  not yet created". Passes when there is no manifest.
+
+- [ ] **ADR 状态**，在所有层级：故事引用的每个 ADR，依据阶段 2 的表格。
+  - `Accepted`：通过。
+  - `Proposed`：BLOCKED。Fix：`BLOCKED: ADR-NNNN is Proposed — accept it with
+    /architecture-decision accept ADR-NNNN once decided`。
+  - `Deprecated` 或 `Superseded`：BLOCKED。Fix：`BLOCKED: ADR-NNNN is [status] —
+    point the story at [successor] (edit its ADR field;
+    /create-stories never rewrites an existing story)`。
+  - 无此 ADR 文件：BLOCKED。
+  - 无可读状态：本条目为 NOT ASSESSED；点明该文件。
+  在 `standard` 下，**关键** ADR（其 `layer` 为 Foundation，或缺失）若缺失或为 Proposed 则阻塞；
+  对其他 ADR，下面的条目为提示性。
+- [ ] **已引用 ADR 或已声明 N/A**：一个 ADR，或带理由的显式 N/A
+  （`ADR: N/A — [reason]`，或 `N/A (minimal — no ADRs)`）。留空不通过。
+- [ ] **TR-ID 有效**：每个 `TR-[system]-NNN` 都在注册表中且 `status:
+  active`。`deprecated` 或 `superseded-by`（无论是否引号）：NEEDS WORK，Fix：将故事指向
+  当前需求。不在注册表中：NEEDS WORK（故事可能早于它，或注册表需要 `/architecture-review`）。
+  无 TR-ID，或无注册表，则通过。
+- [ ] **Manifest Version 为最新**：将故事的 `Manifest Version` 与清单的对比。较旧：一项缺口，
+  因为此后新增的规则可能适用。即使新规则看似无关，它仍是一项缺口：说明变更了什么，把决定留给
+  用户。在 `full` 下无论新规则涵盖什么都是 NEEDS WORK；在 `standard` 下为提示性。Fix，共三步：
+  “审阅自 [故事日期] 以来新增的清单规则；若有适用项，更新故事的规则；然后将其 Manifest
+  Version 设为 [当前日期]。”无 `Manifest Version` 字段，或无清单，则通过。
+- [ ] **引擎备注**：故事涉及的 cutoff 后引擎 API 有备注或验证步骤，或故事声明
+  “N/A — no engine API involved”。
+- [ ] **已记录清单规则**：列出了该分层的规则，或“N/A — manifest
+  not yet created”。无清单时通过。
 
 ### Scope Clarity
-### 范围清晰性
 
-- [ ] **Estimate present**: The story includes a size estimate (hours,
-  points, or a t-shirt size). A story with no estimate cannot be planned.
-- [ ] **存在估算**：故事包含大小估算（小时、
-  点数或 t 恤尺码）。没有估算的故事无法计划。
-- [ ] **In-scope / Out-of-scope boundary stated**: The story states what
-  it does NOT include, either in an explicit Out of Scope section or in
-  language that makes the boundary unambiguous. Without this, scope creep
-  during implementation is likely.
-- [ ] **声明了范围内/范围外边界**：故事说明
-  它不包括什么，要么在明确的范围外章节中，要么在
-  使边界明确的语言中。没有这个，实施期间
-  范围蔓延很可能会发生。
-- [ ] **Story dependencies listed**: If this story depends on other stories
-  being DONE first, those story IDs are listed. If there are no dependencies,
-  "None" is explicitly stated (not just omitted).
-- [ ] **列出故事依赖**：如果此故事依赖于其他故事
-  先 DONE，则列出这些故事 ID。如果没有依赖，
-  则明确声明"None"（而不仅仅是省略）。
+### 范围清晰度
+
+- [ ] **Estimate**: hours, points or a t-shirt size. `unfilled Estimate` (still the
+  template's bracket) fails. Advisory at `minimal`.
+- [ ] **Out of scope stated**: an Out of Scope section, or wording that leaves the
+  boundary unambiguous.
+- [ ] **Dependencies listed**: each story this one needs, or "None" stated.
+
+- [ ] **估算**：小时、点数或 T 恤尺码。`unfilled Estimate`（仍是模板的方括号）不通过。
+  在 `minimal` 下为提示性。
+- [ ] **已声明范围外内容**：有 Out of Scope 小节，或措辞使边界明确无歧义。
+- [ ] **已列出依赖**：本故事所需的每个故事，或声明“None”。
 
 ### Open Questions
+
 ### 未决问题
 
-- [ ] **No unresolved design questions**: The story does not contain text
-  flagged as "UNRESOLVED", "TBD", "TODO", "?", or equivalent markers in
-  any acceptance criterion, implementation note, or rule statement.
-- [ ] **没有未解决的设计问题**：故事不包含在任何验收标准、实施说明或规则声明中标记为
-  "UNRESOLVED"、"TBD"、"TODO"、"?"或等效标记的文本。
-- [ ] **Dependency stories are not in DRAFT**: For each story listed as a
-  dependency, check if the file exists and does not have a DRAFT status. A
-  story that depends on a DRAFT or missing story is BLOCKED, not just
-  NEEDS WORK.
-- [ ] **依赖故事不是 DRAFT 状态**：对于列为
-  依赖的每个故事，检查文件是否存在且没有 DRAFT 状态。一个
-  依赖于 DRAFT 或缺失故事的故事是 BLOCKED，而不仅仅是
-  NEEDS WORK。
+- [ ] **No open markers**: no `marker` rows (TBD, TODO or UNRESOLVED as whole
+  words in capitals). A `?` is not a marker: a formula like `crit ? 2 : 1` passes.
+  A criterion written as an open question still fails Testable.
+- [ ] **Dependencies exist and are not Draft**: a dependency story that is missing
+  or `Draft` makes the story BLOCKED. `Story NNN` means that number in the same
+  epic folder; a path names one exactly.
 
-### Asset References Check
-### 资源引用检查
+- [ ] **无未决标记**：没有 `marker` 行（以全大写单词形式出现的 TBD、TODO 或 UNRESOLVED）。
+  `?` 不是标记：像 `crit ? 2 : 1` 这样的公式通过。写成未决问题的标准仍会在“可测试”项失败。
+- [ ] **依赖存在且非 Draft**：依赖故事缺失或为 `Draft` 会使该故事 BLOCKED。`Story NNN`
+  指同一史诗文件夹中的该编号；路径则精确指名一个。
 
-- [ ] **Referenced assets exist**: Scan the story text for asset path patterns
-  (paths containing `assets/`, or file extensions `.png`, `.jpg`, `.svg`,
-  `.wav`, `.ogg`, `.mp3`, `.glb`, `.gltf`, `.tres`, `.tscn`, `.res`).
-  - For each asset path found: use Glob to check whether the file exists.
-  - If any referenced asset does not exist: **NEEDS WORK** — note the missing
-    path(s). (The story references assets that have not been created yet.
-    Either remove the reference, create a placeholder, or mark it as an
-    explicit dependency on an asset creation story.)
-  - If all referenced assets exist: note "Referenced assets verified:
-    [count] found."
-  - If no asset paths are referenced in the story: note "No asset references
-    found in story — skipping asset check." This item auto-passes.
-  - This is an existence-only check. Do not validate file format or content.
-- [ ] **引用的资源存在**：扫描故事文本以查找资源路径模式
-  （包含 `assets/` 的路径，或文件扩展名 `.png`、`.jpg`、`.svg`、
-  `.wav`、`.ogg`、`.mp3`、`.glb`、`.gltf`、`.tres`、`.tscn`、`.res`）。
-  - 对于找到的每个资源路径：使用 Glob 检查文件是否存在。
-  - 如果任何引用的资源不存在：**NEEDS WORK** —— 注明缺失的
-    路径。（故事引用了尚未创建的资源。
-    要么移除引用，创建占位符，要么将其标记为对资源创建故事的
-    显式依赖。）
-  - 如果所有引用的资源都存在：注明"已验证引用的资源：
-    找到 [count] 个。"
-  - 如果故事中没有引用资源路径：注明"故事中未找到资源
-    引用 —— 跳过资源检查。"此项自动通过。
-  - 这是仅存在性检查。不要验证文件格式或内容。
+### Asset References
+
+### 资产引用
+
+- [ ] **Assets the story uses exist**: paths under `assets/`, or with `.png`,
+  `.jpg`, `.svg`, `.wav`, `.ogg`, `.mp3`, `.glb`, `.gltf`, `.tres`, `.tscn` or
+  `.res`, that the story reads or builds on. A file the story says it will create
+  (a new scene, a new data file) is not checked. Missing: NEEDS WORK; name the
+  path. Report "Referenced assets verified: [N] found", or "No asset references".
+  Existence only.
+
+- [ ] **故事使用的资产存在**：`assets/` 下的路径，或带 `.png`、`.jpg`、`.svg`、`.wav`、
+  `.ogg`、`.mp3`、`.glb`、`.gltf`、`.tres`、`.tscn` 或 `.res` 的路径，且为故事读取或
+  在其基础上构建的内容。故事声称将创建的文件（新场景、新数据文件）不检查。缺失：NEEDS WORK；
+  点明该路径。报告“已核实引用资产：找到 [N] 个”或“无资产引用”。仅检查存在性。
 
 ### Definition of Done
+
 ### 完成定义
 
-- [ ] **Minimum testable acceptance criteria by story type**:
-  - Logic / Integration stories: at least 3
-  - Visual/Feel and UI stories: at least 2
-  - Config/Data stories: at least 1
-  Apply the threshold matching the story's `Type:` field. If the story has fewer than the minimum, mark as NEEDS WORK.
-- [ ] **按故事类型的最小可测试验收标准**：
-  - Logic / Integration 故事：至少 3 个
-  - Visual/Feel 和 UI 故事：至少 2 个
-  - Config/Data 故事：至少 1 个
-  应用与故事的 `Type:` 字段匹配的阈值。如果故事少于最小值，则标记为 NEEDS WORK。
-- [ ] **Performance budget noted if applicable**: If this story touches any
-  part of the gameplay loop, rendering, or physics, a performance budget or
-  a "no performance impact expected — [reason]" note is present.
-- [ ] **适用时注明性能预算**：如果此故事触及
-  游戏循环、渲染或物理的任何部分，则存在性能预算或
-  "预期无性能影响 —— [理由]"注释。
-- [ ] **Story Type declared**: The story includes a `Type:` field in its header
-  identifying the test category (Logic / Integration / Visual/Feel / UI / Config/Data).
-  Without this, test evidence requirements cannot be enforced at story close.
-  Fix: Add `Type: [Logic|Integration|Visual/Feel|UI|Config/Data]` to the story header.
-- [ ] **声明了故事类型**：故事标题中包含 `Type:` 字段，
-  标识测试类别（Logic / Integration / Visual/Feel / UI / Config/Data）。
-  没有这个，在故事关闭时无法强制执行测试证据要求。
-  修复：将 `Type: [Logic|Integration|Visual/Feel|UI|Config/Data]` 添加到故事标题。
-- [ ] **Test evidence requirement is clear**: If the Story Type is set, the story
-  includes a `## Test Evidence` section stating where evidence will be stored
-  (test file path for Logic/Integration, or evidence doc path for Visual/Feel/UI).
-  Fix: Add `## Test Evidence` with the expected evidence location for the story's type.
-- [ ] **测试证据要求明确**：如果设置了故事类型，故事
-  包含 `## Test Evidence` 章节，说明证据将存储在
-  哪里（Logic/Integration 的测试文件路径，或 Visual/Feel/UI 的证据文档路径）。
-  修复：为故事类型添加带有预期证据位置的 `## Test Evidence`。
+- [ ] **Enough acceptance criteria**: no `ac_below_min` row. The minimums follow
+  `story_granularity`, because `/create-stories` writes to it:
 
----
+  | `story_granularity` | Logic, Integration | Visual/Feel, UI | Config/Data |
+  |---|---|---|---|
+  | `coarse` | 3 | 2 | 1 |
+  | `balanced` | 2 | 2 | 1 |
+  | `fine` | 1 | 1 | 1 |
 
-## 4. Verdict Assignment
-## 4. 结论分配
+- [ ] **Performance noted**: a story touching the gameplay loop, rendering or
+  physics states a budget, or "no performance impact expected — [reason]".
+- [ ] **Type declared**: no `type_missing` or `type_unknown` row. Fix: add
+  `Type: [Logic|Integration|Visual/Feel|UI|Config/Data]` to the header.
+- [ ] **Test evidence clear**: a `## Test Evidence` section saying where evidence
+  goes: the test file for Logic and Integration; the retained screenshot of each
+  screen under `production/qa/evidence/` for UI; that plus
+  `production/qa/evidence/[story-slug]-evidence.md` for Visual/Feel.
+  - At `qa.level: minimal`, Logic, Integration and Config/Data pass: tests are
+    waived. List no gap, and add no note, about a missing test file, `tests/`
+    folder or test runner. UI and
+    Visual/Feel are still checked: their screenshot is required at every level.
+  - Otherwise the `gate_level` line above sets the level for the story's type.
+    `blocking`: a missing section is NEEDS WORK. `advisory`: a listed gap only.
+    Fix: add `## Test Evidence` with the evidence location for the story's type.
 
-Assign one of three verdicts per story:
-为每个故事分配三种结论之一：
+- [ ] **验收标准足够**：没有 `ac_below_min` 行。最低数量遵循 `story_granularity`，
+  因为 `/create-stories` 按它写入：
 
-**READY** — All checklist items pass or have explicit N/A justifications.
-The story can be assigned immediately.
-**READY（就绪）** —— 所有检查清单项通过或有明确的 N/A 理由。
-故事可以立即分配。
+  | `story_granularity` | Logic、Integration | Visual/Feel、UI | Config/Data |
+  |---|---|---|---|
+  | `coarse` | 3 | 2 | 1 |
+  | `balanced` | 2 | 2 | 1 |
+  | `fine` | 1 | 1 | 1 |
 
-**NEEDS WORK** — One or more checklist items fail, but all dependency stories
-exist and are not DRAFT. The story can be fixed before assignment.
-**NEEDS WORK（需要工作）** —— 一个或多个检查清单项失败，但所有依赖故事
-存在且不是 DRAFT。故事可以在分配前修复。
+- [ ] **已注明性能**：涉及玩法循环、渲染或物理的故事声明预算，或“预计无性能影响 — [理由]”。
+- [ ] **已声明类型**：没有 `type_missing` 或 `type_unknown` 行。Fix：在头部添加
+  `Type: [Logic|Integration|Visual/Feel|UI|Config/Data]`。
+- [ ] **测试证据清晰**：有 `## Test Evidence` 小节说明证据去往何处：Logic 与 Integration 为
+  测试文件；UI 为 `production/qa/evidence/` 下每个画面的留存截图；Visual/Feel 为截图外加
+  `production/qa/evidence/[story-slug]-evidence.md`。
+  - 在 `qa.level: minimal` 下，Logic、Integration 与 Config/Data 通过：测试被豁免。不要列出
+    关于缺失测试文件、`tests/` 文件夹或测试运行器的缺口，也不要添加相关备注。UI 与
+    Visual/Feel 仍会检查：它们的截图在每个层级都必需。
+  - 否则，上方的 `gate_level` 行为该故事类型设定级别。`blocking`：缺失该小节即 NEEDS WORK。
+    `advisory`：仅列为缺口。Fix：添加 `## Test Evidence`，给出该故事类型的证据位置。
 
-**BLOCKED** — One or more dependency stories are missing or in DRAFT state,
-OR a critical design question (flagged UNRESOLVED in a criterion or rule) has
-no owner. The story cannot be assigned until the blocker is resolved. Note:
-a story that is BLOCKED may also have NEEDS WORK items — list both.
-**BLOCKED（阻塞）** —— 一个或多个依赖故事缺失或处于 DRAFT 状态，
-或关键设计问题（在标准或规则中标记为 UNRESOLVED）没有
-所有者。故事在阻塞解决前无法分配。注意：
-BLOCKED 的故事也可能有 NEEDS WORK 项 —— 两者都列出。
+## Phase 4: Verdict
 
----
+## 阶段 4：判定
 
-## 5. Output Format
-## 5. 输出格式
+Apply the order at the top to each story. A BLOCKED story may also have NEEDS WORK
+items: list both.
 
-### Single story output
-### 单故事输出
+对每个故事应用开头的顺序。BLOCKED 的故事也可能有 NEEDS WORK 条目：两者都列出。
+
+## Phase 5: QA lead review
+
+## 阶段 5：QA 负责人评审
+
+Read the `review_gate` line above. `skill-gates=skip` (solo or lean): skip it, and
+the reply says "QL-STORY-READY skipped — [Solo | Lean] mode". `skill-gates=run`:
+read `references/qa-lead-gate.md` and `.claude/docs/director-gates.md`, and run it
+before reporting. On a skip, do not load it.
+
+读取上方的 `review_gate` 行。`skill-gates=skip`（solo 或 lean）：跳过，且回复说明
+“QL-STORY-READY skipped — [Solo | Lean] mode”。`skill-gates=run`：
+读取 `references/qa-lead-gate.md` 与 `.claude/docs/director-gates.md`，并在报告前运行。
+跳过时不要加载它。
+
+## Phase 6: Report and close
+
+## 阶段 6：报告并收尾
+
+One story:
+
+单个故事：
 
 ```
 ## Story Readiness: [story title]
 File: [path]
-Verdict: [READY / NEEDS WORK / BLOCKED]
+Verdict: [READY / NEEDS WORK / BLOCKED / NOT ASSESSED]
 
 ### Passing Checks (N/[total])
-[list passing items briefly]
+Design Completeness: [passing items]
+Architecture Completeness: [passing items, or "N/A at minimal (ADR status checked)"]
+Scope Clarity: [passing items]
+Open Questions: [passing items]
+Asset References: [passing items, or "no asset references"]
+Definition of Done: [passing items]
 
 ### Gaps
-- [Checklist item]: [exact description of what is missing or wrong]
-  Fix: [specific text needed to resolve this gap]
+- [Checklist item]: [what is missing or wrong]
+  Fix: [the text that resolves it]
 
 ### Blockers (if BLOCKED)
-- [What is blocking]: [story ID or design question that must resolve first]
+- [What blocks]: [the story, ADR or question that must clear first]
 ```
 
-### Multiple story aggregate output
-### 多故事汇总输出
+Name all six groups every time, by these exact names. A group with nothing
+passing says "none — see Gaps", so the reader sees it was checked.
+
+每次都按这六个确切名称点明全部六组。没有任何通过项的分组写“none — see Gaps”，
+好让读者看出它已被检查。
+
+Gaps lists failed checklist items only: never a passing or N/A item, and never an
+observation from outside the checklist (a sprint status, another document).
+
+Gaps 只列出未通过的清单条目：绝不列通过或 N/A 的条目，也绝不列清单之外的观察
+（冲刺状态、另一份文档）。
+
+Several stories: a summary first, then the one-story block for each story that is
+not READY.
+
+多个故事：先给摘要，然后为每个非 READY 的故事给出单故事块。
 
 ```
 ## Story Readiness Summary — [scope] — [date]
+Ready: [N] · Needs Work: [N] · Blocked: [N] · Not Assessed: [N]
 
-Ready:      [N] stories
-Needs Work: [N] stories
-Blocked:    [N] stories
-
-### Ready Stories
-- [story title] ([path])
-
-### Needs Work
-- [story title]: [primary gap — one line]
-- [story title]: [primary gap — one line]
-
-### Blocked Stories
-- [story title]: Blocked by [story ID / design question]
-
----
-[Full detail for each non-ready story follows, using the single-story format]
+Ready: [title] ([path]), ...
+Needs Work: [title]: [main gap]
+Blocked: [title]: blocked by [story, ADR or question]
+Not Assessed: [title]: [what could not be read]
 ```
 
-### Sprint escalation
-### 冲刺升级
+`sprint` scope: when a Must Have story is not READY, put this first:
+`WARNING: [N] Must Have stories are not ready to implement: [each with its main
+gap]. Fix them before the sprint starts, or replan with /sprint-plan update.`
 
-If the scope is `sprint` and any Must Have stories are NEEDS WORK or BLOCKED,
-add a prominent warning at the top of the output:
-如果范围是 `sprint` 且任何 Must Have 故事是 NEEDS WORK 或 BLOCKED，
-在输出顶部添加显眼警告：
+`sprint` 范围：当有 Must Have 故事未 READY 时，将此置于最前：
+`WARNING: [N] Must Have stories are not ready to implement: [each with its main
+gap]. Fix them before the sprint starts, or replan with /sprint-plan update.`
 
-```
-WARNING: [N] Must Have stories are not implementation-ready.
-[List them with their primary gap or blocker.]
-Resolve these before the sprint begins or replan with `/sprint-plan update`.
-```
+**Then, for one story:** look for other stories to start. In the newest plan in
+`production/sprints/`, find up to 3 that are Ready or Not Started, not this one,
+not waiting on unfinished dependencies, and Must Have or Should Have. List each
+with a one-line description and its estimate. When there are none, say which:
+`Next ready stories: no sprint file found` or `Next ready stories: none ready in
+[sprint]`.
 
----
+**然后，针对单个故事：** 寻找其他可开始的故事。在 `production/sprints/` 中最新计划里，
+找出至多 3 个状态为 Ready 或 Not Started、不是本故事、不在等待未完成依赖、且为 Must Have
+或 Should Have 的故事。每个给出一行描述与其估算。若没有，说明是哪一种：
+`Next ready stories: no sprint file found` 或 `Next ready stories: none ready in
+[sprint]`。
 
-## 6. Collaborative Protocol
-## 6. 协作协议
+**Offer help.** Ask: "Would you like me to draft the missing parts for any of
+these stories?" Options: Yes, draft them / No, that's all. On yes, draft only the
+missing parts, in the conversation. The user, or `/create-stories`, writes them.
 
-This skill is read-only. It never proposes edits or asks to write files.
-此技能是只读的。它从不提议编辑或要求写入文件。
+**提供帮助。** 询问：“需要我为其中任何故事起草缺失部分吗？”选项：Yes, draft them /
+No, that's all。若同意，只在对话中起草缺失部分。由用户或 `/create-stories` 写入它们。
 
-After reporting findings, offer:
-报告发现后，提供：
+Redirects:
+- Story file missing: run `/create-stories [epic-slug]` (at `standard` and
+  `full`, `/create-epics` first).
+- No design reference and the change is small (under about a week): run
+  `/quick-design [description]` and cite that spec in the story.
+- Scope grew past its sizing: split the story, or raise it with the producer.
 
-"Would you like help filling in the gaps for any of these stories? I can
-draft the missing sections for your approval."
-"您是否需要帮助填补任何这些故事的差距？我可以
-起草缺失的章节供您批准。"
+重定向：
+- 故事文件缺失：运行 `/create-stories [epic-slug]`（在 `standard` 与
+  `full` 下，先 `/create-epics`）。
+- 无设计参考且变更较小（约一周以内）：运行 `/quick-design [description]`，并在故事中引用该规格。
+- 范围超出其原定尺寸：拆分故事，或向制作人提出。
 
-If the user says yes for a specific story, draft only the missing sections
-in conversation. Do not use Write or Edit tools — the user (or
-`/create-stories`) handles writing.
-如果用户对特定故事说是，仅在对话中起草缺失的章节。
-不要使用 Write 或 Edit 工具 —— 用户（或
-`/create-stories`）处理写入。
+**End the reply with:**
 
-**Redirect rules:**
-- If a story file does not exist at all: "This story file is missing entirely.
-  Run `/create-epics [layer]` then `/create-stories [epic-slug]` to generate stories from the GDD and ADR."
-- If a story has no GDD reference and the work appears small: "This story has
-  no GDD reference. If the change is small (under ~4 hours), run
-  `/quick-design [description]` to create a Quick Design Spec, then reference
-  that spec in the story."
-- If a story's scope has grown beyond its original sizing:
-**重定向规则：**
-- 如果故事文件根本不存在："此故事文件完全缺失。
-  运行 `/create-epics [layer]` 然后 `/create-stories [epic-slug]` 从 GDD 和 ADR 生成故事。"
-- 如果故事没有 GDD 引用且工作看起来很小："此故事没有
-  GDD 引用。如果变更很小（约 4 小时以内），运行
-  `/quick-design [description]` 创建快速设计规格，然后在故事中引用
-  该规格。"
-- 如果故事的范围已超出其原始估算：
-  "This story appears to have expanded in scope. Consider splitting it or escalating to the producer
-  before implementation begins."
-  "此故事似乎在范围上有所扩展。考虑拆分它或在实施开始前升级给制作人。"
-
----
-
-## 7. Next-Story Handoff
-## 7. 下一个故事交接
-
-After completing a single-story readiness check (not `all` or `sprint` scope):
-完成单故事就绪性检查后（非 `all` 或 `sprint` 范围）：
-
-1. Read the current sprint file from `production/sprints/` (most recent).
-1. 从 `production/sprints/` 读取当前冲刺文件（最新）。
-2. Find stories that are:
-2. 查找以下故事：
-   - Status: READY or NOT STARTED
-   - 状态：READY 或 NOT STARTED
-   - Not the story just checked
-   - 不是刚检查的故事
-   - Not blocked by incomplete dependencies
-   - 未被不完整依赖阻塞
-   - In the Must Have or Should Have tier
-   - 在 Must Have 或 Should Have 层级
-
-If any are found, surface up to 3:
-如果找到任何，显示最多 3 个：
+**以以下内容结束回复：**
 
 ```
-### Other Ready Stories in This Sprint
-
-1. [Story name] — [1-line description] — Est: [X hrs]
-2. [Story name] — [1-line description] — Est: [X hrs]
-
-Run `/story-readiness [path]` to validate before starting.
+Review: [QL-STORY-READY skipped — Solo mode | skipped — Lean mode | its verdict]
+Next ready stories: [up to 3 | no sprint file found | none ready in [sprint]]   (one-story scope)
+Next step: [/dev-story [path] when READY | fix the gaps above, then /story-readiness [path]]
+Files changed: none
 ```
-
-If no sprint file exists or no other ready stories are found, skip this section silently.
-如果没有冲刺文件或未找到其他就绪故事，则静默跳过此章节。
-
----
-
-## Phase 8: Director Gate — Story Readiness Review
-## 阶段 8：主管关卡 —— 故事就绪性评审
-
-Apply the review mode resolved in Phase 0 before spawning QL-STORY-READY:
-在生成 QL-STORY-READY 之前，应用阶段 0 中解析的评审模式：
-
-- `solo` → skip. Note: "QL-STORY-READY skipped — Solo mode." Proceed to close.
-- `solo` → 跳过。注明："QL-STORY-READY 已跳过 —— Solo 模式。"继续关闭。
-- `lean` → skip. Note: "QL-STORY-READY skipped — Lean mode." Proceed to close.
-- `lean` → 跳过。注明："QL-STORY-READY 已跳过 —— Lean 模式。"继续关闭。
-- `full` → spawn as normal.
-- `full` → 正常生成。
-
-Spawn `qa-lead` via Task using gate **QL-STORY-READY** (`.claude/docs/director-gates.md`).
-使用关卡 **QL-STORY-READY**（`.claude/docs/director-gates.md`）通过 Task 生成 `qa-lead`。
-
-Pass the following context:
-传递以下上下文：
-- Story title
-- 故事标题
-- Acceptance criteria list (all items from the story's acceptance criteria section)
-- 验收标准列表（来自故事验收标准章节的所有项）
-- Dependency status (all dependencies listed and their current state: exist / DRAFT / missing)
-- 依赖状态（列出的所有依赖及其当前状态：存在 / DRAFT / 缺失）
-- Overall verdict (READY / NEEDS WORK / BLOCKED) from Phase 4
-- 来自阶段 4 的总体结论（READY / NEEDS WORK / BLOCKED）
-
-Handle the verdict per standard rules in `director-gates.md`:
-按 `director-gates.md` 中的标准规则处理结论：
-- **ADEQUATE** → story is cleared. Proceed to close.
-- **ADEQUATE（充分）** → 故事已清除。继续关闭。
-- **GAPS [list]** → surface the specific gaps to the user via `AskUserQuestion`:
-  options: `Update story with suggested gaps` / `Accept and proceed anyway` / `Discuss further`.
-- **GAPS [list]（差距 [列表]）** → 通过 `AskUserQuestion` 向用户显示具体差距：
-  选项：`用建议的差距更新故事` / `接受并继续` / `进一步讨论`。
-- **INADEQUATE** → surface the specific gaps; ask user whether to update the story or proceed anyway.
-- **INADEQUATE（不充分）** → 显示具体差距；询问用户是更新故事还是继续。
-
----
-
-## Recommended Next Steps
-## 推荐的下一步
-
-- Run `/dev-story [story-path]` to begin implementation once the story is READY
-- 一旦故事 READY，运行 `/dev-story [story-path]` 开始实施
-- Run `/story-readiness sprint` to check all stories in the current sprint at once
-- 运行 `/story-readiness sprint` 一次检查当前冲刺中的所有故事
-- Run `/create-stories [epic-slug]` if a story file is missing entirely
-- 如果故事文件完全缺失，运行 `/create-stories [epic-slug]`

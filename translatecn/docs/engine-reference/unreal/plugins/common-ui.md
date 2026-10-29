@@ -1,12 +1,22 @@
-# Unreal Engine 5.7 — CommonUI Plugin
-# Unreal Engine 5.7 — CommonUI 插件
+# Unreal Engine 5.8 — CommonUI Plugin
+# Unreal Engine 5.8 — CommonUI 插件
 
-**Last verified:** 2026-02-13
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
 **Status:** Production-Ready
 **Plugin:** `CommonUI` (built-in, enable in Plugins)
-**最后验证：** 2026-02-13
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
 **状态：** 生产就绪
 **插件：** `CommonUI`（内置，在 Plugins 中启用）
+
+> **UE 5.8 changes:** Common Input/UI and Enhanced Input are unified, which
+> "removes the need for duplicate data assets", with more reliable event
+> processing, better widget binding and an Input Debugger for Enhanced Input
+> UI. CommonUI tags are now comparable in Blueprint. The `CommonUI.uplugin` in a
+> 5.8.1 install carries no Beta/Experimental flag. Source: UE 5.8 release
+> notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** Common Input/UI 与 Enhanced Input 已统一，这"消除了对重复数据资产的需求"，事件处理更可靠、控件绑定更好，并提供了面向 Enhanced Input UI 的 Input Debugger。CommonUI 标签现在可在蓝图中比较。5.8.1 安装中的 `CommonUI.uplugin` 不带 Beta/Experimental 标记。来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
@@ -17,7 +27,7 @@
 for gamepad, mouse, and touch. It's designed for games that need to work seamlessly
 across PC, console, and mobile platforms with minimal platform-specific code.
 
-**CommonUI** 是一个跨平台 UI 框架，可自动处理手柄、鼠标和触摸的输入路由。它专为需要在 PC、主机和移动平台上无缝运行且尽量减少平台特定代码的游戏而设计。
+**CommonUI** 是一个跨平台 UI 框架，可自动处理手柄、鼠标与触摸的输入路由。它面向需要在 PC、主机与移动平台之间无缝运行、且尽量少写平台特定代码的游戏。
 
 **Use CommonUI for:**
 - Multi-platform games (console + PC)
@@ -28,8 +38,8 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 
 **使用 CommonUI 的场景：**
 - 多平台游戏（主机 + PC）
-- 自动手柄/鼠标/触摸输入路由
-- 与输入无关的 UI（同一套 UI 适用于任何输入方式）
+- 自动路由手柄/鼠标/触摸输入
+- 与输入方式无关的 UI（同一套 UI 适用于任何输入方式）
 - 控件焦点与导航
 - 动作栏与输入提示
 
@@ -38,7 +48,7 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 - Simple UI with no navigation requirements
 
 **不要使用 CommonUI 的场景：**
-- 仅 PC 且仅用鼠标的 UI（标准 UMG 更简单）
+- 仅面向 PC、只用鼠标操作的 UI 游戏（标准 UMG 更简单）
 - 无导航需求的简单 UI
 
 ---
@@ -54,13 +64,13 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 | **Input Prompts** | Hardcode icons | Dynamic per platform |
 | **Screen Stack** | Manual | Built-in activatable widgets |
 
-| 特性 | 标准 UMG | CommonUI |
+| 功能 | 标准 UMG | CommonUI |
 |---------|--------------|----------|
 | **输入处理** | 每个控件手动处理 | 自动路由 |
 | **焦点管理** | 基础 | 高级导航 |
 | **平台切换** | 手动检测 | 自动 |
 | **输入提示** | 硬编码图标 | 按平台动态显示 |
-| **屏幕栈** | 手动 | 内置可激活控件 |
+| **界面栈** | 手动 | 内置可激活控件 |
 
 ---
 
@@ -72,6 +82,8 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 
 `Edit > Plugins > CommonUI > Enabled > Restart`
 
+`Edit > Plugins > CommonUI > Enabled > Restart`
+
 ### 2. Configure Project Settings
 ### 2. 配置项目设置
 
@@ -79,8 +91,9 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 - **Default Input Type**: Gamepad (or auto-detect)
 - **Platform-Specific Settings**: Configure input icons per platform
 
-- **默认输入类型**：Gamepad（或自动检测）
-- **平台特定设置**：按平台配置输入图标
+`Project Settings > Plugins > CommonUI`：
+- **Default Input Type**：Gamepad（或自动检测）
+- **Platform-Specific Settings**：按平台配置输入图标
 
 ### 3. Create Common Input Settings Asset
 ### 3. 创建 Common Input Settings 资产
@@ -93,9 +106,9 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 
 1. Content Browser > Input > Common Input Settings
 2. 按平台配置输入数据：
-   - 默认 Gamepad 数据
-   - 默认鼠标与键盘数据
-   - 默认触摸数据
+   - Default Gamepad Data
+   - Default Mouse & Keyboard Data
+   - Default Touch Data
 
 ---
 
@@ -103,11 +116,11 @@ across PC, console, and mobile platforms with minimal platform-specific code.
 ## 核心控件
 
 ### CommonActivatableWidget (Screen Management)
-### CommonActivatableWidget（屏幕管理）
+### CommonActivatableWidget（界面管理）
 
 Base class for screens/menus that can be activated/deactivated.
 
-可用于激活/停用的屏幕/菜单的基类。
+可被激活/停用的界面或菜单的基类。
 
 ```cpp
 #include "CommonActivatableWidget.h"
@@ -143,7 +156,7 @@ private:
 ---
 
 ### CommonButtonBase (Input-Aware Button)
-### CommonButtonBase（输入感知按钮）
+### CommonButtonBase（感知输入的按钮）
 
 Replaces standard UMG Button. Automatically handles gamepad/mouse/keyboard input.
 
@@ -199,7 +212,7 @@ TitleText->SetText(FText::FromString(TEXT("Main Menu")));
 
 Displays input prompts (e.g., "Press A to Continue", automatically shows correct button icon).
 
-显示输入提示（例如“Press A to Continue”，自动显示正确的按钮图标）。
+显示输入提示（例如"Press A to Continue"，会自动显示正确的按钮图标）。
 
 ```cpp
 UPROPERTY(meta = (BindWidget))
@@ -213,14 +226,14 @@ ConfirmActionWidget->SetInputAction(ConfirmInputActionData);
 ---
 
 ## Widget Stack (Screen Management)
-## 控件栈（屏幕管理）
+## 控件栈（界面管理）
 
 ### CommonActivatableWidgetStack
 ### CommonActivatableWidgetStack
 
 Manages a stack of screens (e.g., Main Menu → Settings → Controls).
 
-管理屏幕栈（例如主菜单 → 设置 → 控制）。
+管理界面栈（例如 主菜单 → 设置 → 控制）。
 
 ```cpp
 #include "Widgets/CommonActivatableWidgetContainer.h"
@@ -254,8 +267,8 @@ Create **Common Input Action Data Table**:
 
 创建 **Common Input Action Data Table**：
 1. Content Browser > Miscellaneous > Data Table
-2. 行结构：`CommonInputActionDataBase`
-3. 为动作添加行（Confirm、Cancel、Navigate 等）
+2. Row Structure：`CommonInputActionDataBase`
+3. 为各动作添加行（Confirm、Cancel、Navigate 等）
 
 Example row:
 - **Action Name**: Confirm
@@ -263,9 +276,9 @@ Example row:
 - **Alternate Inputs**: Enter (keyboard), Left Mouse Button
 
 示例行：
-- **动作名称**：Confirm
-- **默认输入**：Gamepad Face Button Bottom（A/Cross）
-- **备用输入**：Enter（键盘）、Left Mouse Button
+- **Action Name**：Confirm
+- **Default Input**：Gamepad Face Button Bottom（A/Cross）
+- **Alternate Inputs**：Enter（键盘）、鼠标左键
 
 ---
 
@@ -330,7 +343,7 @@ virtual UWidget* NativeGetDesiredFocusTarget() const override {
 ---
 
 ## Input Mode (Game vs UI)
-## 输入模式（游戏与 UI）
+## 输入模式（游戏 vs UI）
 
 ### Switch Input Mode
 ### 切换输入模式
@@ -365,18 +378,18 @@ UCommonUIExtensions::PopInputConfig(this);
 3. Assign to **Common Input Settings** asset
 
 1. 为每个平台创建 **Common Input Base Controller Data** 资产：
-   - Gamepad（Xbox、PlayStation、Switch）
+   - 手柄（Xbox、PlayStation、Switch）
    - 鼠标与键盘
    - 触摸
 
-2. 分配平台特定图标：
+2. 分配平台特定的图标：
    - Gamepad Face Button Bottom：`A`（Xbox）、`Cross`（PlayStation）
-   - Confirm 键：`Enter` 图标
+   - 确认键：`Enter` 图标
 
 3. 分配给 **Common Input Settings** 资产
 
 ### Automatically Display Correct Icons
-### 自动显示正确图标
+### 自动显示正确的图标
 
 ```cpp
 // CommonActionWidget automatically shows correct icon for current platform
@@ -431,7 +444,7 @@ protected:
 ---
 
 ### Pause Menu with Back Action
-### 带返回动作的暂停菜单
+### 带返回操作的暂停菜单
 
 ```cpp
 UCLASS()
@@ -459,14 +472,14 @@ protected:
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 - Use **CommonActivatableWidgetStack** for screen management (automatically handles activation/deactivation)
 - Avoid creating/destroying widgets every frame (reuse widgets)
 - Use **Lazy Widgets** for complex menus (only create when needed)
 
-- 使用 **CommonActivatableWidgetStack** 进行屏幕管理（自动处理激活/停用）
-- 避免每帧创建/销毁控件（复用控件）
+- 使用 **CommonActivatableWidgetStack** 管理界面（自动处理激活/停用）
+- 避免每帧创建/销毁控件（应复用控件）
 - 复杂菜单使用 **Lazy Widgets**（仅在需要时创建）
 
 ---
@@ -487,5 +500,6 @@ protected:
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/commonui-plugin-for-advanced-user-interfaces-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/commonui-quickstart-guide-for-unreal-engine/

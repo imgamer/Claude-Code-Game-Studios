@@ -4,8 +4,12 @@
 ## Trigger
 ## 触发条件
 
-Runs before any commit that modifies files in `src/`.
-在任何修改 `src/` 文件的提交之前运行。
+Runs before any commit that modifies files under the code root — `src/`
+(Godot), `Assets/` (Unity) or `Source/` (Unreal); see
+`.claude/docs/code-root-resolution.md`.
+在任何修改代码根目录下文件的提交之前运行——代码根目录为 `src/`
+（Godot）、`Assets/`（Unity）或 `Source/`（Unreal）；见
+`.claude/docs/code-root-resolution.md`。
 
 ## Purpose
 ## 目的
@@ -13,7 +17,7 @@ Runs before any commit that modifies files in `src/`.
 Enforces coding standards before code enters version control. Catches style
 violations, missing documentation, overly complex methods, and hardcoded
 values that should be data-driven.
-在代码进入版本控制之前强制执行编码标准。捕获风格违规、缺失文档、过于复杂的方法，以及应当数据驱动的硬编码值。
+在代码进入版本控制之前强制执行编码标准。捕获风格违规、缺失的文档、过于复杂的方法，以及本应数据驱动的硬编码值。
 
 ## Implementation
 ## 实现
@@ -23,14 +27,23 @@ values that should be data-driven.
 # Pre-commit hook: Code quality checks
 # Adapt the specific checks to your language and tooling
 
-CODE_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^src/')
+# The code root depends on the engine; resolve it the way the shipped commit
+# check does. An unresolved root is reported, never guessed as src/.
+. "$(git rev-parse --show-toplevel)/.claude/hooks/yaml-helper.sh"
+CODE_ROOT=$(resolve_code_root | cut -f1)
+if [ -z "$CODE_ROOT" ]; then
+    echo "SKIPPED: no code root (set engine.name in project.yaml) — code checks did not run."
+    exit 0
+fi
+
+CODE_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E "^$CODE_ROOT/")
 
 EXIT_CODE=0
 
 if [ -n "$CODE_FILES" ]; then
     for file in $CODE_FILES; do
         # Check for hardcoded magic numbers in gameplay code
-        if [[ "$file" == src/gameplay/* ]]; then
+        if [[ "$file" == */[Gg]ameplay/* ]]; then
             # Look for numeric literals that are likely balance values
             # Adjust the pattern for your language
             if grep -nE '(damage|health|speed|rate|chance|cost|duration)[[:space:]]*[:=][[:space:]]*[0-9]+' "$file"; then
@@ -64,8 +77,8 @@ exit $EXIT_CODE
 When this hook fails:
 当此钩子失败时：
 1. For style violations: auto-fix with your formatter or invoke `lead-programmer`
-1. 对于风格违规：使用格式化工具自动修复或调用 `lead-programmer`
+1. 对于风格违规：用你的格式化工具自动修复，或调用 `lead-programmer`
 2. For hardcoded values: invoke `gameplay-programmer` to externalize the values
-2. 对于硬编码值：调用 `gameplay-programmer` 将值外部化
+2. 对于硬编码值：调用 `gameplay-programmer` 将值外置
 3. For test failures: invoke `qa-tester` to diagnose and `gameplay-programmer` to fix
-3. 对于测试失败：调用 `qa-tester` 进行诊断，调用 `gameplay-programmer` 进行修复
+3. 对于测试失败：调用 `qa-tester` 进行诊断，并调用 `gameplay-programmer` 进行修复

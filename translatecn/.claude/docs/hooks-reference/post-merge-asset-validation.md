@@ -4,17 +4,17 @@
 ## Trigger
 ## 触发条件
 
-Runs after any merge to the `develop` or `main` branch that includes changes
-to `assets/`.
-在任何合并到 `develop` 或 `main` 分支且包含 `assets/` 改动之后运行。
+Runs after any merge to `main` (the trunk) or a `release/*` branch that
+includes changes to `assets/`.
+在任何合并到 `main`（主干）或包含 `assets/` 变更的 `release/*` 分支之后运行。
 
 ## Purpose
 ## 目的
 
 Validates that all assets in the merged branch conform to naming conventions,
 size budgets, and format requirements. Prevents non-compliant assets from
-accumulating on integration branches.
-验证合并分支中的所有资产是否符合命名规范、大小预算和格式要求。防止不合规资产在集成分支上堆积。
+accumulating on the trunk.
+验证合并分支中的所有资产均符合命名约定、大小预算和格式要求。防止不合规的资产在主干上不断累积。
 
 ## Implementation
 ## 实现
@@ -88,7 +88,7 @@ exit $EXIT_CODE
 When this hook reports issues:
 当此钩子报告问题时：
 1. For naming violations: fix manually or invoke `art-director` for guidance
-1. 对于命名违规：手动修复或调用 `art-director` 获取指导
+1. 对于命名违规：手动修复，或调用 `art-director` 获取指导
 2. For size violations: invoke `technical-artist` for optimization advice
 2. 对于大小违规：调用 `technical-artist` 获取优化建议
 3. For a full audit: run `/asset-audit` skill

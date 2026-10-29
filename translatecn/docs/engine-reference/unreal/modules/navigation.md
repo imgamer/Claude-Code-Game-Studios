@@ -1,24 +1,35 @@
-# Unreal Engine 5.7 — Navigation Module Reference
-# Unreal Engine 5.7 — 导航模块参考
+# Unreal Engine 5.8 — Navigation Module Reference
+# Unreal Engine 5.8 — 导航模块参考
 
-**Last verified:** 2026-02-13
-**Knowledge Gap:** UE 5.7 navigation improvements
-**最后验证：** 2026-02-13
-**知识缺口：** UE 5.7 导航改进
+**Last verified:** 2026-10-17 (UE 5.8 changes block); 2026-02-13 (rest of file, written against 5.7)
+**Knowledge Gap:** UE 5.7-5.8 navigation improvements
+
+**最后验证：** 2026-10-17（UE 5.8 变更块）；2026-02-13（文件其余部分，基于 5.7 编写）
+**知识缺口：** UE 5.7-5.8 的导航改进
+
+> **UE 5.8 changes:** Static meshes can define their own walkable areas
+> during navmesh generation (per-mesh area costs, e.g. so AI walks around a
+> couch rather than over it), enabled per mesh through a flag and an area class
+> setting on NavCollision. Mover gained NavWalking support for Detour Crowd.
+> Source: UE 5.8 release notes, https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
+
+> **UE 5.8 变更：** 静态网格可以在导航网格生成期间定义自己的可行走区域
+> （按网格的区域开销，例如让 AI 绕过沙发而不是从上面走过），通过一个标记以及 NavCollision 上的区域类设置按网格启用。Mover 为 Detour Crowd 增加了 NavWalking 支持。
+> 来源：UE 5.8 发行说明，https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-8-release-notes?application_version=5.8
 
 ---
 
 ## Overview
 ## 概述
 
-UE 5.7 navigation systems:
+UE 5.8 navigation systems:
 - **Nav Mesh**: Automatic pathfinding mesh for AI
 - **AI Controller**: Controls AI movement and behavior
 - **Behavior Trees**: AI decision-making (covered in AI module)
 
-UE 5.7 导航系统：
-- **Nav Mesh**：AI 的自动寻路网格
-- **AI Controller**：控制 AI 移动与行为
+UE 5.8 导航系统：
+- **Nav Mesh**：用于 AI 的自动寻路网格
+- **AI Controller**：控制 AI 的移动与行为
 - **Behavior Trees**：AI 决策（在 AI 模块中介绍）
 
 ---
@@ -35,7 +46,7 @@ UE 5.7 导航系统：
 
 1. Place Actors > Volumes > Nav Mesh Bounds Volume
 2. 缩放以覆盖可行走区域
-3. 按 `P` 切换 Nav Mesh 可视化（绿色覆盖层）
+3. 按 `P` 切换 Nav Mesh 可视化（绿色叠加层）
 
 ### Nav Mesh Settings
 ### Nav Mesh 设置
@@ -90,7 +101,7 @@ public:
 ---
 
 ## Basic AI Movement
-## 基本 AI 移动
+## 基础 AI 移动
 
 ### Move to Location
 ### 移动到位置
@@ -160,7 +171,7 @@ public:
 ## 寻路查询
 
 ### Find Path to Location
-### 查找到位置的路径
+### 查找通往某位置的路径
 
 ```cpp
 #include "NavigationSystem.h"
@@ -186,7 +197,7 @@ if (NavSys) {
 ```
 
 ### Check if Location is Reachable
-### 检查位置是否可达
+### 检查某位置是否可达
 
 ```cpp
 UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
@@ -201,7 +212,7 @@ if (bReachable) {
 ---
 
 ## Nav Mesh Modifiers
-## Nav Mesh 修饰符
+## Nav Mesh 修饰器
 
 ### Nav Modifier Volume (Block/Allow Areas)
 ### Nav Modifier Volume（阻挡/允许区域）
@@ -215,10 +226,10 @@ if (bReachable) {
 ---
 
 ## Custom Nav Areas
-## 自定义 Nav Area
+## 自定义导航区域
 
 ### Create Custom Nav Area
-### 创建自定义 Nav Area
+### 创建自定义导航区域
 
 ```cpp
 UCLASS()
@@ -234,7 +245,7 @@ public:
 ```
 
 ### Use Custom Nav Area
-### 使用自定义 Nav Area
+### 使用自定义导航区域
 
 ```cpp
 // Assign to Nav Modifier Volume or geometry
@@ -246,7 +257,7 @@ public:
 ## Nav Mesh 生成
 
 ### Rebuild Nav Mesh at Runtime
-### 运行时重建 Nav Mesh
+### 在运行时重建 Nav Mesh
 
 ```cpp
 UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
@@ -280,10 +291,10 @@ Mesh->bDynamicObstacle = true;
    - **Smart Link**: Animate character during traversal
 
 1. Place Actors > Navigation > Nav Link Proxy
-2. 设置起点和终点
+2. 设置起点与终点
 3. 配置：
    - **Direction**：单向或双向
-   - **Smart Link**：在穿过时为角色播放动画
+   - **Smart Link**：在穿越过程中为角色播放动画
 
 ---
 
@@ -306,7 +317,7 @@ MoveComp->SetAvoidanceEnabled(true);
 ---
 
 ## Performance Tips
-## 性能提示
+## 性能建议
 
 ### Nav Mesh Optimization
 ### Nav Mesh 优化
@@ -346,7 +357,7 @@ if (NavPath) {
 ## 常见模式
 
 ### Patrol Between Waypoints
-### 在路点之间巡逻
+### 在路径点之间巡逻
 
 ```cpp
 UPROPERTY(EditAnywhere, Category = "AI")
@@ -391,5 +402,6 @@ void Tick(float DeltaTime) {
 
 ## Sources
 ## 来源
+
 - https://docs.unrealengine.com/5.7/en-US/navigation-system-in-unreal-engine/
 - https://docs.unrealengine.com/5.7/en-US/ai-in-unreal-engine/

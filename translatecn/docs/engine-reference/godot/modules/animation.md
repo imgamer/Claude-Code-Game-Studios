@@ -1,11 +1,22 @@
 # Godot Animation — Quick Reference
 # Godot 动画 — 快速参考
 
-Last verified: 2026-02-12 | Engine: Godot 4.6
-最后验证：2026-02-12 | 引擎：Godot 4.6
+Last verified: 2026-10-17 (4.7 changes); 2026-02-12 (rest) | Engine: Godot 4.7
+最后验证：2026-10-17（4.7 变更）；2026-02-12（其余部分） | 引擎：Godot 4.7
 
 ## What Changed Since ~4.3 (LLM Cutoff)
 ## 自约 4.3（LLM 截止）以来的变更
+
+### 4.7 Changes
+### 4.7 变更
+- **`Tween.tween_await()`**: pauses a tween until a signal is emitted (4.7 release notes: https://godotengine.org/releases/4.7/)
+- **`Tween.tween_await()`**：暂停补间，直到发出某个信号（4.7 发行说明：https://godotengine.org/releases/4.7/）
+- **`LookAtModifier3D.relative`** defaults to `false` (was `true`)
+- **`LookAtModifier3D.relative`** 默认值为 `false`（原为 `true`）
+- **`AnimationNodeBlendSpace1D/2D.add_blend_point()`**: optional `name` parameter
+- **`AnimationNodeBlendSpace1D/2D.add_blend_point()`**：可选 `name` 参数
+- **`Animation.length`** is `double` in C# (was `float`); GDScript unaffected (4.7 migration guide: https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html)
+- **`Animation.length`** 在 C# 中为 `double`（原为 `float`）；GDScript 不受影响（4.7 迁移指南：https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html）
 
 ### 4.6 Changes
 ### 4.6 变更
@@ -94,10 +105,10 @@ func _ready() -> void:
 ## Common Mistakes
 ## 常见错误
 - Using `playback_active` instead of `active` (deprecated since 4.3)
-- 使用 `playback_active` 而非 `active`（自 4.3 起弃用）
+- 使用 `playback_active` 而非 `active`（自 4.3 起已弃用）
 - Using `bone_pose_updated` signal instead of `skeleton_updated` (renamed in 4.3)
-- 使用 `bone_pose_updated` 信号而非 `skeleton_updated`（在 4.3 中重命名）
+- 使用 `bone_pose_updated` 信号而非 `skeleton_updated`（4.3 中重命名）
 - Using old IK approach instead of SkeletonModifier3D system (restored in 4.6)
-- 使用旧的 IK 方式而非 SkeletonModifier3D 系统（在 4.6 中恢复）
+- 使用旧的 IK 方式而非 SkeletonModifier3D 系统（4.6 中恢复）
 - Not checking `is AnimationMixer` when type-checking animation nodes
-- 对动画节点进行类型检查时未检查 `is AnimationMixer`
+- 在对动画节点做类型检查时未检查 `is AnimationMixer`

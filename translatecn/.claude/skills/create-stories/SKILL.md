@@ -1,458 +1,541 @@
 ---
 name: create-stories
-description: "Break a single epic into implementable story files. Reads the epic, its GDD, governing ADRs, and control manifest. Each story embeds its GDD requirement TR-ID, ADR guidance, acceptance criteria, story type, and test evidence path. Run after /create-epics for each epic."
+description: "Breaks one epic into implementable stories with acceptance criteria. Use when the user wants stories for an epic or the next batch of work to build. Not for turning the whole design into epics."
 argument-hint: "[epic-slug | epic-path] [--review full|lean|solo]"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Write, Task, AskUserQuestion
+allowed-tools: Read, Glob, Grep, Write, Edit, Agent, AskUserQuestion, Bash(bash "*/.claude/skills/create-stories/../../hooks/yaml-helper.sh" resolve_config *), Bash(bash .claude/scripts/adr-status.sh *), Bash(bash .claude/scripts/md-section.sh extract *), Bash(bash .claude/scripts/md-section.sh list *)
 model: sonnet
-agent: lead-programmer
 ---
 ---
-名称：create-stories
-描述："将单个史诗拆解为可实现的故事文件。读取史诗及其 GDD、治理 ADR 和控制清单。每个故事嵌入其 GDD 需求 TR-ID、ADR 指引、验收标准、故事类型和测试证据路径。在每个史诗上运行 /create-epics 之后运行。"
-argument-hint："[epic-slug | epic-path] [--review full|lean|solo]"
-user-invocable：true
-allowed-tools：Read, Glob, Grep, Write, Task, AskUserQuestion
-model：sonnet
-agent：lead-programmer
+name: create-stories
+description: "将一个史诗拆解为带验收标准的可实施故事。当用户想要某个史诗的故事，或下一批要构建的工作时使用。不用于将整个设计转化为史诗。"
+argument-hint: "[epic-slug | epic-path] [--review full|lean|solo]"
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write, Edit, Agent, AskUserQuestion, Bash(bash "*/.claude/skills/create-stories/../../hooks/yaml-helper.sh" resolve_config *), Bash(bash .claude/scripts/adr-status.sh *), Bash(bash .claude/scripts/md-section.sh extract *), Bash(bash .claude/scripts/md-section.sh list *)
+model: sonnet
 ---
+
+!`bash "${CLAUDE_SKILL_DIR}/../../hooks/yaml-helper.sh" resolve_config --keys review_mode,review_gate,automation,workflow,docs.density,story_granularity,qa.level,system_overrides`
+
+Resolved above — use as-is; `--review` overrides `review_mode`. No block →
+defaults in `.claude/docs/config-resolution.md`.
+以上已解析 — 直接使用；`--review` 覆盖 `review_mode`。无配置块 →
+使用 `.claude/docs/config-resolution.md` 中的默认值。
+
+Ask with the question tool. Without one, list the options numbered and end your turn
+to wait. A skipped or dismissed question is not an answer: ask again in plain text.
+用提问工具提问。若没有该工具，则把选项编号列出并结束本轮等待。
+被跳过或关闭的提问不算答复：请用纯文本再次提问。
 
 # Create Stories
 # 创建故事
 
-A story is a single implementable behaviour — small enough to complete in one
-focused session, self-contained, and fully traceable to a GDD requirement and
-an ADR decision. Stories are what developers pick up. Epics are what architects
-define.
-故事是单一可实现的行为 —— 足够小以便在一次专注会话内完成、自包含，且
-完全可追溯到 GDD 需求与 ADR 决策。故事是开发者领取的对象。史诗是架构师
-定义的对象。
+A story is one implementable behaviour: small enough for the size
+`story_granularity` sets, self-contained, and traced to a requirement and the
+decision that governs it. Run this skill once per epic, in dependency order:
+Foundation epics first, then Core, Feature, Presentation.
+一个故事是一种可实施的行为：小到符合 `story_granularity` 设定的规模，
+自包含，并可追溯到一项需求以及管辖它的决策。按依赖顺序，每个史诗运行一次此技能：
+先是基础（Foundation）史诗，然后是核心（Core）、功能（Feature）、表现（Presentation）。
 
-**Run this skill per epic**, not per layer. Run it for Foundation epics first,
-then Core, and so on — matching the dependency order.
-**按每个史诗运行此技能**，而非按层运行。先为 Foundation 史诗运行，
-再为 Core 运行，以此类推 —— 与依赖顺序匹配。
+**Writes:** `production/epics/[epic-slug]/story-NNN-[slug].md`, the epic's
+`EPIC.md` Stories table, and its row in `production/epics/index.md`.
+**Next:** `/dev-story [story-path]` at `workflow: minimal`; otherwise
+`/story-readiness [story-path]`, then `/dev-story`.
+**写入：** `production/epics/[epic-slug]/story-NNN-[slug].md`、该史诗的
+`EPIC.md` Stories 表，以及它在 `production/epics/index.md` 中的行。
+**下一步：** 在 `workflow: minimal` 时使用 `/dev-story [story-path]`；否则
+先用 `/story-readiness [story-path]`，再用 `/dev-story`。
 
-**Output:** `production/epics/[epic-slug]/story-NNN-[slug].md` files
-**输出：** `production/epics/[epic-slug]/story-NNN-[slug].md` 文件
+Asks follow `.claude/docs/automation-modes.md` (collaborative always asks, guided
+asks on major choices, autonomous logs and goes on; `automation_always_ask`
+categories always ask).
+提问遵循 `.claude/docs/automation-modes.md`（协作模式总是询问，引导模式
+仅在重大选择上询问，自主模式记录后继续；`automation_always_ask`
+类别总是询问）。
 
-**Previous step:** `/create-epics [system]`
-**Next step after stories exist:** `/story-readiness [story-path]` then `/dev-story [story-path]`
-**上一步：** `/create-epics [system]`
-**故事存在之后的下一步：** `/story-readiness [story-path]`，然后 `/dev-story [story-path]`
+Checklist (copy it and tick as you go):
+检查清单（复制它，边做边勾选）：
 
----
+```
+- [ ] Phase 1: epic found, tier resolved
+- [ ] Phase 2: inputs loaded, each ADR's status reported
+- [ ] Phase 3-4: stories drafted, typed, Ready or Blocked
+- [ ] Phase 5: QA lead review run, or its skip noted
+- [ ] Phase 6: story list shown, one ask to write
+- [ ] Phase 7: stories, EPIC.md and index.md written (or index absence said)
+- [ ] Phase 8: next step asked, closing block printed
+```
 
-## 1. Parse Argument
-## 1. 解析参数
+## Phase 1: Epic and settings
+## 阶段 1：史诗与设置
 
-Extract `--review [full|lean|solo]` if present and store as the review mode
-override for this run. If not provided, read `production/review-mode.txt`
-(default `lean` if missing). This resolved mode applies to all gate spawns
-in this skill — apply the check pattern from `.claude/docs/director-gates.md`
-before every gate invocation.
-若存在则提取 `--review [full|lean|solo]` 并存为本次运行的评审模式
-覆盖值。若未提供，则读取 `production/review-mode.txt`
-（缺失时默认为 `lean`）。此解析后的模式适用于本技能中所有门禁
-派生 —— 在每次门禁调用之前应用 `.claude/docs/director-gates.md`
-中的检查模式。
+**Tier.** `workflow` for the epic's system: the `system_overrides` row for the epic
+slug (its GDD system) if there is one, else the project value.
+**Tier。** 该史诗系统的 `workflow`：若有该史诗 slug（其 GDD 系统）的
+`system_overrides` 行则用该行，否则用项目值。
 
-- `/create-stories [epic-slug]` — e.g. `/create-stories combat`
-- `/create-stories production/epics/combat/EPIC.md` — full path also accepted
-- No argument — ask: "Which epic would you like to break into stories?"
-  Glob `production/epics/*/EPIC.md` and list available epics with their status.
-- `/create-stories [epic-slug]` —— 例如 `/create-stories combat`
-- `/create-stories production/epics/combat/EPIC.md` —— 也接受完整路径
-- 无参数 —— 询问："你想把哪个史诗拆解为故事？"
-  Glob `production/epics/*/EPIC.md` 并列出可用史诗及其状态。
+**`story_granularity`** sets each story's acceptance-criteria load. Group or split
+criteria to hit it:
+**`story_granularity`** 设定每个故事的验收标准负载。对标准进行分组或拆分以达到它：
 
----
+| `story_granularity` | ACs per story | Size |
+|---|---|---|
+| `coarse` (default, `rigor: minimal`) | 5-10 | a whole feature, multi-day |
+| `balanced` (`rigor: standard`) | 2-4 | one task, about one session |
+| `fine` | 1 | one criterion; the story name restates it |
+| `story_granularity` | 每个故事的 AC 数 | 规模 |
+|---|---|---|
+| `coarse`（默认，`rigor: minimal`） | 5-10 | 一整个功能，多天 |
+| `balanced`（`rigor: standard`） | 2-4 | 一项任务，约一次会话 |
+| `fine` | 1 | 一条标准；故事名称重述它 |
 
-## 2. Load Everything for This Epic
-## 2. 加载该史诗的全部内容
+**`docs.density`** sets the depth of each story's prose (context, implementation
+notes, ADR summary), never the AC count or the AC text: `terse` (default) = bullet
+notes, no preamble; `balanced` = a short context paragraph plus notes; `thorough` =
+full context, guidance and ADR rationale. The TR-ID, ADR Version and acceptance
+criteria are never trimmed.
+**`docs.density`** 设定每个故事散文的深度（上下文、实现
+说明、ADR 摘要），绝不改变 AC 数量或 AC 文本：`terse`（默认）= 要点
+说明，无前言；`balanced` = 一段简短上下文加说明；`thorough` =
+完整上下文、指导与 ADR 理由。TR-ID、ADR Version 与验收
+标准永不被削减。
 
-Read in full:
-完整读取：
+**Which epic.** The text typed after the skill name, with any `--review <mode>`
+pair removed: an epic slug (`combat`) or a path (`production/epics/combat/EPIC.md`).
+With nothing typed, the epic the user's request names ("the loot epic") counts as
+named.
+**哪个史诗。** 技能名之后输入的文本，移除任何 `--review <mode>`
+对：史诗 slug（`combat`）或路径（`production/epics/combat/EPIC.md`）。
+若未输入任何内容，用户请求中点名的史诗（"战利品史诗"）也算作
+已命名。
 
-- `production/epics/[epic-slug]/EPIC.md` — epic overview, governing ADRs, GDD requirements table
-- The epic's GDD (`design/gdd/[filename].md`) — read all 8 sections, especially Acceptance Criteria, Formulas, and Edge Cases
-- All governing ADRs listed in the epic — read the Decision, Implementation Guidelines, Engine Compatibility, and Engine Notes sections
-- `docs/architecture/control-manifest.md` — extract rules for this epic's layer; note the Manifest Version date from the header
-- `docs/architecture/tr-registry.yaml` — load all TR-IDs for this system
-- `production/epics/[epic-slug]/EPIC.md` —— 史诗概览、治理 ADR、GDD 需求表
-- 该史诗的 GDD（`design/gdd/[filename].md`）—— 读取全部 8 节，尤其是验收标准、公式与边界情况
-- 史诗中列出的所有治理 ADR —— 读取 Decision、Implementation Guidelines、Engine Compatibility 与 Engine Notes 各节
-- `docs/architecture/control-manifest.md` —— 提取该史诗所在层的规则；记录头部的 Manifest Version 日期
-- `docs/architecture/tr-registry.yaml` —— 加载该系统的全部 TR-ID
+- **Named, but no `EPIC.md` there:** at `standard` and `full`, stop: "No epic at
+  `production/epics/[slug]/EPIC.md`. Run `/create-epics` to create it, or check the
+  slug with `ls production/epics/`." Never decompose from a guess. At `minimal`,
+  say this tier needs no `/create-epics` epic, take Phase 2's `minimal` branch, and
+  name the slug it uses.
+- **Blank, at `minimal`:** take Phase 2's `minimal` branch.
+- **Blank, at `standard` or `full`:** list `production/epics/*/EPIC.md` with each
+  status, then ask: "Which epic would you like to break into stories?" with one
+  option per epic. **No epics found:** stop and say "No epics found under
+  `production/epics/`. Run `/create-epics layer: foundation` first." Never ask a
+  question with no options.
+- **已命名，但那里没有 `EPIC.md`：** 在 `standard` 与 `full` 下，停止："没有史诗位于
+  `production/epics/[slug]/EPIC.md`。运行 `/create-epics` 创建它，或用
+  `ls production/epics/` 检查该 slug。" 绝不凭猜测拆解。在 `minimal` 下，
+  说明此 tier 不需要 `/create-epics` 史诗，走阶段 2 的 `minimal` 分支，并
+  说明它使用的 slug。
+- **留空，在 `minimal` 下：** 走阶段 2 的 `minimal` 分支。
+- **留空，在 `standard` 或 `full` 下：** 列出 `production/epics/*/EPIC.md` 及各自
+  状态，然后询问："你想把哪个史诗拆解为故事？"，每个史诗一个
+  选项。**未找到史诗：** 停止并说明"在 `production/epics/` 下未找到史诗。
+  请先运行 `/create-epics layer: foundation`。" 绝不要提出
+  没有选项的问题。
 
-**ADR existence validation**: After reading the governing ADRs list from the epic, confirm each ADR file exists on disk. If any ADR file cannot be found, **stop immediately** before decomposing any story:
-**ADR 存在性校验**：从史诗读取治理 ADR 列表后，确认每个 ADR 文件在磁盘上存在。若任何 ADR 文件无法找到，在拆解任何故事之前**立即停止**：
+## Phase 2: Load the inputs
+## 阶段 2：加载输入
 
-> "Epic references [ADR-NNNN: title] but `docs/architecture/[adr-file].md` was not found.
-> Check the filename in the epic's Governing ADRs list, or run `/architecture-decision`
-> to create it. Cannot create stories until all referenced ADR files are present."
-> "史诗引用了 [ADR-NNNN: title]，但 `docs/architecture/[adr-file].md` 未找到。
-> 请检查史诗治理 ADR 列表中的文件名，或运行 `/architecture-decision`
-> 创建它。在所有被引用的 ADR 文件齐备之前无法创建故事。"
+### `minimal`: build the epic from the brief
+### `minimal`：从简报构建史诗
 
-Do not proceed to Step 3 until all referenced ADR files are confirmed present.
-在所有被引用的 ADR 文件确认存在之前，不要进入第 3 步。
+1. **No `design/game-brief.md`:** stop. "There is no brief to build stories from
+   yet: run `/brainstorm` first; it writes the one-page brief." When the code root
+   already holds the game (10 or more source files), name `/reverse-document design
+   [code root]` instead.
+2. Read `design/game-brief.md` in full (one page).
+3. **The epic.** `<slug>` is the brief's working title, slugified (`mvp` if it has
+   none), or the epic the user named.
+   - `production/epics/<slug>/EPIC.md` exists: it is the epic. Use its scope, still
+     traced to the brief, and never rewrite it.
+   - It does not: draft one, written in Phase 7 only after the Phase 6 ask names
+     it. Goal = the brief's one-sentence pitch; scope = its MVP feature list;
+     order = its **Build order**. Keep it terse.
+   - Stories already in the folder (a return visit): never rewrite an existing
+     `story-*.md`. Add stories only for brief items they do not cover, or new ones
+     the user names, and number on from the highest existing `story-NNN`.
+4. **One story per MVP feature, in Build order**, each traced to the brief. No
+   story is blocked on ADR grounds: this tier has none.
+1. **没有 `design/game-brief.md`：** 停止。"目前没有可供构建故事的简报：
+   请先运行 `/brainstorm`；它会写出一页式简报。" 若代码根目录
+   已包含游戏（10 个或更多源文件），则改为指明 `/reverse-document design
+   [code root]`。
+2. 完整读取 `design/game-brief.md`（一页）。
+3. **史诗。** `<slug>` 是简报的工作标题的 slug 化形式（若无标题则为 `mvp`），
+   或用户点名的史诗。
+   - `production/epics/<slug>/EPIC.md` 存在：它就是史诗。使用其范围，仍
+     追溯到简报，且绝不重写它。
+   - 不存在：起草一个，只在阶段 6 的提问点名它之后于阶段 7 写入。
+     目标 = 简报的一句话推介语；范围 = 其 MVP 功能列表；
+     顺序 = 其 **Build order**。保持简洁。
+   - 文件夹中已有故事（再次访问）：绝不重写既有
+     `story-*.md`。只为它们未覆盖的简报条目、或用户点名的新条目
+     添加故事，并从现有最高的 `story-NNN` 继续编号。
+4. **每个 MVP 功能一个故事，按 Build order**，各自追溯到简报。没有
+   故事因 ADR 原因被阻塞：此 tier 没有 ADR。
 
-Report: "Loaded epic [name], GDD [filename], [N] governing ADRs (all confirmed present), control manifest v[date]."
-报告："已加载史诗 [name]、GDD [filename]、[N] 个治理 ADR（全部确认存在）、控制清单 v[date]。"
+Read no GDD, control manifest, TR registry or ADR at `minimal`. Go to Phase 3.
+在 `minimal` 下不读取任何 GDD、控制清单（control manifest）、TR 注册表或 ADR。进入阶段 3。
 
----
+### `standard` and `full`: the epic and what governs it
+### `standard` 与 `full`：史诗及管辖它的内容
 
-## 3. Classify Stories by Type
-## 3. 按类型对故事分类
+1. **The epic:** `production/epics/[epic-slug]/EPIC.md` in full (its layer, GDD,
+   governing ADRs, and the GDD Requirements table with TR-IDs).
+2. **The GDD:** its sections by heading, never the whole file:
+   `bash .claude/scripts/md-section.sh extract design/gdd/[file].md "Acceptance Criteria"`,
+   and the same for `Formulas`, `Edge Cases` and `Detailed Design` (exit 3: try
+   `Detailed Rules`, the design standard's name for the same section); at `full`
+   the other required sections too (`list` shows the headings).
+3. **The control manifest:** the epic's layer only, and the version:
+   `bash .claude/scripts/md-section.sh extract docs/architecture/control-manifest.md "[Layer] Layer Rules"`,
+   plus its `Manifest Version` line.
+4. **The TR registry:** this system's entries only: in
+   `docs/architecture/tr-registry.yaml`, the lines matching `system: <slug>\s*$`,
+   with each entry's `id` above and its text below. The anchor keeps `combat` from
+   matching `combat-ai`; `\s*` takes a Windows line ending.
+5. **The ADRs**, every one the epic names (governing, or in its requirements table,
+   Proposed ones included), in one call:
+   ```
+   bash .claude/scripts/adr-status.sh ADR-0001 ADR-0003 ...
+   ```
+   Each row gives the status, layer, `version` (the story's ADR Version stamp),
+   `depends_on`, and missing sections. Then read only `Summary`, `Decision` (its
+   Implementation Guidelines inside) and `Engine Compatibility` of each, with
+   `md-section.sh extract`. Engine Notes is a story field taken from Engine
+   Compatibility, not an ADR section. An ADR with none of these sections predates
+   the template: read it once, and flag it for `/architecture-decision retrofit
+   [file]`.
+1. **史诗：** 完整读取 `production/epics/[epic-slug]/EPIC.md`（其层、GDD、
+   管辖 ADR，以及带 TR-ID 的 GDD Requirements 表）。
+2. **GDD：** 按标题读取其小节，绝不读整个文件：
+   `bash .claude/scripts/md-section.sh extract design/gdd/[file].md "Acceptance Criteria"`，
+   对 `Formulas`、`Edge Cases` 与 `Detailed Design` 同样处理（退出码 3：改试
+   `Detailed Rules`，设计标准中同一小节的名称）；在 `full` 下
+   还要读取其他必需小节（`list` 会显示标题）。
+3. **控制清单：** 只读该史诗的层，以及版本：
+   `bash .claude/scripts/md-section.sh extract docs/architecture/control-manifest.md "[Layer] Layer Rules"`，
+   加上其 `Manifest Version` 行。
+4. **TR 注册表：** 只读此系统的条目：在
+   `docs/architecture/tr-registry.yaml` 中，匹配 `system: <slug>\s*$` 的行，
+   每条条目的 `id` 在其上方、文本在其下方。锚点使 `combat` 不会
+   匹配到 `combat-ai`；`\s*` 用以容纳 Windows 行尾。
+5. **ADR**，即史诗点名的每一个（管辖的，或在其需求表中的，
+   包括 Proposed 的），一次调用：
+   ```
+   bash .claude/scripts/adr-status.sh ADR-0001 ADR-0003 ...
+   ```
+   每行给出状态、层、`version`（故事中的 ADR Version 戳记）、
+   `depends_on` 以及缺失的小节。然后只读取每个 ADR 的 `Summary`、`Decision`（其内含的
+   Implementation Guidelines）与 `Engine Compatibility`，用
+   `md-section.sh extract`。Engine Notes 是从 Engine
+   Compatibility 取的故事字段，不是 ADR 小节。若某 ADR 缺少这些小节中的任何一个，说明它早于
+   模板：读取一次，并标记它以便 `/architecture-decision retrofit
+   [file]`。
 
-**Story Type Classification** — assign each story a type based on its acceptance criteria:
-**故事类型分类** —— 根据每个故事的验收标准为其指派类型：
+**A named ADR with no file** (`NOT_FOUND`):
+**已点名但无文件的 ADR**（`NOT_FOUND`）：
 
-| Story Type | Assign when criteria reference... |
+- `full`: stop before decomposing any story.
+- `standard`: stop only when it is critical (Foundation layer); otherwise warn, go
+  on, and write the stories it governs as `Blocked` until it exists.
+- On stopping: "Epic references [ADR-NNNN: title] but no file for it was found in
+  `docs/architecture/`. Check the epic's Governing ADRs list, or run
+  `/architecture-decision` to create it. Cannot create stories until the
+  referenced ADR files exist."
+- `full`：在拆解任何故事之前停止。
+- `standard`：仅当它至关重要（Foundation 层）时停止；否则警告，继续
+  进行，并将它管辖的故事写为 `Blocked`，直至它存在。
+- 停止时："史诗引用了 [ADR-NNNN: title]，但在
+  `docs/architecture/` 中未找到其文件。请检查该史诗的 Governing ADRs 列表，或运行
+  `/architecture-decision` 创建它。在所引用的 ADR 文件存在之前，无法创建故事。"
+
+**Report before drafting**, with the real state, every ADR on its own with its
+status:
+**起草前先报告**，呈现真实状态，每个 ADR 单独列出并附其
+状态：
+
+```
+Loaded: epic [name] · GDD [file] · manifest v[date], [layer] rules
+ADRs: ADR-0001 Accepted · ADR-0002 Accepted · ADR-0003 Accepted · ADR-0004 Proposed · [ADR-NNNN missing]
+```
+
+Never say "all present" when one is missing, or name a manifest version when there
+is none.
+当一个缺失时绝不说"全部存在"，或在没有清单版本时
+说出某个版本。
+
+## Phase 3: Type each story
+## 阶段 3：为每个故事定类型
+
+| Type | When its criteria reference |
 |---|---|
-| **Logic** | Formulas, numerical thresholds, state transitions, AI decisions, calculations |
-| **Integration** | Two or more systems interacting, signals crossing boundaries, save/load round-trips |
-| **Visual/Feel** | Animation behaviour, VFX, "feels responsive", timing, screen shake, audio sync |
-| **UI** | Menus, HUD elements, buttons, screens, dialogue boxes, tooltips |
-| **Config/Data** | Balance tuning values, data file changes only — no new code logic |
-
-| 故事类型 | 当标准引用……时指派 |
+| **Logic** | formulas, thresholds, state transitions, AI decisions, calculations |
+| **Integration** | two or more systems, signals across boundaries, save/load round-trips |
+| **Visual/Feel** | animation, VFX, "feels responsive", timing, screen shake, audio sync |
+| **UI** | menus, HUD, buttons, screens, dialogue boxes, tooltips |
+| **Config/Data** | balance values and data files only, no new logic |
+| 类型 | 当其标准涉及 |
 |---|---|
-| **Logic** | 公式、数值阈值、状态转换、AI 决策、计算 |
-| **Integration** | 两个或多个系统交互、信号跨越边界、存档/读档往返 |
-| **Visual/Feel** | 动画行为、VFX、"手感响应"、时序、屏幕震动、音频同步 |
-| **UI** | 菜单、HUD 元素、按钮、屏幕、对话框、工具提示 |
-| **Config/Data** | 平衡调优值、仅数据文件改动 —— 无新代码逻辑 |
+| **Logic** | 公式、阈值、状态转换、AI 决策、计算 |
+| **Integration** | 两个或更多系统、跨边界的信号、存档/读档往返 |
+| **Visual/Feel** | 动画、VFX、"感觉灵敏"、时序、屏幕震动、音频同步 |
+| **UI** | 菜单、HUD、按钮、界面、对话框、工具提示 |
+| **Config/Data** | 仅平衡数值与数据文件，无新逻辑 |
 
-Mixed stories: assign the type that carries the highest implementation risk.
-The type determines what test evidence is required before `/story-done` can close the story.
-混合型故事：指派实现风险最高的类型。
-该类型决定 `/story-done` 关闭故事之前所需的测试证据。
+A mixed story takes the type with the highest implementation risk. The type sets
+the evidence `/story-done` needs.
+混合型故事取实施风险最高的类型。类型决定 `/story-done` 所需的
+证据。
 
----
+## Phase 4: Draft the stories
+## 阶段 4：起草故事
 
-## 4. Decompose the GDD into Stories
-## 4. 将 GDD 拆解为故事
+Group the requirements that need the same core implementation into one story, at
+the `story_granularity` load. Order: foundation behaviour first, edge cases later,
+UI last. For each story:
+将需要同一核心实现的需求归入一个故事，符合
+`story_granularity` 的负载。顺序：先基础行为，后边界情况，
+UI 最后。对每个故事：
 
-For each GDD acceptance criterion:
-对于每个 GDD 验收标准：
+- **Requirement:** the TR-ID from the registry, matched through the epic's GDD
+  Requirements table. Only when no entry matches, write `TR-[system]-???` and say
+  so.
+- **ADR:** the one that governs how to build it (the requirements table names it).
+  - `Accepted`: embed it.
+  - `Proposed`: `Status: Blocked`, with "BLOCKED: ADR-NNNN is Proposed — accept it
+    with `/architecture-decision accept ADR-NNNN` once decided".
+  - `Deprecated` or `Superseded`: `Status: Blocked`, with "BLOCKED: ADR-NNNN is
+    [status] — point the story at [successor] (edit its ADR field;
+    `/create-stories` never rewrites an existing story) before implementing".
+  - An `Accepted` ADR whose `depends_on` names an ADR that is not Accepted: Blocked
+    the same way, naming that ADR.
+  - Several apply: list them all, the most direct first.
+  - None applies: `ADR: N/A — [reason]`, e.g. "pure data configuration". Never
+    blank: blank means unchecked.
+- **ADR Version:** the story's **ADR Version** is the ADR's `## Last Verified`
+  date, else its `## Date`, else `unversioned` (the `version` column). `/dev-story`
+  trusts the story's ADR summary while this still matches the ADR.
+- **Engine risk:** from the ADR's Engine Compatibility (its knowledge risk).
+- **Estimate:** propose a t-shirt size from the criteria and the files the story
+  touches: `S` (a few hours), `M` (about a day) or `L` (several days). It is a
+  proposal: Phase 6 shows it and the user can change it. `/story-readiness` fails
+  a story whose Estimate is still the template's bracket, so never leave it.
+- **需求：** 来自注册表的 TR-ID，通过史诗的 GDD
+  Requirements 表匹配。仅当没有条目匹配时，才写 `TR-[system]-???` 并
+  说明原因。
+- **ADR：** 管辖如何构建它的那个（需求表会点名它）。
+  - `Accepted`：内嵌它。
+  - `Proposed`：`Status: Blocked`，并附"BLOCKED: ADR-NNNN 为 Proposed — 一旦决定，
+    用 `/architecture-decision accept ADR-NNNN` 接受它"。
+  - `Deprecated` 或 `Superseded`：`Status: Blocked`，并附"BLOCKED: ADR-NNNN 为
+    [status] — 在实施前将该故事指向 [successor]（编辑其 ADR 字段；
+    `/create-stories` 绝不重写既有故事）"。
+  - 一个 `Accepted` 的 ADR，其 `depends_on` 点名了某个并非 Accepted 的 ADR：以同样方式
+    阻塞，并点名该 ADR。
+  - 多个适用：全部列出，最直接的在前。
+  - 无适用：`ADR: N/A — [reason]`，例如"纯数据配置"。绝不
+    留空：留空意味着未检查。
+- **ADR Version：** 故事的 **ADR Version** 是该 ADR 的 `## Last Verified`
+  日期，否则其 `## Date`，再否则 `unversioned`（`version` 列）。`/dev-story`
+  在此值仍与 ADR 匹配期间信任故事的 ADR 摘要。
+- **引擎风险：** 取自该 ADR 的 Engine Compatibility（其知识风险）。
+- **估算：** 依据标准与故事涉及的文件提出一个 T 恤尺码：
+  `S`（数小时）、`M`（约一天）或 `L`（数天）。它只是
+  提议：阶段 6 会展示它，用户可更改。`/story-readiness` 会使
+  估算仍为模板方括号的故事失败，因此绝不留下它。
 
-1. Group related criteria that require the same core implementation
-2. Each group = one story
-3. Order stories: foundational behaviour first, edge cases last, UI last
-1. 将需要相同核心实现的相关标准分组
-2. 每组 = 一个故事
-3. 故事排序：基础行为在前、边界情况在后、UI 最后
+## Phase 5: QA lead review
+## 阶段 5：QA 负责人评审
 
-**Story sizing rule:** one story = one focused session (~2-4 hours). If a
-group of criteria would take longer, split into two stories.
-**故事规模规则：** 一个故事 = 一次专注会话（约 2-4 小时）。若
-一组标准耗时更长，则拆分为两个故事。
+Read the `review_gate` line above. `skill-gates=skip` (solo or lean): no review;
+note "QL-STORY-READY skipped — [Solo | Lean] mode" in the Phase 6 list and the
+closing block. `skill-gates=run`: read `references/qa-lead-gate.md` and
+`.claude/docs/director-gates.md`, and run it now, before the Phase 6 ask. On a skip,
+do not load it.
+读取上文的 `review_gate` 行。`skill-gates=skip`（solo 或 lean）：不评审；
+在阶段 6 列表与收尾区块中注明 "QL-STORY-READY skipped — [Solo | Lean] mode"。
+`skill-gates=run`：读取 `references/qa-lead-gate.md` 与
+`.claude/docs/director-gates.md`，并在阶段 6 提问之前立即运行它。若为跳过，
+不要加载它。
 
-For each story, determine:
-对每个故事，确定：
-- **GDD requirement**: which acceptance criterion(ia) does this satisfy?
-- **TR-ID**: look up in `tr-registry.yaml`. Use the stable ID. If no match, use `TR-[system]-???` and warn.
-- **Governing ADR**: which ADR governs how to implement this?
-  - `Status: Accepted` → embed normally
-  - `Status: Proposed` → set story `Status: Blocked` with note: "BLOCKED: ADR-NNNN is Proposed — run `/architecture-decision` to advance it"
-  - **Multiple ADRs apply**: List all governing ADRs in the story's `Governing ADRs:` field. Designate the one most directly controlling the implementation pattern as primary (first in the list). Others are listed as secondary references.
-  - **No ADR applies at all**: Write `ADR: N/A — [brief reason, e.g. "pure data configuration, no architectural pattern required"]` in the story's ADR field. Do NOT leave the field blank — a blank ADR field means "not checked", not "not applicable".
-- **Story Type**: from Step 3 classification
-- **Engine risk**: from the ADR's Knowledge Risk field
-- **GDD 需求**：该故事满足哪些验收标准？
-- **TR-ID**：在 `tr-registry.yaml` 中查找。使用稳定 ID。若无匹配，使用 `TR-[system]-???` 并警告。
-- **治理 ADR**：哪个 ADR 治理其实现方式？
-  - `Status: Accepted` → 正常嵌入
-  - `Status: Proposed` → 设定故事 `Status: Blocked`，附注："BLOCKED: ADR-NNNN is Proposed —— 运行 `/architecture-decision` 推进它"
-  - **多个 ADR 适用**：在故事的 `Governing ADRs:` 字段列出所有治理 ADR。将最直接控制实现模式的 ADR 指定为主（列表第一个）。其余作为次要参考列出。
-  - **无 ADR 适用**：在故事的 ADR 字段写入 `ADR: N/A —— [简短原因，例如 "纯数据配置，无需架构模式"]`。不要留空 —— 空的 ADR 字段意为"未检查"，而非"不适用"。
-- **故事类型**：来自第 3 步分类
-- **引擎风险**：来自 ADR 的 Knowledge Risk 字段
-
----
-
-## 4b. QA Lead Story Readiness Gate
-## 4b. QA 主管故事就绪门禁
-
-**Review mode check** — apply before spawning QL-STORY-READY:
-- `solo` → skip. Note: "QL-STORY-READY skipped — Solo mode." Proceed to Step 5 (present stories for review).
-- `lean` → skip (not a PHASE-GATE). Note: "QL-STORY-READY skipped — Lean mode." Proceed to Step 5 (present stories for review).
-- `full` → spawn as normal.
-**评审模式检查** —— 在派生 QL-STORY-READY 之前应用：
-- `solo` → 跳过。附注："QL-STORY-READY skipped —— Solo 模式。"进入第 5 步（呈现故事供评审）。
-- `lean` → 跳过（非 PHASE-GATE）。附注："QL-STORY-READY skipped —— Lean 模式。"进入第 5 步（呈现故事供评审）。
-- `full` → 正常派生。
-
-After decomposing all stories (Step 4 complete) but before presenting them for write approval, spawn `qa-lead` via Task using gate **QL-STORY-READY** (`.claude/docs/director-gates.md`).
-在拆解全部故事之后（第 4 步完成）但呈现它们以获得写入批准之前，通过 Task 派生 `qa-lead` 并使用门禁 **QL-STORY-READY**（`.claude/docs/director-gates.md`）。
-
-Pass: the full story list with acceptance criteria, story types, and TR-IDs; the epic's GDD acceptance criteria for reference.
-传递：包含验收标准、故事类型与 TR-ID 的完整故事列表；史诗的 GDD 验收标准作为参考。
-
-Present the QA lead's assessment. For each story flagged as GAPS or INADEQUATE, revise the acceptance criteria before proceeding — stories with untestable criteria cannot be implemented correctly. Once all stories reach ADEQUATE, proceed.
-呈现 QA 主管的评估。对于每个被标记为 GAPS 或 INADEQUATE 的故事，在继续之前修订其验收标准 —— 不可测试的标准无法被正确实现。当所有故事达到 ADEQUATE 时，继续。
-
-**Before generating test specs**: Glob `production/qa/qa-plan-*.md` for the most recently modified file. If found, read it and check whether it contains test case specifications for the stories in this epic (look for story titles or slugs in the plan's Automated Tests Required section). If matching specs exist:
-**在生成测试规格之前**：Glob `production/qa/qa-plan-*.md` 查找最近修改的文件。若找到，读取它并检查其是否包含本史诗中故事的测试用例规格（在计划的 Automated Tests Required 节查找故事标题或 slug）。若存在匹配规格：
-- Use `AskUserQuestion`:
-  - Prompt: "A QA plan exists at [path] with test specs for some of these stories. How do you want to proceed?"
-  - Options:
-    - `Use existing specs from the QA plan — embed them into the story files (Recommended)`
-    - `Ask qa-lead to generate fresh specs — override the QA plan`
-    - `Skip test spec generation — I'll fill in ## QA Test Cases manually`
-- 使用 `AskUserQuestion`：
-  - 提示："在 [path] 存在 QA 计划，其中含有部分故事的测试规格。你希望如何进行？"
-  - 选项：
-    - `使用 QA 计划中的既有规格 —— 将其嵌入故事文件（推荐）`
-    - `要求 qa-lead 生成新规格 —— 覆盖 QA 计划`
-    - `跳过测试规格生成 —— 我将手动填写 ## QA Test Cases`
-- If "Use existing specs": extract the test case specs from the qa-plan for each matching story and embed them directly into the `## QA Test Cases` section. No qa-lead spawn needed for those stories. Only spawn qa-lead for stories with no coverage in the qa-plan.
-- If "Generate fresh": proceed with the qa-lead spawn below as normal.
-- If "Skip": leave `## QA Test Cases` with a placeholder: `*Test cases not yet defined — run /qa-plan to generate them.*`
-- 若选择"使用既有规格"：从 qa-plan 为每个匹配故事提取测试用例规格，并直接嵌入 `## QA Test Cases` 节。这些故事无需派生 qa-lead。仅对在 qa-plan 中无覆盖的故事派生 qa-lead。
-- 若选择"生成新规格"：按下方流程正常派生 qa-lead。
-- 若选择"跳过"：在 `## QA Test Cases` 留下占位符：`*测试用例尚未定义 —— 运行 /qa-plan 生成。*`
-
-**After ADEQUATE** (or after qa-plan import): for every Logic and Integration story, ask the qa-lead to produce concrete test case specifications — one per acceptance criterion — in this format:
-**ADEQUATE 之后**（或 qa-plan 导入之后）：对每个 Logic 与 Integration 故事，要求 qa-lead 为每个验收标准产出具体测试用例规格 —— 格式如下：
-
-```
-Test: [criterion text]
-  Given: [precondition]
-  When: [action]
-  Then: [expected result / assertion]
-  Edge cases: [boundary values or failure states to test]
-```
-
-For Visual/Feel and UI stories, produce manual verification steps instead:
-对于 Visual/Feel 与 UI 故事，改为产出手动验证步骤：
-```
-Manual check: [criterion text]
-  Setup: [how to reach the state]
-  Verify: [what to look for]
-  Pass condition: [unambiguous pass description]
-```
-
-These test case specs are embedded directly into each story's `## QA Test Cases` section. The developer implements against these cases. The programmer does not write tests from scratch — QA has already defined what "done" looks like.
-这些测试用例规格直接嵌入每个故事的 `## QA Test Cases` 节。开发者依据这些用例实现。程序员无需从零编写测试 —— QA 已定义了"完成"的样子。
-
----
-
-## 5. Present Stories for Review
-## 5. 呈现故事供评审
-
-Before writing any files, present the full story list:
-在写入任何文件之前，呈现完整故事列表：
+## Phase 6: Show the stories, ask once
+## 阶段 6：展示故事，只问一次
 
 ```
 ## Stories for Epic: [name]
+ADRs: ADR-0001 Accepted · ADR-0002 Accepted · ADR-0004 Proposed   (every ADR, from Phase 2)
 
-Story 001: [title] — Logic — ADR-NNNN
-  Covers: TR-[system]-001 ([1-line summary of requirement])
+Story 001: [title] — Logic — ADR-0001 — Ready — Estimate M
+  Covers: TR-[system]-001 ([one-line requirement])
   Test required: tests/unit/[system]/[slug]_test.[ext]
 
-Story 002: [title] — Integration — ADR-MMMM
+Story 002: [title] — Integration — ADR-0004 — BLOCKED (ADR-0004 is Proposed) — Estimate L
   Covers: TR-[system]-002, TR-[system]-003
   Test required: tests/integration/[system]/[slug]_test.[ext]
 
-Story 003: [title] — Visual/Feel — ADR-NNNN
+Story 003: [title] — Visual/Feel — ADR-0001 — Ready — Estimate S
   Covers: TR-[system]-004
-  Evidence required: production/qa/evidence/[slug]-evidence.md
+  Evidence required: retained screenshot + sign-off in production/qa/evidence/[slug]-evidence.md
 
-[N stories total: N Logic, N Integration, N Visual/Feel, N UI, N Config/Data]
+[N stories: N Logic, N Integration, N Visual/Feel, N UI, N Config/Data; N Blocked]
+QL-STORY-READY: [skipped — Solo mode | its verdicts]
 ```
 
-Use `AskUserQuestion`:
-- Prompt: "May I write these [N] stories to `production/epics/[epic-slug]/`?"
-- Options: `[A] Yes — write all [N] stories` / `[B] Not yet — I want to review or adjust first`
-使用 `AskUserQuestion`：
-- 提示："我可以将这 [N] 个故事写入 `production/epics/[epic-slug]/` 吗？"
-- 选项：`[A] 是 —— 写入全部 [N] 个故事` / `[B] 暂不 —— 我想先评审或调整`
+At `minimal`, each line traces to `Brief MVP feature N`, there is no ADRs line, and
+there is one story per MVP feature: no extra stories for brief items outside the
+MVP list. Then
+ask: "May I write these [N] stories to `production/epics/[epic-slug]/`, and
+[create | update] `production/epics/[epic-slug]/EPIC.md` and update
+`production/epics/index.md`?" Options: Yes, write all [N] / Not yet, I want to
+adjust first; an adjustment can change any estimate. Name every file Phase 7 touches: *create* `EPIC.md` only when it
+does not exist, and leave `index.md` out when it does not exist. Write nothing
+before the yes.
+在 `minimal` 下，每行追溯到 `Brief MVP feature N`，没有 ADRs 行，且
+每个 MVP 功能一个故事：不为 MVP 列表之外的简报条目添加额外故事。然后
+询问："我可以把这 [N] 个故事写入 `production/epics/[epic-slug]/`，并
+[创建 | 更新] `production/epics/[epic-slug]/EPIC.md` 以及更新
+`production/epics/index.md` 吗？" 选项：Yes, write all [N] / Not yet, I want to
+adjust first；调整可改变任何估算。点名阶段 7 会触碰的每个文件：仅当
+`EPIC.md` 不存在时才*创建*它，`index.md` 不存在时则不提及它。在
+Yes 之前不写入任何内容。
 
----
+## Phase 7: Write
+## 阶段 7：写入
 
-## 6. Write Story Files
-## 6. 写入故事文件
+### The story files
+### 故事文件
 
-For each story, write `production/epics/[epic-slug]/story-[NNN]-[slug].md`:
-对每个故事，写入 `production/epics/[epic-slug]/story-[NNN]-[slug].md`：
+**Each story** is `production/epics/[epic-slug]/story-[NNN]-[slug].md`, laid out
+as `.claude/docs/templates/story.md`. Never reuse a story number. Write each file
+as a file, never through a shell command: a shell write skips the project's write
+checks.
+**每个故事**都是 `production/epics/[epic-slug]/story-[NNN]-[slug].md`，按
+`.claude/docs/templates/story.md` 布局。绝不重复使用故事编号。将每个文件
+作为文件写入，绝不通过 shell 命令写入：shell 写入会跳过项目的写入
+检查。
 
-```markdown
-# Story [NNN]: [title]
+At `minimal` there is no GDD, ADR, TR registry or manifest. Fill these fields
+exactly:
+在 `minimal` 下没有 GDD、ADR、TR 注册表或清单。精确填写这些
+字段：
 
-> **Epic**: [epic name]
-> **Status**: Ready
-> **Layer**: [Foundation / Core / Feature / Presentation]
-> **Type**: [Logic | Integration | Visual/Feel | UI | Config/Data]
-> **Estimate**: [hours or t-shirt size — fill before sprint planning]
-> **Manifest Version**: [date from control-manifest.md header]
-> **Last Updated**: [set by /dev-story when implementation begins]
+| Field | Value at `minimal` |
+|---|---|
+| GDD | `design/game-brief.md` |
+| Requirement | `Brief MVP feature N`, never a TR-ID |
+| ADR Governing Implementation, ADR Decision Summary, ADR Version | `N/A (minimal — no ADRs)` |
+| Manifest Version, Control Manifest Rules | `N/A (minimal — no control manifest)` |
+| Engine | `engine.name` + `engine.version` |
+| Risk | the level `docs/engine-reference/<engine>/VERSION.md` gives the pinned version (its timeline row, or its overall rating). No file or no level: `NOT ASSESSED (no VERSION.md risk rating)`, never a guess. `/dev-story` reads NOT ASSESSED as HIGH |
+| Engine Notes | `none (no ADR engine-compatibility analysis at minimal)` |
+| Acceptance Criteria | from the brief's **Player goal & fail state** and the MVP feature, made concrete and testable; never invented from a bare bullet |
+| 字段 | 在 `minimal` 下的值 |
+|---|---|
+| GDD | `design/game-brief.md` |
+| Requirement | `Brief MVP feature N`，绝不是 TR-ID |
+| ADR Governing Implementation、ADR Decision Summary、ADR Version | `N/A (minimal — no ADRs)` |
+| Manifest Version、Control Manifest Rules | `N/A (minimal — no control manifest)` |
+| Engine | `engine.name` + `engine.version` |
+| Risk | `docs/engine-reference/<engine>/VERSION.md` 为所固定版本给出的级别（其时间线行，或其总体评级）。无文件或无级别：`NOT ASSESSED (no VERSION.md risk rating)`，绝不猜测。`/dev-story` 将 NOT ASSESSED 读作 HIGH |
+| Engine Notes | `none (no ADR engine-compatibility analysis at minimal)` |
+| Acceptance Criteria | 来自简报的 **Player goal & fail state** 与 MVP 功能，使其具体且可测试；绝不从单条要点凭空编造 |
 
-## Context
+At every tier:
+- **QA Test Cases:** when the review was skipped, write
+  `*N/A — no qa-lead specs at this tier; implement against the Acceptance Criteria above*`.
+  Never improvise test cases.
+- **Test Evidence:** `qa.level` governs it. At `qa.level: minimal` tests are
+  waived (advisory), but a Visual/Feel or UI story's retained screenshot is not.
+- **Estimate:** the size from Phase 6, with any change the user made.
+- **Dependencies:** name each story this one needs by its path.
+- **Files:** the code and test files the story is planned to create or change,
+  under the code root and test root. `/dev-story` replaces them with the real list.
+在每个 tier：
+- **QA Test Cases：** 当评审被跳过时，写
+  `*N/A — no qa-lead specs at this tier; implement against the Acceptance Criteria above*`。
+  绝不临时编造测试用例。
+- **Test Evidence：** 由 `qa.level` 决定。在 `qa.level: minimal` 下测试
+  获得豁免（仅作建议），但 Visual/Feel 或 UI 故事的留存截图不豁免。
+- **Estimate：** 阶段 6 的规模，加上用户所做的任何更改。
+- **Dependencies：** 按路径点名此故事所需的每个故事。
+- **Files：** 计划创建或更改的代码与测试文件，
+  位于代码根与测试根之下。`/dev-story` 会用真实列表替换它们。
 
-**GDD**: `design/gdd/[filename].md`
-**Requirement**: `TR-[system]-NNN`
-*(Requirement text lives in `docs/architecture/tr-registry.yaml` — read fresh at review time)*
+### `EPIC.md`
 
-**ADR Governing Implementation**: [ADR-NNNN: title]
-**ADR Decision Summary**: [1-2 sentence summary of what the ADR decided]
-
-**Engine**: [name + version] | **Risk**: [LOW / MEDIUM / HIGH]
-**Engine Notes**: [from ADR Engine Compatibility section — post-cutoff APIs, verification required]
-
-**Control Manifest Rules (this layer)**:
-- Required: [relevant required pattern]
-- Forbidden: [relevant forbidden pattern]
-- Guardrail: [relevant performance guardrail]
-
----
-
-## Acceptance Criteria
-
-*From GDD `design/gdd/[filename].md`, scoped to this story:*
-
-- [ ] [criterion 1 — directly from GDD]
-- [ ] [criterion 2]
-- [ ] [performance criterion if applicable]
-
----
-
-## Implementation Notes
-
-*Derived from ADR-NNNN Implementation Guidelines:*
-
-[Specific, actionable guidance from the ADR. Do not paraphrase in ways that
-change meaning. This is what the programmer reads instead of the ADR.]
-
----
-
-## Out of Scope
-
-*Handled by neighbouring stories — do not implement here:*
-
-- [Story NNN+1]: [what it handles]
-
----
-
-## QA Test Cases
-
-*Written by qa-lead at story creation. The developer implements against these — do not invent new test cases during implementation.*
-
-**[For Logic / Integration stories — automated test specs]:**
-
-- **AC-1**: [criterion text]
-  - Given: [precondition]
-  - When: [action]
-  - Then: [assertion]
-  - Edge cases: [boundary values / failure states]
-
-**[For Visual/Feel / UI stories — manual verification steps]:**
-
-- **AC-1**: [criterion text]
-  - Setup: [how to reach the state]
-  - Verify: [what to look for]
-  - Pass condition: [unambiguous pass description]
-
----
-
-## Test Evidence
-
-**Story Type**: [type]
-**Required evidence**:
-- Logic: `tests/unit/[system]/[story-slug]_test.[ext]` — must exist and pass
-- Integration: `tests/integration/[system]/[story-slug]_test.[ext]` OR playtest doc
-- Visual/Feel: `production/qa/evidence/[story-slug]-evidence.md` + sign-off
-- UI: `production/qa/evidence/[story-slug]-evidence.md` or interaction test
-- Config/Data: smoke check pass (`production/qa/smoke-*.md`)
-
-**Status**: [ ] Not yet created
-
----
-
-## Dependencies
-
-- Depends on: [Story NNN-1 must be DONE, or "None"]
-- Unlocks: [Story NNN+1, or "None"]
-```
-
-### Also update `production/epics/[epic-slug]/EPIC.md`
-### 同时更新 `production/epics/[epic-slug]/EPIC.md`
-
-Replace the "Stories: Not yet created" line with a populated table:
-将 "Stories: Not yet created" 行替换为已填充的表格：
+At `minimal` with none yet, write the Phase 2 draft with the table
+below. Otherwise replace its "Stories: Not yet created" line with the table, or on
+a return visit append one row per new story and leave the rest of the file as it
+is:
+在 `minimal` 且尚无 `EPIC.md` 时，用下表写入阶段 2 的草稿。
+否则将其 "Stories: Not yet created" 行替换为该表，或在
+再次访问时每个新故事追加一行，文件其余部分保持
+原样：
 
 ```markdown
 ## Stories
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | [title] | Logic | Ready | ADR-NNNN |
-| 002 | [title] | Integration | Ready | ADR-MMMM |
+| 001 | [title] | Logic | Ready | ADR-0001 |
+| 002 | [title] | Integration | Blocked | ADR-0004 |
 ```
 
-### Also update `production/epics/index.md`
-### 同时更新 `production/epics/index.md`
+### `production/epics/index.md`
 
-Find the row in the index table matching this epic (by epic name or slug). Update its `Stories` column from `Not yet created` to `[N] stories` (where N is the count just written). If the index file does not exist, skip silently.
-在索引表中找到与该史诗匹配的行（按史诗名或 slug）。将其 `Stories` 列从 `Not yet created` 更新为 `[N] stories`（其中 N 为刚写入的数量）。若索引文件不存在，则静默跳过。
+Set the epic's `Stories` cell to `[N] stories`,
+the epic's total after this run. When the file does not exist, say so:
+`Epics index not updated: production/epics/index.md absent`.
+将该史诗的 `Stories` 单元格设为 `[N] stories`，
+即本次运行后该史诗的总数。若文件不存在，则说明：
+`Epics index not updated: production/epics/index.md absent`。
 
----
+## Phase 8: Close
+## 阶段 8：收尾
 
-## 7. After Writing
-## 7. 写入之后
+If other epics in `production/epics/` have no stories, list them. Then ask:
+"[N] stories written to `production/epics/[epic-slug]/`. What next?" Options, those
+that apply:
+若 `production/epics/` 中的其他史诗没有故事，则列出它们。然后询问：
+"[N] 个故事已写入 `production/epics/[epic-slug]/`。接下来做什么？" 选项为
+适用者：
 
-Use `AskUserQuestion` to close with context-aware next steps:
-使用 `AskUserQuestion` 以感知上下文的下一步收尾：
+- Start implementing: `/dev-story [first-story-path]` at `minimal`,
+  `/story-readiness [first-story-path]` otherwise (recommended)
+- Create stories for [next epic]: `/create-stories [slug]` (only when an epic has
+  none)
+- Plan the sprint: `/sprint-plan new` (only when every epic has stories; never at
+  `minimal`, where the brief's build order is the plan)
+- Stop here for this session
+- 开始实施：在 `minimal` 下用 `/dev-story [first-story-path]`，
+  否则用 `/story-readiness [first-story-path]`（推荐）
+- 为 [next epic] 创建故事：`/create-stories [slug]`（仅当某史诗
+  尚无故事时）
+- 规划冲刺：`/sprint-plan new`（仅当每个史诗都有故事时；在
+  `minimal` 下绝不可用，那里简报的 build order 就是计划）
+- 本次会话到此停止
 
-Check:
-- Are there other epics in `production/epics/` without stories yet? List them.
-- Is this the last epic? If so, include `/sprint-plan` as an option.
-检查：
-- `production/epics/` 中是否还有尚未生成故事的史诗？列出它们。
-- 这是最后一个史诗吗？若是，将 `/sprint-plan` 作为选项之一。
+Never start implementation or write code: this skill stops at the story files.
+Acceptance criteria come from the GDD (the brief at `minimal`), implementation
+notes from the ADRs, rules from the manifest; none are invented.
+绝不开始实施或编写代码：此技能止于故事文件。
+验收标准来自 GDD（`minimal` 下为简报），实现
+说明来自 ADR，规则来自清单；一概不凭空编造。
 
-Widget:
-- Prompt: "[N] stories written to `production/epics/[epic-slug]/`. What next?"
-- Options (include all that apply):
-  - `[A] Start implementing — run /story-readiness [first-story-path]` (Recommended)
-  - `[B] Create stories for [next-epic-slug] — run /create-stories [slug]` (only if other epics have no stories yet)
-  - `[C] Plan the sprint — run /sprint-plan new` (only if all epics have stories)
-  - `[D] Stop here for this session`
-小组件：
-- 提示："[N] 个故事已写入 `production/epics/[epic-slug]/`。下一步？"
-- 选项（含所有适用项）：
-  - `[A] 开始实现 —— 运行 /story-readiness [first-story-path]`（推荐）
-  - `[B] 为 [next-epic-slug] 创建故事 —— 运行 /create-stories [slug]`（仅当其他史诗尚无故事时）
-  - `[C] 规划冲刺 —— 运行 /sprint-plan new`（仅当所有史诗都有故事时）
-  - `[D] 本次会话到此为止`
+**The run's last reply ends with this block**, after the question above is
+answered (repeat it if you showed it earlier):
+**本次运行的最后回复以此区块结束**，在上述提问
+得到答复之后（若你早先已展示过，则重复它）：
 
-Note in output: "Work through stories in order — each story's `Depends on:` field tells you what must be DONE before you can start it."
-在输出中注明："按顺序处理故事 —— 每个故事的 `Depends on:` 字段告诉你启动前必须完成什么。"
+```
+Verdict: COMPLETE — [N] stories written to production/epics/[epic-slug]/ ([N] Ready, [N] Blocked)
+Review: [QL-STORY-READY skipped — Solo mode | skipped — Lean mode | its verdicts]
+Index: [production/epics/index.md updated | Epics index not updated: production/epics/index.md absent]
+Next step: [/dev-story [first-story-path] | /story-readiness [first-story-path]]
+```
 
----
-
-## Collaborative Protocol
-## 协作协议
-
-1. **Read before presenting** — load all inputs silently before showing the story list
-2. **Ask once** — present all stories for the epic in one summary, not one at a time
-3. **Warn on blocked stories** — flag any story with a Proposed ADR before writing
-4. **Ask before writing** — get approval for the full story set before writing files
-5. **No invention** — acceptance criteria come from GDDs, implementation notes from ADRs, rules from the manifest
-6. **Never start implementation** — this skill stops at the story file level
-1. **先读取后呈现** —— 在呈现故事列表之前静默加载全部输入
-2. **一次性询问** —— 在一份摘要中呈现该史诗的全部故事，而非逐个呈现
-3. **对受阻故事发出警告** —— 写入前标记任何带有 Proposed ADR 的故事
-4. **写入前征询** —— 写入文件前获取整套故事的批准
-5. **禁止杜撰** —— 验收标准来自 GDD、实现说明来自 ADR、规则来自清单
-6. **绝不开始实现** —— 本技能止于故事文件层
-
-After writing (or declining):
-写入（或拒绝）之后：
-
-- **Verdict: COMPLETE** — [N] stories written to `production/epics/[epic-slug]/`. Run `/story-readiness` → `/dev-story` to begin implementation.
-- **Verdict: BLOCKED** — user declined. No story files written.
-- **结论：COMPLETE** —— [N] 个故事已写入 `production/epics/[epic-slug]/`。运行 `/story-readiness` → `/dev-story` 开始实现。
-- **结论：BLOCKED** —— 用户拒绝。未写入任何故事文件。
+When the user declines the write: `Verdict: BLOCKED — user declined. No story
+files written.`
+当用户拒绝写入时：`Verdict: BLOCKED — user declined. No story
+files written.`

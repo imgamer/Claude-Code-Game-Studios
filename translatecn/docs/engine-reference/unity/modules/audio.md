@@ -4,7 +4,7 @@
 **Last verified:** 2026-02-13
 **最后验证：** 2026-02-13
 **Knowledge Gap:** Unity 6 audio mixer improvements
-**知识盲区：** Unity 6 音频混音器改进
+**知识盲区：** Unity 6 的音频混合器改进
 
 ---
 
@@ -18,8 +18,8 @@ Unity 6.3 audio systems:
 
 Unity 6.3 音频系统：
 - **AudioSource**：在 GameObject 上播放声音
-- **Audio Mixer**：混音、效果处理、动态混合
-- **Spatial Audio**：3D 定位声音
+- **Audio Mixer**：混音、效果处理、动态混音
+- **空间音频（Spatial Audio）**：3D 定位的声音
 
 ---
 
@@ -50,7 +50,7 @@ audioSource.UnPause();
 ```
 
 ### Play Sound at Position (Static Method)
-### 在位置播放声音（静态方法）
+### 在指定位置播放声音（静态方法）
 
 ```csharp
 // ✅ Quick 3D sound playback (auto-destroys when done)
@@ -66,7 +66,7 @@ AudioSource.PlayClipAtPoint(clip, transform.position, 0.7f);
 ## 3D 空间音频
 
 ### AudioSource 3D Settings
-### AudioSource 3D 设置
+### AudioSource 的 3D 设置
 
 ```csharp
 AudioSource source = GetComponent<AudioSource>();
@@ -84,14 +84,14 @@ source.rolloffMode = AudioRolloffMode.Logarithmic; // Natural falloff
 ```
 
 ### Volume Rolloff Curves
-### 音量衰减曲线
+### 音量衰减曲线（Rolloff）
 - **Logarithmic**: Natural, realistic (RECOMMENDED)
 - **Linear**: Steady decrease
 - **Custom**: Define your own curve
 
-- **Logarithmic**：自然、真实（推荐）
-- **Linear**：稳定下降
-- **Custom**：自定义曲线
+- **对数（Logarithmic）**：自然、真实（推荐）
+- **线性（Linear）**：均匀衰减
+- **自定义（Custom）**：定义你自己的曲线
 
 ---
 
@@ -107,10 +107,10 @@ source.rolloffMode = AudioRolloffMode.Logarithmic; // Natural falloff
 
 1. `Assets > Create > Audio Mixer`
 2. 打开混音器：`Window > Audio > Audio Mixer`
-3. 创建组：Master > SFX、Music、Dialogue
+3. 创建分组：Master > SFX、Music、Dialogue
 
 ### Assign AudioSource to Mixer Group
-### 将 AudioSource 分配到 Mixer 组
+### 将 AudioSource 指派到混音器分组
 
 ```csharp
 using UnityEngine.Audio;
@@ -124,7 +124,7 @@ void Start() {
 ```
 
 ### Control Mixer from Code
-### 从代码控制 Mixer
+### 通过代码控制混音器
 
 ```csharp
 using UnityEngine.Audio;
@@ -143,16 +143,16 @@ audioMixer.SetFloat("MusicVolume", volumeDB);
 ```
 
 ### Expose Mixer Parameters
-### 暴露 Mixer 参数
+### 暴露混音器参数
 In Audio Mixer window:
 1. Right-click parameter (e.g., Volume)
 2. "Expose 'Volume' to script"
 3. Rename in "Exposed Parameters" tab (e.g., "MusicVolume")
 
 在 Audio Mixer 窗口中：
-1. 右键点击参数（例如 Volume）
-2. "Expose 'Volume' to script"
-3. 在 "Exposed Parameters" 标签页中重命名（例如 "MusicVolume"）
+1. 右键单击参数（例如 Volume）
+2. 选择 "Expose 'Volume' to script"
+3. 在 "Exposed Parameters" 选项卡中重命名（例如 "MusicVolume"）
 
 ---
 
@@ -160,7 +160,7 @@ In Audio Mixer window:
 ## 音频效果
 
 ### Add Effects to Mixer Groups
-### 为 Mixer 组添加效果
+### 为混音器分组添加效果
 
 In Audio Mixer:
 - Click group (e.g., SFX)
@@ -168,12 +168,12 @@ In Audio Mixer:
 - Choose: Reverb, Echo, Low Pass, High Pass, Distortion, etc.
 
 在 Audio Mixer 中：
-- 点击组（例如 SFX）
-- 点击 "Add Effect"
+- 单击分组（例如 SFX）
+- 单击 "Add Effect"
 - 选择：Reverb、Echo、Low Pass、High Pass、Distortion 等
 
 ### Duck Music During Dialogue (Sidechain)
-### 对话时压低音乐（侧链）
+### 对白期间压低音乐（侧链，Sidechain）
 
 ```csharp
 // Setup in Audio Mixer:
@@ -235,7 +235,7 @@ if (audioSource.clip.loadState == AudioDataLoadState.Loaded) {
 ## 音乐系统
 
 ### Crossfade Between Tracks
-### 轨道之间交叉淡入淡出
+### 曲目之间的交叉淡入淡出
 
 ```csharp
 public IEnumerator CrossfadeMusic(AudioSource from, AudioSource to, float duration) {
@@ -271,7 +271,7 @@ audioSource.loop = true;
 ## 常见模式
 
 ### Random Pitch Variation (Avoid Repetition)
-### 随机音调变化（避免重复）
+### 随机音高变化（避免重复感）
 
 ```csharp
 void PlaySoundWithVariation(AudioClip clip) {
@@ -282,7 +282,7 @@ void PlaySoundWithVariation(AudioClip clip) {
 ```
 
 ### Footstep Sounds (Random from Array)
-### 脚步声（从数组随机选择）
+### 脚步声（从数组中随机选取）
 
 ```csharp
 public AudioClip[] footstepClips;
@@ -305,15 +305,15 @@ if (audioSource.isPlaying) {
 ---
 
 ## Audio Listener
-## Audio Listener
+## 音频监听器（Audio Listener）
 
 ### Single Listener Rule
-### 单监听器规则
+### 单一监听器规则
 - Only ONE `AudioListener` should be active at a time
 - Usually attached to Main Camera
 
-- 一次只能有一个 `AudioListener` 处于活动状态
-- 通常附加到主摄像机
+- 同一时间只应有一个 `AudioListener` 处于活动状态
+- 通常挂载在主摄像机上
 
 ```csharp
 // Disable extra listeners
@@ -332,7 +332,7 @@ listener.enabled = false;
 - Visualize levels, test snapshots
 
 - `Window > Audio > Audio Mixer`
-- 可视化电平，测试快照
+- 可视化电平、测试快照（snapshot）
 
 ### Audio Settings
 ### 音频设置

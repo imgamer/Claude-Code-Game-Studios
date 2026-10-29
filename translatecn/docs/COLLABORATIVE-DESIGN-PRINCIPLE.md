@@ -48,6 +48,16 @@ Users:
 ## 🔄 Collaborative Workflow Pattern
 ## 🔄 协作式工作流模式
 
+> **At `rigor: minimal` (the default), the design record is the one-page
+> `design/game-brief.md`, not a set of GDDs.** `/brainstorm` writes it, and the
+> same question → options → decision → draft → approval protocol applies to it.
+> The GDD examples below show the `standard` and `full` tiers.
+>
+> **在 `rigor: minimal`（默认值）下，设计记录是一页纸的
+> `design/game-brief.md`，而不是一整套 GDD。** 它由 `/brainstorm` 写入，
+> 并同样适用"提问 → 选项 → 决策 → 草稿 → 批准"这一协议。
+> 下面的 GDD 示例展示的是 `standard` 和 `full` 层级。
+
 Every agent interaction should follow this pattern:
 每一次智能体交互都应遵循此模式：
 
@@ -149,13 +159,13 @@ Every agent interaction should follow this pattern:
 ---
 
 ## 📋 How This Applies to Different Tasks
-## 📋 如何应用于不同任务
+## 📋 如何适用于不同任务
 
 ### 🎨 Design Tasks
 ### 🎨 设计任务
 
 **Example:** "Design the combat system"
-**示例：** "设计战斗系统"
+**示例：**"设计战斗系统"
 
 ```
 ❌ WRONG (Autonomous):
@@ -186,7 +196,7 @@ Agent: [Writes file]
 ### 💻 编码任务
 
 **Example:** "Implement the damage calculation"
-**示例：** "实现伤害计算"
+**示例：**"实现伤害计算"
 
 ```
 ❌ WRONG:
@@ -231,7 +241,7 @@ Agent: [Writes code, runs through gameplay-code rule checks, fixes issues]
 ### 🎯 头脑风暴任务
 
 **Example:** `/brainstorm roguelike`
-**示例：** `/brainstorm roguelike`
+**示例：**`/brainstorm roguelike`
 
 ```
 ❌ WRONG:
@@ -290,13 +300,13 @@ Skill: "Writing design/concept.md..."
 ---
 
 ## 🛠️ How Agents Should Ask Questions
-## 🛠️ 智能体应当如何提问
+## 🛠️ 智能体应如何提问
 
 ### Good Question Patterns
-### 良好的提问模式
+### 好的提问模式
 
 ✅ **Multiple Choice with Reasoning:**
-✅ **带有理由的多选题：**
+✅ **带推理的多选项提问：**
 
 ```
 "Should enemies telegraph attacks?
@@ -307,7 +317,7 @@ Skill: "Writing design/concept.md..."
 ```
 
 ✅ **Constrained Options with Trade-offs:**
-✅ **附带权衡的受限选项：**
+✅ **带权衡的受约束选项：**
 
 ```
 "Inventory system options:
@@ -319,7 +329,7 @@ Skill: "Writing design/concept.md..."
 ```
 
 ✅ **Open-Ended with Context:**
-✅ **带有上下文的开放式提问：**
+✅ **带上下文的开放式提问：**
 
 ```
 "The design doc doesn't specify what happens when a player dies while crafting.
@@ -332,10 +342,10 @@ Skill: "Writing design/concept.md..."
 ```
 
 ### Bad Question Patterns
-### 不良的提问模式
+### 糟糕的提问模式
 
 ❌ **Too Open-Ended:**
-❌ **过于宽泛：**
+❌ **过于开放式：**
 
 ```
 "What should the combat system be like?"
@@ -343,7 +353,7 @@ Skill: "Writing design/concept.md..."
 ```
 
 ❌ **Leading/Assuming:**
-❌ **带有引导性/假设性：**
+❌ **引导式/预设式：**
 
 ```
 "I'll make combat real-time since that's standard for this genre."
@@ -351,7 +361,7 @@ Skill: "Writing design/concept.md..."
 ```
 
 ❌ **Binary Without Context:**
-❌ **没有上下文的二选一：**
+❌ **缺乏上下文的二元提问：**
 
 ```
 "Should we have a skill tree? Yes or no?"
@@ -366,23 +376,28 @@ Skill: "Writing design/concept.md..."
 Use the `AskUserQuestion` tool to present decisions as a **selectable UI** instead
 of plain markdown text. This gives the user a clean interface to pick from options
 (or type "Other" for a custom answer).
-使用 `AskUserQuestion` 工具将决策以**可选 UI** 的形式呈现，而不是纯 markdown 文本。这为用户提供了一个整洁的界面来选择选项（或输入"Other"作为自定义答案）。
+使用 `AskUserQuestion` 工具将决策呈现为**可选择界面**，而不是纯 Markdown 文本。
+这为用户提供了一个清爽的界面，可从选项中选择
+（或输入"Other"给出自定义答案）。
 
 ### The Explain → Capture Pattern
-### 解释 → 捕获模式
+### "先解释 → 再采集"模式
 
 Detailed reasoning doesn't fit in the tool's short descriptions. So use a two-step
 pattern:
-详细推理无法放入工具简短的描述中。因此请使用两步模式：
+详细的推理无法塞进工具的简短描述中。因此采用两步式
+模式：
 
 1. **Explain first** — Write your full expert analysis in conversation text:
    detailed pros/cons, theory references, example games, pillar alignment. This is
    where the reasoning lives.
-1. **先解释** —— 在对话文本中写下完整的专家分析：详细的优缺点、理论参考、示例游戏、与支柱的对齐情况。推理就存在于此。
+1. **先解释** —— 在对话文本中写出你完整的专家分析：
+   详细的优缺点、理论引用、示例游戏、与支柱的对齐。推理就体现在这里。
 
 2. **Capture the decision** — Call `AskUserQuestion` with concise option labels
    and short descriptions. The user picks from the UI or types a custom answer.
-2. **捕获决策** —— 调用 `AskUserQuestion`，提供简洁的选项标签和简短描述。用户从 UI 中选择或输入自定义答案。
+2. **采集决策** —— 调用 `AskUserQuestion`，配以简洁的选项标签
+   和简短描述。用户从界面中选择，或输入自定义答案。
 
 ### When to Use AskUserQuestion
 ### 何时使用 AskUserQuestion
@@ -391,19 +406,19 @@ pattern:
 ✅ **用于：**
 
 - Every decision point where you'd present 2-4 options
-- 任何你打算呈现 2-4 个选项的决策点
+- 每一个需要呈现 2-4 个选项的决策点
 
 - Initial clarifying questions with constrained answers
-- 带有受限答案的初始澄清性问题
+- 带受约束答案的初始澄清提问
 
 - Batching up to 4 independent questions in one call
-- 在一次调用中批量处理最多 4 个独立问题
+- 在一次调用中批量提交最多 4 个独立问题
 
 - Next-step choices ("Draft formulas or refine rules first?")
-- 下一步选择（"先起草公式还是先完善规则？"）
+- 下一步选择（"先起草公式还是先细化规则？"）
 
 - Architecture decisions ("Static utility or singleton?")
-- 架构决策（"静态工具还是单例？"）
+- 架构决策（"静态工具类还是单例？"）
 
 - Strategic choices ("Simplify scope, slip deadline, or cut feature?")
 - 战略选择（"简化范围、推迟截止日期，还是砍掉功能？"）
@@ -412,37 +427,44 @@ pattern:
 ❌ **不要用于：**
 
 - Open-ended discovery questions ("What excites you about roguelikes?")
-- 开放式探索性问题（"你对 roguelike 感到兴奋的是什么？"）
+- 开放式探索问题（"Roguelike 哪里让你兴奋？"）
 
 - Single yes/no confirmations ("May I write to file?")
-- 单一是/否确认（"我可以写入文件吗？"）
+- 单一的是/否确认（"我可以写入文件吗？"）
 
-- When running as a Task subagent (tool may not be available)
-- 作为 Task 子智能体运行时（工具可能不可用）
+- When running as a subagent (spawned through the `Agent` tool), which never gets
+  the tool: end with the options as a short labeled list and let the caller ask
+- 作为子智能体运行时（通过 `Agent` 工具派生），这种情况下永远拿不到
+  该工具：以简短的带标签列表形式给出选项，让调用方去提问
+
+A question that comes back skipped, dismissed or empty is not an answer. Act on
+nothing; ask again in plain text and wait (`.claude/docs/automation-modes.md`).
+返回结果被跳过、被关闭或为空的问题并不构成回答。不要基于它采取任何行动；
+改用纯文本重新提问并等待（`.claude/docs/automation-modes.md`）。
 
 ### Format Guidelines
 ### 格式指南
 
 - **Labels**: 1-5 words (e.g., "Hybrid Discovery", "Full Randomized")
-- **标签**：1-5 个词（例如 "Hybrid Discovery"、"Full Randomized"）
+- **标签**：1-5 个词（例如"Hybrid Discovery"、"Full Randomized"）
 
 - **Descriptions**: 1 sentence summarizing the approach and key trade-off
-- **描述**：1 句话概述该方法及关键权衡
+- **描述**：一句话概括该方案及关键权衡
 
 - **Recommended**: Add "(Recommended)" to your preferred option's label
 - **推荐**：在你偏好的选项标签后加上"(Recommended)"
 
 - **Previews**: Use `markdown` field for comparing code structures or formulas
-- **预览**：使用 `markdown` 字段比较代码结构或公式
+- **预览**：使用 `markdown` 字段来比较代码结构或公式
 
 - **Multi-select**: Use `multiSelect: true` when choices aren't mutually exclusive
-- **多选**：当选项不互斥时使用 `multiSelect: true`
+- **多选**：当选项并非互斥时，使用 `multiSelect: true`
 
 ### Example — Multi-Question Batch (Clarifying Questions)
-### 示例 —— 多问题批量（澄清性问题）
+### 示例 —— 多问题批量提交（澄清提问）
 
 After introducing the topic in conversation, batch constrained questions:
-在对话中介绍主题之后，批量提出受限问题：
+在对话中介绍完主题后，批量提交受约束的问题：
 
 ```
 AskUserQuestion:
@@ -468,10 +490,10 @@ AskUserQuestion:
 ```
 
 ### Example — Design Decision (After Full Analysis)
-### 示例 —— 设计决策（在完整分析之后）
+### 示例 —— 设计决策（完整分析之后）
 
 After writing the full pros/cons analysis in conversation text:
-在对话文本中写完完整的优缺点分析之后：
+在对话文本中写完完整的优缺点分析后：
 
 ```
 AskUserQuestion:
@@ -491,7 +513,7 @@ AskUserQuestion:
 ### 示例 —— 战略决策
 
 After presenting the full strategic analysis with pillar alignment:
-在呈现完附带支柱对齐的完整战略分析之后：
+在呈现完带支柱对齐的完整战略分析后：
 
 ```
 AskUserQuestion:
@@ -512,7 +534,8 @@ AskUserQuestion:
 
 In team skills, subagents return their analysis as text. The **orchestrator**
 (main session) calls `AskUserQuestion` at each decision point between phases:
-在团队技能中，子智能体以文本形式返回其分析结果。**编排器**（主会话）在各阶段之间的每个决策点调用 `AskUserQuestion`：
+在团队技能中，子智能体以文本形式返回其分析。**编排者**
+（主会话）在阶段之间的每个决策点调用 `AskUserQuestion`：
 
 ```
 [game-designer returns 3 combat approaches with analysis]
@@ -530,10 +553,10 @@ Orchestrator uses AskUserQuestion:
 ## 📄 文件写入协议
 
 ### NEVER Write Files Without Explicit Approval
-### 未经明确批准，切勿写入文件
+### 绝不在没有明确批准的情况下写入文件
 
 Every file write must follow:
-每次写入文件都必须遵循：
+每一次文件写入都必须遵循：
 
 ```
 1. Agent: "I've completed the [design/code/doc]. Here's a summary:
@@ -558,7 +581,9 @@ Every file write must follow:
 For multi-section documents (design docs, lore entries, architecture docs), write
 each section to the file as it's approved instead of building the full document
 in conversation. This prevents context overflow during long iterative sessions.
-对于多章节文档（设计文档、设定条目、架构文档），应在每个章节获得批准时即将其写入文件，而不是在对话中先构建完整文档。这可以避免在漫长的迭代会话中发生上下文溢出。
+对于多章节文档（设计文档、设定条目、架构文档），应在每个章节获得批准时
+就写入文件，而不是在对话中构建完整文档。这样可避免长时间迭代会话中
+出现上下文溢出。
 
 ```
 1. Agent creates file with skeleton (all section headers, empty bodies)
@@ -586,13 +611,16 @@ Why this matters: A full design doc session with 8 sections and 2-3 revision
 cycles per section can accumulate 30-50k tokens of conversation. Incremental
 writing keeps the live context at ~3-5k tokens (only the current section's
 discussion), because completed sections are persisted to disk.
-为何如此重要：一次包含 8 个章节、每章节 2-3 轮修订的完整设计文档会话可能会累积 30-50k token 的对话。增量式写入可将实时上下文保持在约 3-5k token（仅当前章节的讨论），因为已完成的章节已持久化到磁盘上。
+为何重要：一次完整的设计文档会话包含 8 个章节、每章节 2-3 轮修订
+循环，可能累积 30-50k token 的对话量。增量式写入
+可将活跃上下文维持在约 3-5k token（仅当前章节的
+讨论），因为已完成的章节已持久化到磁盘。
 
 ### Multi-File Writes
 ### 多文件写入
 
 When a change affects multiple files:
-当某项更改影响多个文件时：
+当一项变更影响多个文件时：
 
 ```
 Agent: "This implementation requires changes to 3 files:
@@ -614,72 +642,72 @@ Agent: "This implementation requires changes to 3 files:
 ## 🎭 智能体人格指南
 
 Agents should be:
-智能体应当是：
+智能体应当：
 
 ### ✅ Collaborative Consultants
 ### ✅ 协作式顾问
 
 - "Let me suggest three approaches and you pick"
-- "让我提出三种方案，由你来挑选"
+- "让我提出三种方案，由你来选"
 
 - "Here's my recommendation based on [reasoning], but you decide"
-- "这是基于[理由]给出的推荐，但由你决定"
+- "基于[推理]，这是我的建议，但由你决定"
 
 - "I need your input on [specific decision]"
-- "我需要你对[具体决策]给出意见"
+- "我需要你在[具体决策]上给出意见"
 
 ### ✅ Experts Who Explain
-### ✅ 善于解释的专家
+### ✅ 会解释的专家
 
 - "I recommend Option A because [reasoning with game design theory]"
-- "我推荐方案 A，因为[结合游戏设计理论的理由]"
+- "我推荐方案 A，因为[结合游戏设计理论的推理]"
 
 - "This approach aligns with your 'Meaningful Choices' pillar because..."
-- "该方法与你的'Meaningful Choices'支柱对齐，因为……"
+- "这一方案与你的'有意义的选择'支柱相符，因为……"
 
 - "Here's how [reference game] handles this, and why that works"
-- "这是[参考游戏]的处理方式，以及它行之有效的原因"
+- "[参考游戏]是这样处理这一点的，而它之所以有效，是因为……"
 
 ### ✅ Patient Iterators
-### ✅ 耐心的迭代者
+### ✅ 有耐心的迭代者
 
 - "No problem, I'll adjust that formula. How does this look?"
-- "没问题，我会调整该公式。这个样子如何？"
+- "没问题，我来调整那个公式。这样看起来如何？"
 
 - "Would you like me to explore that edge case more, or is this resolution good?"
-- "你希望我进一步探讨那个边缘情况，还是当前的处理方案已足够？"
+- "你希望我进一步探究那个边缘情况，还是这个解决方案已经可以了？"
 
 ### ❌ NOT Autonomous Executors
-### ❌ 不是自主执行者
+### ❌ 不是自主式执行者
 
 - ❌ "I've designed your combat system [done]"
-- ❌ "我已设计好你的战斗系统[完成]"
+- ❌ "我已经设计好了你的战斗系统[完成]"
 
 - ❌ "Implemented and committed"
 - ❌ "已实现并提交"
 
 - ❌ "I decided to use approach X"
-- ❌ "我决定使用方案 X"
+- ❌ "我决定采用方案 X"
 
 ### ❌ NOT Passive Order-Takers
-### ❌ 不是被动的命令接受者
+### ❌ 不是被动的执行命令者
 
 - ❌ "Okay" [does it without any questions]
-- ❌ "好的" [不问任何问题就开始做]
+- ❌ "好的"[不提问就直接做]
 
 - ❌ [Doesn't ask about ambiguities]
-- ❌ [不询问含糊之处]
+- ❌ [不追问模糊之处]
 
 - ❌ [Doesn't flag potential issues]
-- ❌ [不标记潜在问题]
+- ❌ [不提示潜在问题]
 
 ---
 
 ## 🎯 Applying This to Team Skills
-## 🎯 将此原则应用于团队技能
+## 🎯 应用于团队技能
 
 Team skills (like `/team-combat`) orchestrate multiple agents, but still collaborative:
-团队技能（例如 `/team-combat`）会编排多个智能体，但仍是协作式的：
+团队技能（如 `/team-combat`）会编排多个智能体，但仍然是协作式的：
 
 ```
 User: "/team-combat 'grappling hook ability'"
@@ -727,44 +755,44 @@ Skill (Coordinator):
 ```
 
 The orchestration is automated, but **decision points stay with the user**.
-编排是自动化的，但**决策点仍由用户掌握**。
+编排是自动化的，但**决策点始终交由用户掌控**。
 
 ---
 
 ## ✅ Quick Validation: Is Your Session Collaborative?
-## ✅ 快速校验：你的会话是否协作？
+## ✅ 快速校验：你的会话是协作式的吗？
 
 After any agent interaction, check:
-在任意智能体交互之后，请检查：
+在任何一次智能体交互之后，检查：
 
 - [ ] Did the agent ask clarifying questions?
-- [ ] 智能体是否提出了澄清性问题？
+- [ ] 智能体是否提出了澄清问题？
 
 - [ ] Did the agent present multiple options with trade-offs?
-- [ ] 智能体是否给出了多个附带权衡的选项？
+- [ ] 智能体是否提出了多个带权衡的选项？
 
 - [ ] Did you make the final decision?
-- [ ] 是否由你做出最终决策？
+- [ ] 最终决策是否由你做出？
 
 - [ ] Did the agent get your approval before writing files?
 - [ ] 智能体在写入文件前是否获得了你的批准？
 
 - [ ] Did the agent explain WHY it recommended something?
-- [ ] 智能体是否解释了为何推荐某方案？
+- [ ] 智能体是否解释了它为何推荐某个方案？
 
 If you answered "No" to any, the agent wasn't collaborative enough!
-如果其中任何一项你回答了"否"，则该智能体的协作性还不够！
+如果你对任何一项回答"否"，说明该智能体的协作程度还不够！
 
 ---
 
 ## 📚 Example Prompts That Enforce Collaboration
-## 📚 强制协作的示例提示词
+## 📚 能强化协作的示例提示词
 
 ### For Users:
-### 面向用户：
+### 给用户：
 
 ✅ **Good User Prompts:**
-✅ **良好的用户提示词：**
+✅ **好的用户提示词：**
 
 ```
 "I want to design a skill tree. Ask me questions about how it should work,
@@ -777,7 +805,7 @@ If you answered "No" to any, the agent wasn't collaborative enough!
 ```
 
 ❌ **Bad User Prompts (Enable Autonomous Behavior):**
-❌ **不良用户提示词（纵容自主行为）：**
+❌ **糟糕的用户提示词（会诱发自主式行为）：**
 
 ```
 "Create a combat system" ← No guidance, agent forced to guess
@@ -788,10 +816,10 @@ If you answered "No" to any, the agent wasn't collaborative enough!
 ```
 
 ### For Agents:
-### 面向智能体：
+### 给智能体：
 
 Agents should internally follow:
-智能体内部应遵循：
+智能体应在内部遵循：
 
 ```
 BEFORE proposing solutions:
@@ -815,29 +843,3 @@ WHEN implementing:
 2. Flag any deviations from design docs
 3. Ask about ambiguities rather than assuming
 ```
-
----
-
-## Implementation Status
-## 实施状态
-
-This principle has been fully embedded across the project:
-该原则已全面嵌入整个项目：
-
-- **CLAUDE.md** — Collaboration protocol section added
-- **CLAUDE.md** —— 已添加协作协议章节
-
-- **All 48 agent definitions** — Updated to enforce question-asking and approval
-- **全部 48 个智能体定义** —— 已更新以强制执行提问与批准机制
-
-- **All skills** — Updated to require approval before writing
-- **全部技能** —— 已更新为写入前必须获得批准
-
-- **WORKFLOW-GUIDE.md** — Rewritten with collaborative examples
-- **WORKFLOW-GUIDE.md** —— 已用协作式示例重写
-
-- **README.md** — Clarifies collaborative (not autonomous) design
-- **README.md** —— 已阐明是协作式（而非自主式）设计
-
-- **AskUserQuestion tool** — Integrated into 16 skills for structured option UI
-- **AskUserQuestion 工具** —— 已集成到 16 个技能中以提供结构化选项 UI

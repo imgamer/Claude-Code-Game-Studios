@@ -1,26 +1,34 @@
 # Godot Audio — Quick Reference
 # Godot 音频 — 快速参考
 
-Last verified: 2026-02-12 | Engine: Godot 4.6
-最后验证：2026-02-12 | 引擎：Godot 4.6
+Last verified: 2026-10-17 (4.7 changes); 2026-02-12 (rest) | Engine: Godot 4.7
+最后验证：2026-10-17（4.7 变更）；2026-02-12（其余部分） | 引擎：Godot 4.7
 
 ## What Changed Since ~4.3 (LLM Cutoff)
 ## 自约 4.3（LLM 截止）以来的变更
 
-No major breaking changes to the audio API in 4.4–4.6. The core audio system
-remains stable. Key updates are workflow improvements:
-在 4.4–4.6 中音频 API 没有重大破坏性变更。核心音频系统保持稳定。
-主要更新为工作流改进：
+No major breaking changes to the audio API in 4.4–4.6; 4.7 removes one
+property and changes one default:
+4.4–4.6 中音频 API 没有重大的破坏性变更；4.7 移除了一个属性并更改了一个默认值：
+
+### 4.7 Changes
+### 4.7 变更
+- **`AudioEffectSpectrumAnalyzer.tap_back_pos` removed**
+- **`AudioEffectSpectrumAnalyzer.tap_back_pos` 已移除**
+- **`area_mask` on `AudioStreamPlayer2D`/`3D` defaults to `0`** (was layer `1`):
+  `audio_bus_override` on an `Area2D`/`Area3D` stops working with the default
+  mask until it is set back to layer `1` (4.7 migration guide: https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html)
+- **`AudioStreamPlayer2D`/`3D` 上的 `area_mask` 默认值为 `0`**（原为层 `1`）：`Area2D`/`Area3D` 上的 `audio_bus_override` 在默认掩码下会停止工作，直到将其重新设为层 `1`（4.7 迁移指南：https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.7.html）
 
 ### 4.6 Changes
 ### 4.6 变更
 - **No audio-specific breaking changes** in this release
-- 此版本**没有音频专用的破坏性变更**
+- 此版本**没有音频相关的破坏性变更**
 
 ### 4.5 Changes
 ### 4.5 变更
 - **No audio-specific breaking changes** in this release
-- 此版本**没有音频专用的破坏性变更**
+- 此版本**没有音频相关的破坏性变更**
 
 ## Current API Patterns
 ## 当前 API 模式
@@ -67,7 +75,7 @@ AudioServer.set_bus_mute(AudioServer.get_bus_index(&"Music"), true)
 ```
 
 ### Object Pooling for SFX
-### 音效的对象池
+### 音效对象池
 ```gdscript
 # Pre-create multiple AudioStreamPlayer nodes for concurrent sounds
 var _sfx_pool: Array[AudioStreamPlayer] = []
@@ -90,8 +98,8 @@ func play_pooled(stream: AudioStream) -> void:
 ## Common Mistakes
 ## 常见错误
 - Creating new AudioStreamPlayer nodes at runtime instead of pooling
-- 在运行时创建新的 AudioStreamPlayer 节点而非使用对象池
+- 在运行时创建新的 AudioStreamPlayer 节点，而非使用对象池
 - Not using audio buses for volume categories (Music, SFX, UI, Voice)
 - 未使用音频总线来划分音量类别（Music、SFX、UI、Voice）
 - Using `_process()` for audio timing instead of signals (`finished`)
-- 使用 `_process()` 处理音频时序而非信号（`finished`）
+- 使用 `_process()` 处理音频计时，而非使用信号（`finished`）
