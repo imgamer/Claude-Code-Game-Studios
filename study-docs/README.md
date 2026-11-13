@@ -61,6 +61,7 @@
 | W3 | [workflow/skill-rules/ 73个技能规则抽取](file:///workspace/study-docs/workflow/skill-rules/README.md) | WORKFLOW-GUIDE 每个技能的规则怎么抽取来复用？ | 73 份 AGENTS.md 移植版文档（统一六节结构）、十类索引、三种组装策略（拿通用规则/拿流程线/整套移植） |
 | W4 | [workflow/7阶段逐阶指南](file:///workspace/study-docs/workflow/7阶段逐阶指南.md) | 每阶段要输入什么？AI 读什么上下文？输出什么？每个文档干什么？ | 7 阶段逐阶输入→命令→输出对照表、门禁检查清单、rigor/review_mode/三种原型完整差异、7 个常见误区 |
 | W5 | [workflow/回填与哈希重跑机制](file:///workspace/study-docs/workflow/回填与哈希重跑机制.md) | 设计改了之后，怎么知道哪些东西过期了？回填和哈希重跑是怎么回事？ | review-receipts.sh 内容指纹回执、UNCHANGED/CHANGED/NEW/GONE 五种输出、design-review 三分支决策树、retrofit 回填铁律、STALE REGISTRY vs CONFLICT、变更传播闭环、7 个误区 |
+| W6 | [workflow/注册表机制详解](file:///workspace/study-docs/workflow/注册表机制详解.md) | entities.yaml / architecture.yaml / tr-registry.yaml 是干什么的？为什么这样设计？格式怎么读？ | 三本注册表逐字段解剖、五条铁律、grep 优先的布局契约、registry.sh 7 个命令、写前钩子、哥布林全链路时间线、单一事实源家族（control-manifest/systems-index/asset-manifest 等） |
 
 ---
 
