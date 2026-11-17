@@ -62,7 +62,8 @@
 | W4 | [workflow/7阶段逐阶指南](file:///workspace/study-docs/workflow/7阶段逐阶指南.md) | 每阶段要输入什么？AI 读什么上下文？输出什么？每个文档干什么？ | 7 阶段逐阶输入→命令→输出对照表、门禁检查清单、rigor/review_mode/三种原型完整差异、7 个常见误区 |
 | W5 | [workflow/回填与哈希重跑机制](file:///workspace/study-docs/workflow/回填与哈希重跑机制.md) | 设计改了之后，怎么知道哪些东西过期了？回填和哈希重跑是怎么回事？ | review-receipts.sh 内容指纹回执、UNCHANGED/CHANGED/NEW/GONE 五种输出、design-review 三分支决策树、retrofit 回填铁律、STALE REGISTRY vs CONFLICT、变更传播闭环、7 个误区 |
 | W6 | [workflow/注册表机制详解](file:///workspace/study-docs/workflow/注册表机制详解.md) | entities.yaml / architecture.yaml / tr-registry.yaml 是干什么的？为什么这样设计？格式怎么读？ | 三本注册表逐字段解剖、五条铁律、grep 优先的布局契约、registry.sh 7 个命令、写前钩子、哥布林全链路时间线、单一事实源家族（control-manifest/systems-index/asset-manifest 等） |
-| W7 | [workflow/系统设计阶段详解](file:///workspace/study-docs/workflow/系统设计阶段详解.md) | Phase 2 每一步做什么？map-systems 和 design-system 怎么接力？为什么要这么做？ | /map-systems 7 阶段逐步（枚举/依赖/优先级/索引）、三个总监门禁（TD-SYSTEM-BOUNDARY/PR-SCOPE/CD-SYSTEMS）、/design-system 五段流程（骨架/逐节 8 节/专家路由/注册表登记）、两道验收出口、11 条设计思路对照表 |
+| W7 | [workflow/系统设计阶段详解](file:///workspace/study-docs/workflow/系统设计阶段详解.md) | Phase 1 的 `/map-systems`（枚举+依赖+门禁）和 Phase 2 的 `/design-system`（骨架+逐节+会话隔离）怎么分工？ | 显式+隐式推断机制（6 组映射表）、依赖五层+循环检测、TD-SYSTEM-BOUNDARY 为什么在写 GDD 前、空骨架三理由、会话隔离四机制、哈希+会话怎么配合、10 条设计思路对照表 |
+| W8 | [workflow/概念阶段详解](file:///workspace/study-docs/workflow/概念阶段详解.md) | Phase 1 每一步做什么？brainstorm 两条路径+四个总监门禁+setup-engine 12 子阶段怎么配合？ | Lean Brief vs Full Concept 分叉、四个门禁判决流（CD-PILLARS/AD-CONCEPT-VISUAL/TD-FEASIBILITY/PR-SCOPE）、AD-CONCEPT-VISUAL→art-bible 跨阶段耦合、setup-engine 双写+Knowledge Gap+Version Awareness、NOT ASSESSED 规则、13 条设计思路对照表 |
 
 ---
 
