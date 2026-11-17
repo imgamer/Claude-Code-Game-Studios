@@ -432,6 +432,8 @@ production/   生产管理（sprints/milestones/releases）+ session-state/（�
 
 **作用**：这是**项目专属的"配置表"**——记录这个项目用哪个引擎、什么语言、目标平台、输入方式、命名规范、性能预算、测试框架、禁止模式、允许的库、引擎专家路由。**初始全是 `[TO BE CONFIGURED]`，由 `/setup-engine` 填充。**
 
+> ⚠️ **地位变化（v1.1+）**：它**不再是 CLAUDE.md 的 `@` 注入文件**——[CLAUDE.md 第 38-41 行](file:///workspace/CLAUDE.md#L38-L41)明确标注它为 **legacy fallback, read on demand**。`project.yaml` 是引擎/命名/预算等配置的**主存储**（技能经 `resolve_config` 解析），键缺失时技能才按需回退读这个文件。例如 `/design-system` §2 查引擎配置：首选 `project.yaml` 的 `engine.name/version`，没有 engine 块才回退读这里（读到 `[TO BE CONFIGURED]` = 未设置）。
+
 **关键内容**（来自 [technical-preferences.md](file:///workspace/.claude/docs/technical-preferences.md)）：
 
 - 引擎与语言（Engine/Language/Rendering/Physics）
@@ -538,6 +540,8 @@ production/   生产管理（sprints/milestones/releases）+ session-state/（�
 #### 14. `context-management.md` —— 上下文管理
 
 **作用**：这是**长会话不"失忆"的核心秘籍**。它教 AI 怎么管理上下文（工作记忆）：用文件当记忆、增量写入、主动压缩、用子智能体分担。
+
+> ⚠️ **地位变化（v1.1+）**：它也**不再是 CLAUDE.md 的 `@` 注入文件**——[CLAUDE.md 第 72-76 行](file:///workspace/CLAUDE.md#L72-L76)标注 "Read on demand — it is a reference, not session context"。但它的两条**承重约定**被转述进 CLAUDE.md 正文防止丢失：① `production/session-state/active.md` 是会话检查点（压缩/崩溃/`/clear` 后先读它）；② `.claude/scripts/` 的脚本只报观察、不下判决（被 `artifact-check.sh`、`adr-dep-graph.sh` 引用）。其余内容（增量写入、压缩时机、上下文预算等）按需读取。
 
 **关键内容**（来自 [context-management.md](file:///workspace/.claude/docs/context-management.md)）：
 
@@ -727,20 +731,23 @@ cp .claude/docs/CLAUDE-local-template.md CLAUDE.local.md
 
 | 类别 | 生效方式 | 谁读它 | 例子 |
 |------|---------|--------|------|
-| **A. 运行时注入类** | 被 CLAUDE.md 用 `@路径` 引用 → 每次会话启动，内容被自动注入 AI 上下文 → 对所有智能体生效 | AI（自动） | coordination-rules、coding-standards、technical-preferences、context-management、directory-structure |
+| **A. 运行时注入类** | 被 CLAUDE.md 用 `@路径` 引用 → 每次会话启动，内容被自动注入 AI 上下文 → 对所有智能体生效 | AI（自动） | directory-structure、coordination-rules、coding-standards，外加一个特殊的引擎版本文件 |
+| **A′. 按需兜底类（从 A 降级）** | 不注入。project.yaml 是主配置，键缺失时技能**按需 Read 兜底**；其中承重约定由 CLAUDE.md 正文转述 | AI（按需） | technical-preferences、context-management |
 | **B. 人读参考类** | 不被 `@` 引用，不进运行时上下文 → 给**人**理解全局用，或给维护者改架构时参考 | 人（手动翻） | agent-roster、agent-coordination-map、quick-start、skills-reference、hooks-reference、director-gates、templates、两个 local-template |
 
-验证方法：打开根 [CLAUDE.md](file:///workspace/CLAUDE.md)，看它的 `@` 引用——
+验证方法：打开根 [CLAUDE.md](file:///workspace/CLAUDE.md)，看它**现在**的 `@` 引用——
 
 ```
-@.claude/docs/directory-structure.md
-@.claude/docs/technical-preferences.md
-@.claude/docs/coordination-rules.md      ← 5 条规则从这里进上下文
-@.claude/docs/coding-standards.md
-@.claude/docs/context-management.md
+@.claude/docs/directory-structure.md        ← 项目结构（第 19 行）
+@docs/engine-reference/godot/VERSION.md     ← 引擎版本（第 29 行，特殊：/setup-engine 会把它改写成所选引擎的 VERSION.md）
+@.claude/docs/coordination-rules.md         ← 5 条规则从这里进上下文（第 45 行）
+@.claude/docs/coding-standards.md           ← 编码标准（第 70 行）
 ```
 
-**只有这 5 个文件被 `@` 引用**。它们的内容会在每次会话启动时注入 AI 的上下文窗口，所以它们的规则"对所有智能体自动生效"——不需要智能体主动去读。
+**只有这 3 个 `.claude/docs/` 文件被 `@` 引用**（外加 1 个引擎版本文件）。而下面这两个**曾在注入清单里，后来被移出**：
+
+- **technical-preferences.md**：[CLAUDE.md 第 38-41 行](file:///workspace/CLAUDE.md#L38-L41)明确写着 "legacy fallback, read on demand... **It is not imported here**"——原因：它没配置时全是 `[TO BE CONFIGURED]` 占位符，注入每个会话纯属浪费；配置后真值又在 project.yaml。它降级为"project.yaml 缺键时的兜底"——例如 `/design-system` §2 读引擎配置时，project.yaml 没有 engine 块才回退读它（读到 `[TO BE CONFIGURED]` 即"未设置"）。
+- **context-management.md**：[CLAUDE.md 第 72-76 行](file:///workspace/CLAUDE.md#L72-L76)写着 "Read ... on demand — it is a reference, not session context"。但它的两条**承重约定**（active.md 是会话检查点、脚本只报观察不下判决）被**转述**进 CLAUDE.md 正文，防止丢失——"整份文件不注入，只保留两条不能丢的"。
 
 ### 那 `agent-roster.md` 和 `agent-coordination-map.md` 呢？
 
@@ -800,8 +807,8 @@ Coordinates with: `game-designer` for feature specs, `qa-lead` for testability
 |------|------|---------|
 | [coordination-rules.md](file:///workspace/.claude/docs/coordination-rules.md) | **A 运行时** | CLAUDE.md `@` 引用 → 注入上下文 → 5 条规则对所有智能体自动生效 |
 | [coding-standards.md](file:///workspace/.claude/docs/coding-standards.md) | **A 运行时** | CLAUDE.md `@` 引用 → 注入上下文 → 写代码/文档/测试时自动遵守 |
-| [technical-preferences.md](file:///workspace/.claude/docs/technical-preferences.md) | **A 运行时** | CLAUDE.md `@` 引用 → 注入上下文 → AI 知道项目用哪个引擎、什么命名 |
-| [context-management.md](file:///workspace/.claude/docs/context-management.md) | **A 运行时** | CLAUDE.md `@` 引用 → 注入上下文 → AI 知道"文件即记忆、增量写入" |
+| [technical-preferences.md](file:///workspace/.claude/docs/technical-preferences.md) | **A′ 按需兜底**（已从注入清单移出） | 不再被 `@` 注入（CLAUDE.md 第 38-41 行：legacy fallback）。project.yaml 是主配置；键缺失时技能按需回退读它（如 `/design-system` §2 查引擎配置） |
+| [context-management.md](file:///workspace/.claude/docs/context-management.md) | **A′ 按需读取**（已从注入清单移出） | 不再被 `@` 注入（CLAUDE.md 第 72-76 行：on demand 参考）。两条承重约定（active.md 检查点、脚本只报观察）被转述进 CLAUDE.md 正文 |
 | [directory-structure.md](file:///workspace/.claude/docs/directory-structure.md) | **A 运行时** | CLAUDE.md `@` 引用 → 注入上下文 → AI 知道文件该放哪 |
 | [agent-roster.md](file:///workspace/.claude/docs/agent-roster.md) | **B 人读** | 不注入。给人查"有哪些智能体、什么级别"。运行时靠 agent 文件 frontmatter 的 `description` |
 | [agent-coordination-map.md](file:///workspace/.claude/docs/agent-coordination-map.md) | **B 人读** | 不注入。给人看全局组织图+9 种工作流。运行时靠各 agent 文件内嵌的 Delegation Map |
@@ -820,8 +827,8 @@ Coordinates with: `game-designer` for feature specs, `qa-lead` for testability
 
 **三层生效机制**总结：
 
-1. **`@` 注入层**（最强）：CLAUDE.md `@` 引用的 5 个文件 → 每次会话自动进上下文 → 全局自动生效
-2. **技能主动读层**（按需）：workflow-catalog、director-gates、templates → 技能跑到需要时主动 Read → 该次调用生效
+1. **`@` 注入层**（最强）：CLAUDE.md `@` 引用的 3 个 `.claude/docs/` 文件（directory-structure、coordination-rules、coding-standards）+ 1 个引擎版本文件 → 每次会话自动进上下文 → 全局自动生效
+2. **技能主动读层**（按需）：technical-preferences（project.yaml 缺键时的兜底）、context-management（参考）、workflow-catalog、director-gates、templates → 技能跑到需要时主动 Read → 该次调用生效
 3. **机制独立层**（不靠文档）：rules（按路径自动套）、hooks（settings.json 触发）、agent 的 description/Delegation Map（召唤时读 agent 文件）→ 各有独立机制，不依赖 `.claude/docs/` 里的索引或参考图
 
 `agent-roster.md` 和 `agent-coordination-map.md` 属于**第 3 层的"人读镜像"**——运行时事实在 agent 文件里，这两个文档是把运行时事实"翻译成人能一眼看懂的全局图"。
@@ -884,7 +891,7 @@ Coordinates with: `game-designer` for feature specs, `qa-lead` for testability
 ❌ 不会。运行时事实在 `.claude/agents/*.md` 各文件的内嵌 `Delegation Map` 里。`agent-coordination-map.md` 是"地图"，agent 文件是"地形"——改地图不动地形，行为不变。要改委派关系，必须改对应 agent 文件的 Delegation Map 段。这也是为什么地图可能和地形漂移——维护时要两边同步。
 
 **误区 12："所有规则都靠 AI 自觉读 `.claude/docs/` 生效。"**
-❌ 错。生效有三层机制（见上方"关键机制"一节）：① CLAUDE.md `@` 引用的 5 个文件自动注入；② 技能主动 Read 的文件（workflow-catalog、director-gates、templates）；③ 完全独立机制（rules 按路径套、hooks 由 settings.json 触发、agent 的 description/Delegation Map）。大多数规则**不靠 AI 主动读 `.claude/docs/`**，而是靠注入或独立机制。
+❌ 错。生效有三层机制（见上方"关键机制"一节）：① CLAUDE.md `@` 引用的文件自动注入（directory-structure、coordination-rules、coding-standards + 引擎版本文件）；② 技能主动 Read 的文件（technical-preferences 兜底、context-management 参考、workflow-catalog、director-gates、templates）；③ 完全独立机制（rules 按路径套、hooks 由 settings.json 触发、agent 的 description/Delegation Map）。大多数规则**不靠 AI 主动读 `.claude/docs/`**，而是靠注入或独立机制。
 
 **误区 13（关键）："`technical-preferences.md` 是'偏好'（软建议），`coding-standards.md` 是'规范'（硬约束）。"**
 ❌ 错。文件名有误导。两者本质上**都是工程规范**——`technical-preferences` 里的命名规范、禁止模式、允许的库一旦定下就是硬约束；`coding-standards` 里的"用 Conventional Commits""数据驱动"严格说也是项目选择（偏好），只是被框架预设成默认了。命名差异造成的认知差异**大于**实际内容差异。真正的差别在另外几个维度：填入方式（预设 vs `/setup-engine` 动态填）、抽象层次（方法论原则 vs 具体选型配置）、变化频率（基本不变 vs 随项目演进）。把它们看作"工程规范全集"的两半——coding-standards 是方法论半，technical-preferences 是选型半——比"偏好 vs 规范"的脑补准确得多。
