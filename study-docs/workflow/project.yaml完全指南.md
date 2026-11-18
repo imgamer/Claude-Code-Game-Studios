@@ -12,6 +12,8 @@
 - **准备改配置**：第 4、8 节 + 第 11 节。
 - **配置不生效，来排错**：第 6、9 节。
 - **想理解项目架构**：第 2、6、10 节。
+- **想搞懂技术栈**：第 13 节。
+- **想查某个键的取值/默认/谁读谁写**：第 14 节。
 
 ---
 
@@ -729,7 +731,7 @@ commands:
 | `input_methods` | `platform.*` | 支持哪些输入方式 |
 | `perf_budgets` | `performance.*` 四个预算 | 性能分析/门禁 |
 | `cert_tier` | `platform.cert_tier` 的请求别名 | 发布清单 |
-| `system_overrides` | `workflow_overrides.system_overrides` | 14 个消费技能一次性拿到全部覆盖 |
+| `system_overrides` | `workflow_overrides.system_overrides` | 所有按系统工作的技能一次性拿到全部覆盖 |
 | `workflow[系统名]` | `system_overrides` 或项目 workflow | 单个系统的有效档位 |
 
 看到技能里写 `resolve_config --keys gate_level`，不要以为你要在 YAML 里加一个 `gate_level:`。它只是“请把测试严格度换算成阻断等级”。
@@ -1477,7 +1479,718 @@ bash .claude/hooks/yaml-helper.sh resolve_config --keys automation,workflow,qa.l
 
 ---
 
-## 13. 进一步阅读
+## 13. 技术栈：项目怎么说明自己“用什么做游戏”
+
+### 13.1 先说人话：技术栈不只是“引擎”
+
+很多初学者以为，技术栈就是写一句“我们用 Godot”。这只说对了一小半。
+
+技术栈其实在回答四个问题：
+
+1. **用什么工具做**：引擎、版本、编程语言。
+2. **做出来的东西跑在哪**：PC、手机、网页、主机；键鼠、手柄、触屏；是否联网。
+3. **谁来干**：代码、着色器、UI 分别找哪个专家代理。
+4. **怎么写字、怎么跑**：命名规范、构建/测试/运行命令、测试框架。
+
+打个比方：
+
+| 配置 | 像什么 |
+|---|---|
+| `project.yaml` | 工程档案卡：材料、工具、工艺都记在上面 |
+| `CLAUDE.md` | 贴在工地墙上的总规矩：每次开工都先看 |
+| `docs/engine-reference/` | 厂家说明书：这个版本的引擎哪些 API 能用、哪些废弃了 |
+| `specialists.*` | “什么活找哪位师傅”的分工表 |
+| `commands.*` | 电钻、切割机的开关命令 |
+| `platform.*` | 工地在哪里：室内、室外、还是网页上 |
+| `naming.*` | 标签和文件的书写规范 |
+
+只写 `engine: Godot`，就像只说“我们用锤子”，但没说是木工还是铁工、钉子多大、谁来钉。代理会知道引擎，但可能不知道语言、平台、该找哪个专家、测试怎么跑。
+
+所以：**技术栈不是一行配置，而是一套分散在多个文件里的上下文。**
+
+最短答案：
+
+- `engine` 写“用什么”。
+- `platform` 写“跑在哪”。
+- `specialists` 写“找谁”。
+- `naming` 写“怎么写字”。
+- `commands` 写“怎么跑”。
+- `testing.framework` 写“用什么测试”。
+- `CLAUDE.md` 和 `docs/engine-reference/` 负责“让代理真的知道，而不是凭记忆猜”。
+
+注意：技术栈只是项目上下文的一部分。技能还会读阶段、GDD、ADR、故事、QA 证据；技术栈不能替代这些。
+
+### 13.2 技术栈分散在九个地方
+
+| 存放位置 | 回答什么问题 | 打个比方 | 谁写 |
+|---|---|---|---|
+| `project.yaml` 的 `engine.*` | 用什么引擎、版本、语言、渲染、物理 | 材料清单 | `/setup-engine`、`/settings` |
+| `project.yaml` 的 `platform.*` | 跑在哪些平台、什么输入、是否联网、什么认证 | 施工场地 | `/settings`、迁移脚本 |
+| `project.yaml` 的 `specialists.*` | 代码/着色器/UI 分别找谁 | 分工表 | `/setup-engine`、`/settings` |
+| `project.yaml` 的 `naming.*` | 类、变量、文件怎么命名 | 标签规范 | `/setup-engine`、`/settings` |
+| `project.yaml` 的 `commands.*` | 怎么构建、测试、运行、冒烟 | 机器开关 | `/setup-engine`、`/settings` |
+| `project.yaml` 的 `testing.framework` | 用哪个测试框架 | 质检工具 | `/setup-engine`、`/settings` |
+| `CLAUDE.md` | 每次会话都要遵守的总指令、加载哪份引擎说明书 | 墙上的总规矩 | `/setup-engine`、手动 |
+| `docs/engine-reference/<engine>/` | 这个引擎版本的 API、废弃项、破坏性变更、最佳实践 | 厂家说明书 | `/setup-engine`（可借助 WebSearch 核对） |
+| `.claude/docs/technical-preferences.md` | v1.0 旧版技术偏好，缺键时兜底 | 旧档案 | `/setup-engine` 双写、迁移 |
+
+注意最后一项：它是**旧版兼容文件**。新项目应优先看 `project.yaml`；只有某个键在 YAML 里缺失时，才会回退到它。
+
+### 13.3 `engine` 块：技术栈的“身份证”
+
+`engine` 是最核心的一块。它告诉所有技能和代理：这个项目到底在什么引擎、什么版本、什么语言上工作。
+
+| 键 | 取值 | 默认 | 谁写 | 谁读 |
+|---|---|---|---|---|
+| `engine.name` | `Godot`、`Unity`、`Unreal` | 未设置（不是默认 Godot） | `/setup-engine`、`/settings` | `engine_values`、专家路由、`project-coherence.sh` |
+| `engine.version` | 字符串，如 `"4.7"`、`"6000.3"`、`"5.8"` | 未设置 | `/setup-engine`、`/settings` | `engine_values`、版本一致性检查、引擎参考文档 |
+| `engine.language` | `GDScript`、`C#`、`C++`、`Blueprint` | 未设置 | `/setup-engine`、`/settings` | `engine_values`、代码专家选择 |
+| `engine.rendering` | 引擎相关字符串，如 `Forward+`、`Compatibility`、`URP` | 由引擎和项目形态决定 | `/setup-engine`、`/settings` | `project-coherence.sh`、平台/渲染相关技能 |
+| `engine.physics` | 引擎相关字符串，如 `Jolt`、`Godot Physics 2D`、`PhysX`、`Chaos` | 由引擎和项目形态决定 | `/setup-engine`、`/settings` | `project-coherence.sh`、物理相关技能 |
+| `engine.path` | 编辑器可执行文件或引擎根目录的路径 | 未设置 | `/setup-engine`、`/settings` | `smoke-check`、需要定位编辑器的代理/脚本 |
+
+注意一个容易误解的地方：`engine.name` 未设置时，模板的参考文档默认是 Godot；但配置本身并没有写 `engine.name: Godot`。不要把“模板默认”误当成“项目已经配置好”。
+
+一个最小可用的技术栈声明长这样：
+
+```yaml
+engine:
+  name: Godot
+  version: "4.7"
+  language: GDScript
+```
+
+但只有这三行还不够。至少还要补上 `specialists`、`naming`、`commands`，代理才知道“找谁、怎么写字、怎么跑”。
+
+三种引擎的完整例子：
+
+```yaml
+# Godot 2D 网页项目
+engine:
+  name: Godot
+  version: "4.7"
+  language: GDScript
+  rendering: Compatibility
+  physics: Godot Physics 2D
+```
+
+```yaml
+# Unity 桌面项目
+engine:
+  name: Unity
+  version: "6000.3"
+  language: C#
+  rendering: URP
+  physics: PhysX
+```
+
+```yaml
+# Unreal 3D 项目
+engine:
+  name: Unreal
+  version: "5.8"
+  language: C++
+  rendering: Lumen + Nanite (deferred)
+  physics: Chaos
+```
+
+为什么 `rendering` 和 `physics` 不能只看引擎名？
+
+- Godot 的 `Jolt` 是 **3D 默认物理**，2D 项目仍然用 `Godot Physics 2D`。给 2D 项目写 `Jolt`，会把实现者引到一个游戏根本不用的后端。
+- Godot 的 `Forward+` 偏向桌面；网页项目通常要 `Compatibility`，才能覆盖更多浏览器/显卡。
+- 所以 `/setup-engine` 会先问你“2D 还是 3D、是否上网页”，再决定这两个值。
+
+`engine.path` 容易被忽略，但它很重要：
+
+- 它不是“可选装饰”。如果编辑器不在 `PATH`，代理可能误以为这台机器没装引擎。
+- 它**不会**自动拼进 `commands.*`。命令要按写好的完整路径执行，所以 `commands` 里也要写全路径。
+- 它主要给需要定位编辑器的脚本/代理用，比如冒烟检查。
+
+### 13.4 `platform` 块：技术栈的“施工场地”
+
+`engine` 说明“用什么工具”，`platform` 说明“做出来的东西在哪里跑”。
+
+| 键 | 取值 | 默认 | 谁写 | 谁读 |
+|---|---|---|---|---|
+| `platform.multiplayer` | `true` / `false` | 未设置（不等于 `false`） | `/settings` | `security-audit`、`team-release` |
+| `platform.online` | `true` / `false` | 未设置（不等于 `false`） | `/settings` | `security-audit`、`team-release` |
+| `platform.cert_tier` | `none`、`itch`、`steam`、`console` | 未设置（不等于 `none`） | `/settings` | `launch-checklist`、`release-checklist` |
+| `platform.targets` | `PC`、`Mobile`、`Web`、`Console` 的列表 | 未设置 | `/settings`、迁移脚本 | `input_methods`、`setup-engine`、UX/安全相关技能 |
+| `platform.primary_input` | 字符串，如 `Keyboard/Mouse`、`Gamepad`、`Touch` | 未设置 | `/settings`、迁移脚本 | `input_methods` |
+| `platform.gamepad_support` | `Full`、`Partial`、`None` | 未设置 | `/settings`、迁移脚本 | `input_methods` |
+| `platform.touch_support` | `Full`、`Partial`、`None` | 未设置 | `/settings`、迁移脚本 | `input_methods` |
+
+两个非常重要的“未设置”规则：
+
+1. `platform.multiplayer` 未设置，不代表“单机”。它代表“还没决定”。安全审计会**问你**，而不是擅自跳过联机检查。
+2. `platform.cert_tier` 未设置，不代表“不做认证”。`none` 是“明确不做”，未设置是“还没决定”。发布清单会问你。
+
+还有一个容易忽略的事实：**`/setup-engine` 和 `/start` 都不会写 `platform` 块**。它们只在选择 `rendering`/`physics` 时参考平台信息；真正把 `platform.*` 写进 `project.yaml` 的，通常是你运行 `/settings`。
+
+一个平台声明的例子：
+
+```yaml
+platform:
+  targets:
+    - PC
+    - Web
+  primary_input: Keyboard/Mouse
+  gamepad_support: Partial
+  touch_support: None
+  multiplayer: false
+  online: true
+  cert_tier: steam
+```
+
+它会派生出：
+
+- `input_methods`：`keyboard/mouse`、`gamepad`（因为 `Partial` 也算支持）。
+- 安全审计：因为 `online: true`，会跑在线相关内容。
+- 发布清单：因为 `cert_tier: steam`，会按 Steam 的要求列清单。
+
+### 13.5 `specialists`、`naming`、`commands`：把技术栈变成“谁来干、怎么写字、怎么跑”
+
+#### 13.5.1 `specialists`：分工表
+
+| 键 | 含义 | 取值 | 谁写 | 谁读 |
+|---|---|---|---|---|
+| `specialists.code` | 代码/语言专家 | 代理名，如 `godot-gdscript-specialist` | `/setup-engine`、`/settings` | `dev-story`、`code-review`、`team-*` |
+| `specialists.shader` | 着色器专家 | 代理名 | 同上 | 同上 |
+| `specialists.ui` | UI 专家 | 代理名 | 同上 | 同上 |
+| `specialists.additional` | 额外专家列表 | 代理名列表 | 同上 | 同上 |
+
+`primary` 不是 YAML 键，而是根据 `engine.name` 算出来的：
+
+- Godot → `godot-specialist`
+- Unity → `unity-specialist`
+- Unreal → `unreal-specialist`
+
+为什么 Godot 还需要 `specialists.code`？
+
+- `engine.name: Godot` 只知道“Godot”，不知道你用 GDScript 还是 C#。
+- `specialists.code` 才能区分 `godot-gdscript-specialist` 和 `godot-csharp-specialist`。
+- 所以 `dev-story` 会同时看 `engine_values` 和 `specialists`。
+
+#### 13.5.2 `naming`：写字规范
+
+`naming.*` 是“建议怎么命名”，不是“自动门禁”。
+
+| 键 | 取值 | Godot 默认 | Unity 默认 | Unreal 默认 |
+|---|---|---|---|---|
+| `naming.classes` | `PascalCase`、`snake_case`、`camelCase` | PascalCase | PascalCase | PascalCase |
+| `naming.variables` | `snake_case`、`camelCase` | snake_case | camelCase | PascalCase |
+| `naming.constants` | `SCREAMING_SNAKE`、`PascalCase` | SCREAMING_SNAKE | SCREAMING_SNAKE | SCREAMING_SNAKE |
+| `naming.signals` | `past_tense`、`on_event_name` | past_tense | on_event_name | PascalCase `On<Event>` |
+| `naming.files` | `snake_case`、`PascalCase`、`kebab-case` | snake_case | PascalCase | PascalCase |
+| `naming.scenes`（Unity 常叫 `prefabs`；Unreal 对应 Levels/Maps） | `snake_case`、`PascalCase` | snake_case | PascalCase | PascalCase |
+
+它会被 `dev-story`、`create-control-manifest`、`asset-spec`、`create-architecture`、`architecture-review` 等技能读取，传给程序员或写进清单/规格。
+
+但请注意：**`/code-review` 不会逐文件校验命名**。如果你需要强制检查，要自己加工具或规则。
+
+另外，`naming.signals` 在 Unreal 里的实际惯例是 PascalCase `On<Event>`，但配置枚举写作 `on_event_name`；这是枚举表达力的限制，不要因为字面值不同就以为配置写错了。
+
+#### 13.5.3 `commands`：机器开关
+
+| 键 | 证明什么 | 谁读 |
+|---|---|---|
+| `commands.build` | 能不能打出完整构建 | `smoke-check`、`project-coherence.sh`、发布清单（只引用） |
+| `commands.test` | 测试套件能不能跑、通不通过 | `smoke-check`、`hotfix`、`bug-report`、`day-one-patch` |
+| `commands.run` | 游戏窗口能不能起来（不是编辑器） | `dev-story` 的“运行并观察”步骤 |
+| `commands.smoke` | 最小启动检查能不能过 | `dev-story`、`smoke-check` |
+
+两种写法：
+
+```yaml
+# 所有系统用同一条
+commands:
+  test: "godot --headless ..."
+
+# 按操作系统区分
+commands:
+  build:
+    default: "godot --headless --export-debug 'Linux/X11'"
+    windows: "godot.exe --headless --export-debug 'Windows Desktop'"
+    macos: "godot --headless --export-debug 'macOS'"
+```
+
+`commands.build` 是最特殊的一行：导出预设名是项目自定义的，`/setup-engine` 必须问你，不能猜。没有预设就写 `[TO BE CONFIGURED]`。
+
+#### 13.5.4 `testing.framework`：质检工具
+
+`testing.framework` 告诉测试相关技能用哪个框架：
+
+- Godot：`gdunit4`
+- Unity：`unity-test-framework`
+- Unreal：`unreal-automation`
+
+它由 `/setup-engine` 自动填。实际读取者主要是 `/test-helpers`；很多测试行为也依赖 `commands.test` 里写好的命令。
+
+#### 13.5.5 一份完整的技术栈配置模板
+
+下面是一份 Godot 2D Web 项目的示意配置，把技术栈的六块放在一起。**不要整段照抄**，按你的项目改；`/setup-engine` 会替你生成大部分。
+
+```yaml
+engine:
+  name: Godot
+  version: "4.7"
+  language: GDScript
+  rendering: Compatibility
+  physics: Godot Physics 2D
+  # path: "/path/to/godot"   # 编辑器不在 PATH 时才需要
+
+platform:
+  targets:
+    - PC
+    - Web
+  primary_input: Keyboard/Mouse
+  gamepad_support: Partial
+  touch_support: None
+  multiplayer: false
+  online: false
+  cert_tier: none
+
+specialists:
+  code: godot-gdscript-specialist
+  shader: godot-shader-specialist
+  ui: godot-specialist
+  additional:
+    - godot-gdextension-specialist
+
+naming:
+  classes: PascalCase
+  variables: snake_case
+  constants: SCREAMING_SNAKE
+  signals: past_tense
+  files: snake_case
+  scenes: snake_case
+
+commands:
+  build: "godot --headless --export-debug '<你的导出预设名>'"
+  test: "<你的测试命令>"
+  run: "godot --path . --windowed"
+  smoke: "godot --headless --quit-after 5"
+
+testing:
+  framework: gdunit4
+```
+
+读这份模板时注意：
+
+- `engine` 是“用什么”。
+- `platform` 是“跑在哪”。
+- `specialists` 是“找谁”。
+- `naming` 是“怎么写字”。
+- `commands` 是“怎么跑”。
+- `testing.framework` 是“用什么质检工具”。
+- `build` 里的预设名和 `test` 命令必须按你的项目替换；带 `< >` 的是占位符，不是能直接执行的命令。
+
+#### 13.5.6 从零开始，技术栈的配置顺序
+
+1. 跑 `/setup-engine`，选引擎、版本、语言；回答“2D 还是 3D、目标平台是什么”（这决定 `rendering`/`physics`）。
+2. 它写入 `engine`、`specialists`、`naming`、`commands` 四块，双写旧版文件，改写 `CLAUDE.md` 的导入，并生成引擎参考文档。
+3. 用 `/settings` 补 `platform.*`——`/setup-engine` 和 `/start` 都不写这一块。
+4. 需要的话，用 `/settings` 补性能预算。
+5. 按 13.12 的清单检查，并跑一次 `project-coherence.sh`。
+
+### 13.6 技术栈上下文是怎么一步步送到的：六层传递链
+
+代理没有“长期记忆”。它不会在两次会话之间记住你的引擎。技术栈上下文是**每次从磁盘重新装配**的，像接力棒一样经过六层。
+
+```text
+第 1 层  /setup-engine
+         ├─ 写 project.yaml: engine / specialists / naming / commands
+         ├─ 双写 technical-preferences.md（旧版兼容）
+         ├─ 改写 CLAUDE.md 的 @docs/engine-reference/<engine>/VERSION.md
+         ├─ 生成 docs/engine-reference/<engine>/ 下的说明书
+         └─ 必要时搭建引擎工程骨架
+
+第 2 层  CLAUDE.md
+         ├─ Technology Stack 段落：人看的摘要
+         └─ @import：每次会话自动加载 VERSION.md
+
+第 3 层  session-start.sh
+         ├─ 打印当前阶段、引擎
+         └─ 检查 engine.name 与 CLAUDE.md 的 import 是否一致
+
+第 4 层  技能加载
+         └─ resolve_config --keys engine_values,specialists,...
+            把结果直接注入技能正文
+
+第 5 层  子代理
+         ├─ 技能把活派给 programmer / specialist
+         └─ specialist 的 Version Awareness 要求它读
+            VERSION.md、deprecated-apis.md、breaking-changes.md、
+            current-best-practices.md、modules/*.md
+            （文件名以 Godot 专家为例；Unity/Unreal 专家结构类似）
+
+第 6 层  执行与检查
+         ├─ commands.test / run / smoke / build 真正执行
+         ├─ project-coherence.sh 对比声明与真实工程文件
+         └─ gate-check / CI 用这些结果做判断
+```
+
+#### 第 1 层：`/setup-engine` 写什么
+
+它做四件关键事：
+
+1. 把 `engine`、`specialists`、`naming`、`commands` 四个块写进 `project.yaml`。
+2. 把同样的引擎事实双写到 `.claude/docs/technical-preferences.md`（旧版镜像）。
+3. 改写 `CLAUDE.md` 里的引擎参考导入行。
+4. 生成 `docs/engine-reference/<engine>/` 的版本说明书。
+
+它还会验证双写是否一致；不一致就停下来报告，因为“两个配置打架”会污染后面的所有读取。
+
+#### 第 2 层：`CLAUDE.md` 的导入
+
+`CLAUDE.md` 里有一行：
+
+```markdown
+@docs/engine-reference/godot/VERSION.md
+```
+
+这行的作用是：**每次会话开始，自动把这份引擎说明书加载进上下文**。
+
+`/setup-engine` 会把它改成你选的引擎：
+
+- Godot → `@docs/engine-reference/godot/VERSION.md`
+- Unity → `@docs/engine-reference/unity/VERSION.md`
+- Unreal → `@docs/engine-reference/unreal/VERSION.md`
+
+如果你只手动改了 `project.yaml` 的 `engine.name`，却没有重跑 `/setup-engine`，这一行仍然指向旧引擎。于是：
+
+- 配置说 Unity；
+- 每次会话却加载 Godot 的说明书；
+- 代理会用错知识，而且不一定会报错。
+
+`session-start.sh` 会检测这种不一致并警告。
+
+#### 第 3 层：会话启动
+
+`session-start.sh` 会读 `project.yaml` 的关键值，打印当前上下文：
+
+- 当前阶段；
+- 引擎名；
+- 是否显示会话恢复预览；
+- 是否有新版本提示。
+
+它还会做一致性检查：
+
+- `engine.name` 和 `CLAUDE.md` 的 `@import` 是否指向同一个引擎；
+- `project.stage` 和旧版 `stage.txt` 是否一致；
+- 配置里有没有非法枚举值。
+
+这一层不改变配置，只负责“把问题尽早说出来”。
+
+#### 第 4 层：技能加载时的注入
+
+技能不会自己去 YAML 里一行一行找。它们在加载前执行类似：
+
+```markdown
+!`bash "${CLAUDE_SKILL_DIR}/../../hooks/yaml-helper.sh" resolve_config --keys automation,workflow,qa.level,gate_level,engine_values,specialists,perf_budgets,system_overrides`
+```
+
+输出会被直接替换进技能正文。你会看到类似：
+
+```text
+engine_values: name=Godot (project.yaml) version=4.7 (project.yaml) language=GDScript (project.yaml)
+specialists: primary=godot-specialist (engine.name) code=godot-gdscript-specialist shader=godot-shader-specialist ui=godot-specialist additional=godot-gdextension-specialist (project.yaml)
+```
+
+（以上是示意值，实际以你的配置为准。）
+
+这样技能作者只需要写“按上面的 engine_values 和 specialists 执行”，不用重复实现解析链。
+
+#### 第 5 层：子代理的“版本意识”
+
+技术专家代理（如 `godot-specialist`）的提示词里有一段 **Version Awareness**：
+
+1. 读 `docs/engine-reference/<engine>/VERSION.md`，确认版本。
+2. 查 `deprecated-apis.md`，避免建议已废弃的 API。
+3. 查 `breaking-changes.md`，注意版本迁移。
+4. 读 `current-best-practices.md` 和相关 `modules/*.md`。
+5. 如果资料里没有这个 API，就说“未验证”，不要凭记忆编。
+
+为什么需要这一层？因为模型的训练数据有截止日期，而引擎每年都在变。**说明书比记忆可靠。**
+
+代理还会检查 `engine.name`：
+
+- 如果项目是 Unity，却被要求用 Godot 的概念回答，它应该说“我是错误的专家”，而不是硬翻译。
+- 这防止“看起来什么都会，其实用错引擎”的问题。
+
+#### 第 6 层：执行与检查
+
+最后，技术栈要落到“真的能跑”：
+
+- `commands.test` 真的执行测试。
+- `commands.run` 真的打开游戏窗口。
+- `commands.smoke` 真的做最小启动检查。
+- `commands.build` 真的出构建。
+- `project-coherence.sh` 对比 `project.yaml` 和真实工程文件：
+  - `engine.version` 与 `VERSION.md` 的 pin 是否一致；
+  - `engine.rendering` 与 Godot 的 `project.godot` 是否一致；
+  - `engine.physics` 与实际物理后端是否一致；
+  - `commands.build` 的导出预设是否有对应文件；
+  - 声明与安装的编辑器是否一致（能探测到时）。
+
+它只报告差异，不替你做判断；是否阻断由 `/gate-check` 或 CI 决定。
+
+这就是“技术栈上下文”的完整闭环：**写进配置 → 加载说明书 → 注入技能 → 路由专家 → 执行命令 → 检查落地。**
+
+### 13.7 技能眼里的技术栈：两条解析结果
+
+以 `/dev-story` 为例，它的注入行包含：
+
+```text
+engine_values, specialists, perf_budgets, ...
+```
+
+它拿到的不是“引擎对象”，而是两条扁平文本：
+
+1. `engine_values`：`name`、`version`、`language`，每项带来源标签。
+2. `specialists`：`primary`、`code`、`shader`、`ui`、`additional`，以及来源。
+
+然后它做三件事：
+
+- 根据故事类型选程序员代理（gameplay / AI / network / UI 等）。
+- 把改动文件交给 `specialists.code` 做引擎 API 检查。
+- 如果故事涉及着色器/UI，再分别找 `shader`/`ui` 专家。
+
+这里有一个容易误解的点：**不是每个代理都会自动拿到整份 `project.yaml`。** 技能只把这次任务需要的那几行传下去（引擎、版本、命名、预算、专家名）；专家代理再按提示词去读参考文档。所以如果技能忘了注入，代理就可能“什么都不知道”，或者只凭记忆猜。
+
+注意：`engine_values` 在 `project.yaml` 缺键时会回退到 `technical-preferences.md`。这就是旧项目还能工作的原因。
+
+### 13.8 代理眼里的技术栈：不是“记住”，而是“查书”
+
+一个引擎专家代理工作时，脑子里大致是这样：
+
+```text
+我是 Godot 专家。
+先看 VERSION.md：项目是 4.7，不是 4.6。
+再看 deprecated-apis.md：这个 API 在 4.5 废弃了，不能建议。
+再看 breaking-changes.md：4.6 → 4.7 有行为变化，要提醒。
+最后看 modules/rendering.md：这个渲染后端支持什么。
+如果文件里没写，我就说“未验证”，不凭记忆下结论。
+```
+
+如果 `VERSION.md` 的 `Installed at pin time` 是 `NOT DETERMINED`，说明安装版本探测没有跑；代理应该先问实际安装的版本，而不是把 pin 当成已安装版本。
+
+这解决了三个常见问题：
+
+- 模型记错 API；
+- 模型用旧版本的知识回答新版本；
+- 模型把 Unity 的概念套到 Godot 上。
+
+### 13.9 设计、实现、评审、测试、发布：技术栈在每一站怎么用
+
+| 阶段/技能 | 用到的技术栈事实 | 具体表现 |
+|---|---|---|
+| 设计 `create-architecture` | `engine.name/version/language`、平台 | 架构文档写入引擎约束、目录结构、模块边界 |
+| 架构决策 `architecture-decision` | 引擎参考文档 | 写 ADR 前先读 `VERSION.md`，再让专家验证 API |
+| 实现 `dev-story` | `specialists`、`naming`、`commands.run`、`engine.path` | 选程序员和专家、传命名规范、运行游戏观察 |
+| 评审 `code-review` | 文件类型 + 专家路由 | `.gd` 找 GDScript 专家，`.shader` 找着色器专家，UI 找 UI 专家 |
+| 测试 `smoke-check` | `commands.test/smoke/build`、`testing.framework` | 真正执行测试/启动/构建 |
+| 性能 `perf-profile` | `engine.*`、`performance.*` | 按引擎给分析建议，对照预算 |
+| 发布 `launch-checklist` | `platform.*`、`commands.build` | 按平台/认证级别列要求，确认构建产物 |
+| 门禁 `gate-check` | 阶段 + 架构/性能/QA 证据 | 检查技术栈声明是否落地到产物 |
+
+### 13.10 冲突时谁说了算
+
+初学者最容易在这里迷路：`project.yaml`、`CLAUDE.md`、引擎说明书、真实工程文件，到底听谁的？
+
+先分清两个问题：
+
+- **“团队想用什么？”** → 看 `project.yaml`（主配置），缺键时看 `technical-preferences.md`。
+- **“实际用的是什么？”** → 看真实工程文件（`project.godot`、`.uproject`、`ProjectSettings/`、包清单等）。
+
+两者冲突时，不要猜，也不要静默选一个。正确做法是报告并修正。
+
+更准确地说，要看你问的是哪类问题：
+
+| 你在问什么 | 先看 | 再看 | 不要拿来当证据 |
+|---|---|---|---|
+| 团队想用什么 | `project.yaml` | `technical-preferences.md`（旧版兜底） | 模型记忆 |
+| 实际用的是什么 | 真实工程文件 | `project-coherence.sh` 的报告 | 只凭 `project.yaml` 下结论 |
+| 这个 API 怎么用 | `docs/engine-reference/` | 官方文档 / WebSearch | 模型记忆 |
+| 这次会话该加载哪份说明书 | `CLAUDE.md` 的 `@import` | `session-start.sh` 的警告 | 猜 |
+
+一句话：
+
+- **配置值**以 `project.yaml` 为准。
+- **落地事实**以真实工程文件为准。
+- **API 知识**以版本化参考文档为准。
+- 三者不一致时，报告并修正，不要静默选一个。
+
+检查“三处一致”：
+
+1. `project.yaml` 的 `engine.name` = `CLAUDE.md` 的 `@docs/engine-reference/<engine>/VERSION.md` = `docs/engine-reference/<engine>/` 存在。
+2. `project.yaml` 的 `engine.version` = `VERSION.md` 的 pin = 安装的编辑器版本（按主.次版本比较；探测不到时会显示 `NOT DETERMINED`）。
+3. `project.yaml` 的 `rendering`/`physics` = 真实工程文件里的设置。
+
+`project-coherence.sh` 会检查其中大部分；`session-start.sh` 会检查第 1 条。
+
+### 13.11 常见技术栈问题
+
+| 症状 | 很可能的原因 | 处理 |
+|---|---|---|
+| 项目是 Unity，代理却满口 Godot | `engine.name` 没改，或 `CLAUDE.md` 的 import 还指向 Godot | 重跑 `/setup-engine`，不要只手改 YAML |
+| 代理建议了一个不存在的 API | 引擎参考文档过时，或版本与项目不一致 | `/setup-engine refresh` 或 `upgrade` |
+| `commands.test` 跑不起来 | 编辑器不在 `PATH`，`engine.path` 没写，命令里也没写全路径 | 补 `engine.path`，并把全路径写进 `commands.*` |
+| 没有生成引擎专家 | `engine.name` 未设置，或 `specialists` 块缺失 | 跑 `/setup-engine` |
+| 总被问“是否联机/什么平台” | `platform.*` 未设置 | 用 `/settings` 明确设置 |
+| 构建出来的是错误平台 | `commands.build` 里硬编码了别的平台预设 | 让 `/setup-engine` 问你要构建的预设 |
+| `rendering`/`physics` 和实际工程不一致 | 声明值写错，或工程文件被手动改过 | 跑 `project-coherence.sh`，按报告修正 |
+| 命名规范没拦住代码 | 设计上就不是自动门禁 | 需要强制就自己加检查 |
+| 模型“记得”一个旧 API | 模型记忆不可靠 | 以 `docs/engine-reference/` 为准 |
+
+### 13.12 最小可用技术栈检查清单
+
+新项目配置完，至少确认这九件事：
+
+- [ ] `engine.name`、`engine.version`、`engine.language` 已设置。
+- [ ] `specialists.code`、`shader`、`ui` 已按引擎填好。
+- [ ] `naming.*` 已按引擎填好（至少 `classes`、`variables`、`files`）。
+- [ ] `commands.test`、`run`、`smoke` 能实际执行；`build` 已问过预设或标了 TODO。
+- [ ] `platform.targets`、`primary_input`、`gamepad_support`、`touch_support` 已设置。
+- [ ] `platform.multiplayer`、`online` 已明确（即使答案是“没有”）。
+- [ ] `CLAUDE.md` 的 `@import` 指向当前引擎。
+- [ ] `docs/engine-reference/<engine>/VERSION.md` 存在且版本一致。
+- [ ] `project-coherence.sh` 没有未处理的版本/渲染/物理不一致。
+
+---
+
+## 14. 配置项字典（逐项速查）
+
+这一节像字典，不需要一次读完。查某个键时看对应的行即可。
+
+先说明表里的四个约定：
+
+- **写入者**：主要写这个键的地方；手改也允许，但没有 `/settings` 的校验。
+- **默认**：这里的“默认”有三种，不能混：
+  - **解析器默认**：`yaml-helper.sh` 直接给的兜底值。
+  - **派生默认**：由 `modes.rigor` 或 `engine.name` 算出来的值。
+  - **技能默认**：解析器输出 `unset`，由具体技能自己决定。
+- **读取者**：主要读取者，通常是 grep 能看到的“下限”，不等于全部。
+- **同上**：与上一行完全相同，不是“还有别的”。
+- **`*`**：表示这个键可以写进 `project.local.yaml`（本机白名单）。
+
+写入者简称：
+
+| 简称 | 实际是谁 |
+|---|---|
+| `start` | `/start` |
+| `setup` | `/setup-engine` |
+| `settings` | `/settings` |
+| `gate` | `/gate-check` |
+| `migrate` | `/adopt` 或 `migrate-v1-config.sh` |
+| `hand` | 人手写 |
+
+举个例子：查 `qa.level` 这一行，能读出“它有三个值；不写就跟着 rigor；用 `/settings` 写；主要影响故事完成和门禁；和引擎无关”。会读这一行，就会读整张表。
+
+### 14.1 身份、版本与生命周期
+
+| 键 | 取值 | 默认 | 写入者 | 主要读取者 | 备注 |
+|---|---|---|---|---|---|
+| `schema_version` | 整数 | `1` | `start`、`setup`（创建时）、`migrate` | 所有解析器、迁移逻辑 | 低版本提示迁移；高版本警告“部分设置可能被忽略” |
+| `framework.version` | 语义化版本 | 模板版本，如 `1.2.0` | 模板、`setup`（创建时）、`migrate` | 无行为读取者 | 只记录模板来源 |
+| `framework.last_upgraded` | ISO 日期 | 模板日期 | 模板、`setup`（创建时）、`migrate` | 无行为读取者 | 只记录升级时间 |
+| `project.name` | 字符串 | 未设置 | `hand` | 几乎没有 | 元数据；不要指望它驱动流程 |
+| `project.genre` | 字符串 | 未设置 | `hand` | 几乎没有 | 元数据 |
+| `project.version` | 字符串 | 未设置 | `hand` | 几乎没有 | 元数据 |
+| `project.stage` | `Concept`、`Systems Design`、`Technical Setup`、`Pre-Production`、`Production`、`Polish`、`Release` | `Concept`（检测器推断） | `start`、`gate` | `/help`、`/gate-check`、`/project-stage-detect`、状态栏、`/team-release`、`/launch-checklist` | 会双写 `production/stage.txt`；不要手改来跳过门禁 |
+| `project.kind` | `game`、`tool`、`engine`、`mod`、`library` | `game`（文档默认） | `settings`（会警告“保留”）、`hand` | **无人读（保留）** | 设置了也不会改变行为 |
+
+### 14.2 流程档位、文档、QA 与性能
+
+| 键 | 取值 | 默认 | 写入者 | 主要读取者 | 备注 |
+|---|---|---|---|---|---|
+| `modes.rigor` | `minimal`、`standard`、`full` | `minimal` | `start`、`settings` | 无技能直接读；只作为派生源 | 套餐键；不要预置它派生的六个键 |
+| `modes.review_mode` `*` | `full`、`lean`、`solo` | 由 rigor 派生：minimal→solo，standard→lean，full→full | `settings`、`migrate` | `architecture-review`、`design-review`、`review-all-gdds`、`gate-check`、`design-system`、`art-bible`、`ux-design`、`brainstorm` | 决定“评审关卡跑不跑/多宽”，不决定文档要求 |
+| `modes.workflow` | `minimal`、`standard`、`full` | 由 rigor 派生：同值 | `settings`、`migrate` | `design-system`、`create-architecture`、`gate-check`、`create-epics`、`create-stories`、`story-readiness`、`review-all-gdds` | 决定“要求哪些文档/产物存在” |
+| `modes.automation` `*` | `collaborative`、`guided`、`autonomous` | `collaborative` | `start`、`settings` | 几乎所有会写文件/提问的技能 | 决定“先问再做”还是“边说边做” |
+| `modes.automation_always_ask` `*` | 类别列表：`scope_changes`、`file_deletions`、`schema_changes`、`architecture_decisions`、`version_bumps`、`external_calls` | `scope_changes`、`file_deletions`、`schema_changes` | `settings` | 所有遵守 automation 的技能 | 自主模式下的“一票否决”清单 |
+| `modes.story_granularity` | `coarse`、`balanced`、`fine` | 由 rigor 派生：coarse/balanced/fine | `settings` | `/create-stories`、`/sprint-plan`、`/sprint-status`、`/story-readiness` | 决定故事切多大 |
+| `docs.density` | `terse`、`balanced`、`thorough` | 由 rigor 派生：terse/balanced/thorough | `settings` | `design-system`、`art-bible`、`create-architecture`、`ux-design`、`map-design`、`brainstorm` | 决定每节写多深；不决定哪些节存在 |
+| `qa.level` | `minimal`、`standard`、`full` | 由 rigor 派生：同值 | `settings`、`migrate` | `/story-done`、`/story-readiness`、`/gate-check`、`/qa-plan`、`/team-qa` | 决定“要不要测试证据”；视觉/UI 截图从不豁免 |
+| `qa.coverage_minimum` | `0`–`100` 或 `null` | `null` | `settings` | 只有 `/gate-check`（且 `qa.level: full`） | `null` 是“没有承诺”，不是 0 |
+| `testing.framework` | `gdunit4`、`unity-test-framework`、`unreal-automation` | 引擎默认 | `setup`、`settings` | `/test-helpers` | 主要影响测试脚手架说明；实际执行看 `commands.test` |
+| `testing.strict.logic` `*` | `true` / `false` | 未设置；技能默认 `true` | `settings`、`migrate` | `/story-done`、`/story-readiness`、`/gate-check`、`/smoke-check`、`/dev-story` | 逻辑测试失败是否阻断 |
+| `testing.strict.integration` `*` | `true` / `false` | 未设置；技能默认 `true` | 同上 | 同上 | 集成测试失败是否阻断 |
+| `testing.strict.visual` `*` | `true` / `false` | 未设置；技能默认 `true` | 同上 | 同上 | 视觉证据缺失/失败是否阻断 |
+| `testing.strict.ui` `*` | `true` / `false` | 未设置；技能默认 `true` | 同上 | 同上 | UI 截图缺失是否阻断 |
+| `testing.strict.config` `*` | `true` / `false` | 未设置；技能默认 `false`；`smoke-check` 未设置时按严格处理 | 同上 | 同上 | 配置/数据冒烟失败是否阻断 |
+| `strict_gate_checks` | `true` / `false` | `true`（文档默认） | `settings`（会警告“保留”） | **无人读（保留）** | 不要依赖 |
+| `team.size` `*` | `individual`、`small`、`studio` | 由 rigor 派生：full→studio，否则 individual | `settings` | 所有 `team-*`、`/gate-check`、会生成代理的技能 | 决定默认启用多少代理，不是团队人数 |
+| `performance.target_framerate` | 整数，如 `60` | 未设置 | `settings`、`migrate` | `/perf-profile`、`/gate-check`、`/team-polish` | 未设置不是 0 |
+| `performance.frame_budget_ms` | 数字，如 `16.67` | 未设置 | 同上 | 同上 | 未设置不是 0 |
+| `performance.draw_call_limit` | 整数 | 未设置 | 同上 | 同上 | 未设置不是 0 |
+| `performance.memory_ceiling_mb` | 整数 | 未设置 | 同上 | 同上 | 未设置不是 0 |
+| `performance.enforce` `*` | `warn`、`block`、`off` | `warn` | `settings` | `/perf-profile`、`/gate-check`、CI | 超预算时警告/阻断/关闭 |
+
+### 14.3 技术栈与运行
+
+| 键 | 取值 | 默认 | 写入者 | 主要读取者 | 备注 |
+|---|---|---|---|---|---|
+| `engine.name` | `Godot`、`Unity`、`Unreal` | 未设置 | `setup`、`settings` | `engine_values`、专家路由、`project-coherence.sh`、`session-start.sh` | 模板的参考文档默认是 Godot，但 `engine.name` 本身不默认 Godot |
+| `engine.version` | 字符串 | 未设置 | `setup`、`settings` | `engine_values`、`project-coherence.sh`、参考文档 pin | 建议加引号 |
+| `engine.language` | `GDScript`、`C#`、`C++`、`Blueprint` | 未设置 | `setup`、`settings` | `engine_values`、`specialists.code` 选择 | Godot 的 C#/GDScript 区分还依赖 `specialists.code` |
+| `engine.rendering` | 引擎相关字符串 | 由引擎和项目形态决定 | `setup`、`settings` | `project-coherence.sh`、渲染/平台相关技能 | Godot 2D 网页常用 `Compatibility` |
+| `engine.physics` | 引擎相关字符串 | 由引擎和项目形态决定 | `setup`、`settings` | `project-coherence.sh`、物理相关技能 | Godot 2D 用 `Godot Physics 2D`，不是 `Jolt` |
+| `engine.path` | 路径字符串 | 未设置 | `setup`、`settings` | `/smoke-check`、需要定位编辑器的代理/脚本 | 不会自动拼进 `commands.*` |
+| `platform.multiplayer` | `true` / `false` | 未设置（不等于 `false`） | `settings` | `/security-audit`、`/team-release`、`security-engineer` | 未设置会触发提问 |
+| `platform.online` | `true` / `false` | 未设置（不等于 `false`） | `settings` | `/security-audit`、`/team-release`、`security-engineer` | 与 multiplayer 独立 |
+| `platform.cert_tier` | `none`、`itch`、`steam`、`console` | 未设置（不等于 `none`） | `settings` | `/launch-checklist`、`/release-checklist` | 未设置会问；`none` 是明确选择 |
+| `platform.targets` | `PC`、`Mobile`、`Web`、`Console` 的列表 | 未设置 | `settings`、`migrate` | `input_methods`、`/setup-engine`、UX/安全相关技能 | 平台列表会参与输入法派生 |
+| `platform.primary_input` | 字符串 | 未设置 | `settings`、`migrate` | `input_methods` | 会被归一化 |
+| `platform.gamepad_support` | `Full`、`Partial`、`None` | 未设置 | `settings`、`migrate` | `input_methods` | `Partial` 也算支持 |
+| `platform.touch_support` | `Full`、`Partial`、`None` | 未设置 | `settings`、`migrate` | `input_methods` | `Partial` 也算支持 |
+| `specialists.code` | 代理名 | 未设置；`primary` 另由 `engine.name` 派生 | `setup`、`settings` | `/dev-story`、`/code-review`、`/architecture-*`、`/team-*` | Godot 用它区分 GDScript/C# |
+| `specialists.shader` | 代理名 | 未设置 | `setup`、`settings` | 同上 | 着色器相关任务 |
+| `specialists.ui` | 代理名 | 未设置 | `setup`、`settings` | 同上 | UI 相关任务 |
+| `specialists.additional` | 代理名列表 | 未设置 | `setup`、`settings` | 同上 | 没有就跳过 |
+| `naming.classes` | `PascalCase`、`snake_case`、`camelCase` | 引擎默认 | `setup`、`settings` | `/dev-story`、`/create-control-manifest`、`/asset-spec`、架构类技能 | 指南，不是自动门禁 |
+| `naming.variables` | `snake_case`、`camelCase` | 引擎默认 | 同上 | 同上 | 同上 |
+| `naming.constants` | `SCREAMING_SNAKE`、`PascalCase` | 引擎默认 | 同上 | 同上 | 三个引擎的默认都是 SCREAMING_SNAKE |
+| `naming.signals` | `past_tense`、`on_event_name` | 引擎默认 | 同上 | 同上 | Unreal 语义上是 PascalCase `On<Event>` |
+| `naming.files` | `snake_case`、`PascalCase`、`kebab-case` | 引擎默认 | 同上 | 同上 | 只描述源文件 |
+| `naming.scenes` | `snake_case`、`PascalCase` | 引擎默认 | 同上 | 同上 | Unity 常叫 prefabs；Unreal 对应 Levels/Maps |
+| `commands.build` | 字符串或 OS 映射 | 未设置；setup 填 | `setup`、`settings` | `/smoke-check`、`project-coherence.sh`、发布清单（只引用） | 预设名必须问，不能猜 |
+| `commands.test` | 字符串或 OS 映射 | 未设置；setup 填 | `setup`、`settings` | `/smoke-check`、`/hotfix`、`/bug-report`、`/day-one-patch`、`/dev-story` | 真正执行测试 |
+| `commands.run` | 字符串或 OS 映射 | 未设置；setup 填 | `setup`、`settings` | `/dev-story` 的运行观察步骤 | 启动游戏，不是编辑器 |
+| `commands.smoke` | 字符串或 OS 映射 | 未设置；setup 填 | `setup`、`settings` | `/dev-story`、`/smoke-check` | 最小启动检查 |
+
+### 14.4 例外、开关与保留项
+
+| 键 | 取值 | 默认 | 写入者 | 主要读取者 | 备注 |
+|---|---|---|---|---|---|
+| `workflow_overrides.edge_cases` | `true` / `false` | `false` | `settings` | 设计/评审/门禁类技能 | `standard` 已要求 Edge Cases，这里是额外强制 |
+| `workflow_overrides.tuning_knobs` | `true` / `false` | `false` | `settings` | 同上 | `full` 已要求 Tuning Knobs |
+| `workflow_overrides.art_bible_strict` | `true` / `false` | `false` | `settings` | 美术/门禁类技能 | 没有视觉资产也要求全 9 节 |
+| `workflow_overrides.system_overrides` | 映射：系统名 → `minimal/standard/full` | 空 | `settings` | 所有按系统工作的技能 | 双向替换，可更松也可更严；必须在根目录 |
+| `features.session_state` `*` | `on` / `off` | `on` | `settings` | `session-start.sh`、`session-stop.sh`、`pre-compact.sh`、`log-agent*.sh` | 只有 `off` 关闭；`false` 是非法值，会回退到 `on` |
+| `features.token_budget_warn_at` `*` | `0.0`–`1.0` | `0.7`（文档默认） | `settings` | **无人读（保留）** | 不要依赖 |
+| `features.read_guard` `*` | `on` / `off`（也接受 `true`/`false`） | `on` | `settings` | `validate-read.sh` / `read-guard.sh` | 拒绝整文件读大文档 |
+| `features.read_guard_kb` `*` | 整数 KB | `40` | `settings` | 同上 | 超过阈值触发守卫 |
+| `updates.check` `*` | `true` / `false` | `true` | `settings` | `session-start.sh` / `update-check.sh` | CI 自动关闭；最多每天一次 |
+| `accessibility.target` | `none`、`standard`、`aaa` | `none`（文档默认） | `settings` | **无人读（保留）** | 不要依赖 |
+| `cadence.sprint_length` | `1w`、`2w`、`3w`、`4w`、`none` | `2w`（文档默认） | `settings` | **无人读（保留）** | 不要依赖 |
+| `cadence.milestone_length` | `4w`、`6w`、`8w`、`12w` | `8w`（文档默认） | `settings` | **无人读（保留）** | 不要依赖 |
+
+### 14.5 派生关系速查
+
+| 你设置的值 | 可能派生出什么 | 用在哪里 |
+|---|---|---|
+| `modes.rigor` | `review_mode`、`workflow`、`docs.density`、`qa.level`、`story_granularity`、`team.size` | 所有设计/故事/评审技能 |
+| `engine.name` | `specialists.primary` | 所有引擎相关实现/评审 |
+| `specialists.*` | 无（直接使用） | `dev-story`、`code-review`、`team-*` |
+| `platform.*` | `input_methods` | UX、输入、安全、发布 |
+| `testing.strict.*` | `gate_level`（blocking/advisory） | 故事完成、门禁、冒烟 |
+| `modes.review_mode` | `review_gate`（skill-gates/phase-gates） | 评审类技能、门禁 |
+| `performance.*` | `perf_budgets` | 性能分析、门禁 |
+
+记住一句话：**派生值不是配置键。** 你不需要在 YAML 里写 `gate_level`、`input_methods`、`perf_budgets`；它们是用上面的源键算出来的。
+
+## 15. 进一步阅读
 
 | 文件 | 读什么 |
 |---|---|
@@ -1507,3 +2220,5 @@ bash .claude/hooks/yaml-helper.sh resolve_config --keys automation,workflow,qa.l
 - 每个值来自哪里、
 
 ——这五件事，才是它真正想解决的问题。理解了这些，你就不需要背键名，也能从任意一个配置项推断出它对项目的影响。
+
+技术栈也是同一套思路：它不是一行 `engine: Godot`，而是“配置 → 说明书 → 技能注入 → 专家路由 → 命令执行 → 一致性检查”的接力。任何一环缺失，代理都可能在“看起来懂”的情况下做错。
