@@ -2083,11 +2083,11 @@ engine_values, specialists, perf_budgets, ...
 | Input & Platform | `Gamepad Support` | `platform.gamepad_support` | 直接映射 | 是 |
 | Input & Platform | `Touch Support` | `platform.touch_support` | 直接映射 | 是 |
 | Input & Platform | `Platform Notes` | **无** | 留在 Markdown | 不迁移 |
-| Naming Conventions | `Classes` | `naming.classes` | 原文搬运（不翻译成枚举） | 值保留，但可能不是合法枚举，需人工规范 |
+| Naming Conventions | `Classes` | `naming.classes` | 原文搬运（不翻译写法） | 值保留，但写法可能与仓库约定不一致 |
 | Naming Conventions | `Variables` | `naming.variables` | 原文搬运 | 否：`_camelCase` 私有字段等细节丢失 |
 | Naming Conventions | `Signals/Events` | `naming.signals` | 原文搬运 | 否：自定义前缀/后缀丢失 |
-| Naming Conventions | `Files` | `naming.files` | 原文搬运 | 值保留，需人工规范 |
-| Naming Conventions | `Scenes/Prefabs` | `naming.scenes` | 原文搬运 | 值保留，需人工规范 |
+| Naming Conventions | `Files` | `naming.files` | 原文搬运 | 值保留，写法可能与约定不一致 |
+| Naming Conventions | `Scenes/Prefabs` | `naming.scenes` | 原文搬运 | 值保留，写法可能与约定不一致 |
 | Naming Conventions | `Constants` | `naming.constants` | 原文搬运 | 否：`PascalCase 或 UPPER_SNAKE` 只能选一个 |
 | Performance Budgets | `Target Framerate` | `performance.target_framerate` | 散文 → 数字 | 否：区间/分平台目标无法容纳 |
 | Performance Budgets | `Frame Budget` | `performance.frame_budget_ms` | 散文 → 数字 | 否：同上 |
@@ -2116,7 +2116,204 @@ engine_values, specialists, perf_budgets, ...
 - **“无”**：不是遗漏，而是**有意不搬**或**留在旧家**。
 - **“新增能力”**：旧文件本来就没有，谈不上遗漏。
 
-#### 13.13.2 为什么这套格式能装下：七个设计手法
+#### 13.13.2 先看懂“地址”：区块、字段、值
+
+不熟悉 YAML 的读者，先记住一张图。旧文件里的这一段：
+
+```markdown
+## Engine & Language
+- **Engine**: Godot 4.7
+```
+
+在新文件里变成：
+
+```yaml
+engine:
+  name: "Godot"
+  version: "4.7"
+```
+
+可以这样理解：
+
+| 词 | 白话比喻 | 上面的例子 |
+|---|---|---|
+| 区块（block） | 一个抽屉、一个大栏目 | `engine:` |
+| 字段（key） | 抽屉里的小格子 | `name:` |
+| 值（value） | 格子里填的内容 | `"Godot"` |
+| 点路径（dot path） | 格子的完整地址：抽屉.格子 | `engine.name` |
+
+旧文件像**一本手写笔记**：一章一章往下写，一条一行，冒号后面跟一段话。
+新文件像**一张登记表**：先分抽屉，再分格子，每个格子只填一个值。
+
+所以“一一对应”**不是“一行对一行”**，而是“**一个信息点对一个格子**”。这会带来三种偏差：
+
+- **拆开**：旧文件的一行，拆成新文件的两个格子（`Engine: Godot 4.7`）。
+- **合并**：旧文件的好几行，合成一个新格子里的清单（`PC, Console, Mobile`）。
+- **不搬**：这段话是给人看的判断，程序用不上，就继续留在笔记里（禁止模式、平台备注）。
+
+#### 13.13.3 每一项的一一对应（人话版）
+
+下面按旧文件的分区逐条列。第一列是“旧文件里长这样”，第二列是“新文件里对应哪个格子”。
+
+**引擎与语言**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Engine: Godot 4.7` | `engine.name` + `engine.version` | 用哪个引擎、哪个版本 | 拆成两格 |
+| `Language: GDScript` | `engine.language` | 写代码用什么语言 | 原样搬 |
+| `Rendering: Forward+` | `engine.rendering` | 画面用什么渲染方式 | 原样搬 |
+| `Physics: Jolt` | `engine.physics` | 物理效果用什么引擎 | 原样搬 |
+
+**输入与平台**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Target Platforms: PC, Console` | `platform.targets` | 游戏要发到哪些平台 | 逗号清单 → 逐项列出 |
+| `Input Methods: Keyboard/Mouse, Gamepad` | **没有这一格**，由平台四格算出 `input_methods` | 玩家能用哪些设备操作 | 不抄，重新算 |
+| `Primary Input: Keyboard/Mouse` | `platform.primary_input` | 玩家主要用哪个设备 | 原样搬 |
+| `Gamepad Support: Full` | `platform.gamepad_support` | 对手柄支持到什么程度 | 原样搬 |
+| `Touch Support: None` | `platform.touch_support` | 对触屏支持到什么程度 | 原样搬 |
+| `Platform Notes: ...` | **没有** | 平台相关的额外提醒 | 不搬，留在旧文件 |
+
+**命名约定**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Classes: PascalCase` | `naming.classes` | 类名怎么起 | 原样搬 |
+| `Variables: snake_case` | `naming.variables` | 变量名怎么起 | 原样搬 |
+| `Signals/Events: past_tense` | `naming.signals` | 事件/信号名怎么起 | 原样搬（旧标签可写成短名） |
+| `Files: snake_case` | `naming.files` | 文件名怎么起 | 原样搬 |
+| `Scenes/Prefabs: PascalCase` | `naming.scenes` | 场景/预制体名怎么起 | 原样搬 |
+| `Constants: SCREAMING_SNAKE` | `naming.constants` | 常量名怎么起 | 原样搬 |
+
+**性能预算**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Target Framerate: 60 fps` | `performance.target_framerate` | 一秒至少画多少帧 | 去掉单位，只留数字 |
+| `Frame Budget: 16.67ms` | `performance.frame_budget_ms` | 每一帧最多花多少毫秒 | 去掉单位，只留数字 |
+| `Draw Calls: 2000` | `performance.draw_call_limit` | 一帧最多提交多少次绘制 | 只留数字 |
+| `Memory Ceiling: 1024MB` | `performance.memory_ceiling_mb` | 内存最多用多少 MB | 去掉单位，只留数字 |
+
+**测试**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Framework: gdUnit4` | `testing.framework` | 自动化测试用哪个工具 | 原样搬 |
+| `Minimum Coverage: 80%` | `qa.coverage_minimum` | 代码至少被测试覆盖多少 | 去掉 `%`，只留数字 |
+| `Required Tests: ...` | **没有** | 哪些东西必须写测试 | 不搬，留在旧文件 |
+
+注意：`Minimum Coverage` 没有搬进 `testing:` 块，而是搬进了 `qa:` 块。因为它约束的是“质量证据要求”，测试框架只是手段。
+
+**三条“只留在旧文件”的规则**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Forbidden Patterns` 整节 | **没有** | 绝对不能出现的写法 | 故意不搬 |
+| `Allowed Libraries / Addons` 整节 | **没有** | 允许使用的第三方库 | 故意不搬 |
+| `Architecture Decisions Log` 整节 | **没有** | 重大架构决定的记录 | 改用 `docs/architecture/` + registry |
+
+**引擎专家**
+
+| 旧文件写法 | 新文件里的格子 | 一句话解释 | 对应方式 |
+|---|---|---|---|
+| `Primary: godot-specialist` | **没有 `specialists.primary`** | 主要是哪个专家负责 | 不抄，按 `engine.name` 算 |
+| `Language/Code Specialist: ...` | `specialists.code` | 谁来看代码 | 只搬代理名 |
+| `Shader Specialist: ...` | `specialists.shader` | 谁来看着色器 | 只搬代理名 |
+| `UI Specialist: ...` | `specialists.ui` | 谁来看界面 | 只搬代理名 |
+| `Additional Specialists: a, b` | `specialists.additional` | 还要叫上哪些专家 | 逗号清单 → 逐项列出 |
+| `Routing Notes: ...` | **没有** | 什么文件交给谁看 | 不搬，留在旧文件 |
+| `File Extension Routing` 表 | **没有** | 按文件后缀分派专家 | 不搬，技能自己按后缀判断 |
+
+**新表里“多出来”的格子**（旧文件根本没有，谈不上对应）：
+
+| 新格子 | 干什么用 |
+|---|---|
+| `commands.build` / `test` / `run` / `smoke` | 构建、测试、运行、冒烟检查具体跑什么命令 |
+| `platform.multiplayer` / `online` / `cert_tier` | 是否联机、是否有在线功能、走哪个发行渠道 |
+| `engine.path` | 编辑器装在哪，便于脚本找到它 |
+| `framework.*`、`features.*`、`updates.*` | 仓库工具链的版本与开关，和游戏技术栈无关 |
+
+#### 13.13.4 五种“不是照抄”的情况，看例子就懂
+
+**① 拆开：一句话里藏着两个信息**
+
+```yaml
+# 旧文件
+- **Engine**: Godot 4.7
+
+# 新文件
+engine:
+  name: "Godot"
+  version: "4.7"
+```
+
+为什么拆：程序要比较版本号，必须单独拿到 `4.7`，不能每次从一句话里猜。
+迁移规则：第一个词当引擎名，最后一个“像版本号”的词当版本。所以 `Unity 6.3 LTS` 的版本会拆不出来，需要手补。
+
+**② 清单：逗号句子变成一行一项**
+
+```yaml
+# 旧文件
+- **Target Platforms**: PC, Console, Mobile
+
+# 新文件
+platform:
+  targets:
+    - PC
+    - Console
+    - Mobile
+```
+
+为什么：逗号既可能分隔平台，也可能出现在括号说明里；写成清单就没有歧义。
+注意：`PC + Console` 没有逗号，会被当成一个平台，需要手改。
+
+**③ 数字：去掉单位，只留能计算的数**
+
+```yaml
+# 旧文件
+- **Frame Budget**: 16.67ms
+- **Minimum Coverage**: 80%
+
+# 新文件
+performance:
+  frame_budget_ms: 16.67
+qa:
+  coverage_minimum: 80
+```
+
+迁移会先去掉 `ms`、`MB`、`fps`、`%` 这类单位；如果剩下的还不是纯数字，性能预算会写 `null` 并在报告里提示，覆盖率则直接不写。
+所以 `尽量高`、`60 帧左右` 这类写法搬不过去，需要人给一个准确数字。
+
+**④ 算出来：不存第二份答案**
+
+```yaml
+# 旧文件
+- **Primary**: godot-specialist
+- **Input Methods**: Keyboard/Mouse, Gamepad
+
+# 新文件：这两行都不存
+engine:
+  name: "Godot"          # → 推导出主专家 godot-specialist
+platform:
+  targets: [PC]          # → 含 PC，所以有键盘鼠标
+  gamepad_support: Full  # → 有手柄
+  primary_input: "Keyboard/Mouse"
+```
+
+为什么：同一个结论存两份，迟早会互相矛盾（引擎改成 Unity，Primary 还写着 Godot 专家）。
+代价：`Input Methods: Mixed` 这种“结论型”写法，重算后会变成具体设备列表，不一定一字不差。
+
+**⑤ 不搬：给人看的判断，留在旧本子**
+
+- `Forbidden Patterns`、`Allowed Libraries`：评审时会被**整段复制**进提示词的管控清单，程序并不逐条解析它们，所以留在 Markdown 最合适。
+- `Platform Notes`、`Required Tests`、`Routing Notes`、`File Extension Routing`：都是解释性文字或自定义规则，没有对应的 YAML 表达方式。
+
+**抄写口诀**：
+
+> 一格一值；清单分行；单位去掉；算得出来的不抄；判断和说明留在旧本子。
+
+#### 13.13.5 为什么这套格式能装下：七个设计手法
 
 `project.yaml` 能容纳旧内容，不是因为它“更长”，而是因为它换了数据模型。具体有七个手法：
 
@@ -2149,14 +2346,14 @@ performance.frame_budget_ms
 
 **③ 枚举把“自由文本”收窄成“可校验值”**
 
-旧文件写 `PascalCase`、`Full`、`gdUnit4`；这些是给人看的。新文件写 `pascal_case`、`full`、`gdunit4`，并且**解析器会校验**：
+旧文件写 `PascalCase`、`Full`、`gdUnit4`；这些是给人看的。新文件统一成仓库约定的写法，常见的有 `PascalCase`、`snake_case`、`SCREAMING_SNAKE`、`Full`/`Partial`/`None`、`gdunit4`，并且**解析器会对真正有枚举的键做校验**：
 
 - 合法值 → 正常使用；
-- 非法值 → 被拒绝，写进 `notes`，继续回退，不会把 `naming.classes: 随便写` 传遍所有技能。
+- 非法值 → 被拒绝，写进 `notes`，继续回退，不会把 `platform.gamepad_support: 也许吧` 传遍所有技能。
 
 这是“能容纳”与“能可靠使用”的分界线：**旧文件能写任何话，新文件只接受能执行的话。**
 
-> 迁移是一个例外：迁移脚本为了不猜错，**按原文搬运**命名和测试框架，不做枚举翻译。所以迁移后建议用 `/settings` 复核一遍这些值，让它们变成合法枚举。
+> 迁移是一个例外：迁移脚本为了不猜错，**按原文搬运**命名和测试框架，不做写法翻译。所以迁移后建议用 `/settings` 复核一遍这些值，让写法统一到仓库约定。
 
 **④ 数组容纳“一对多”**
 
@@ -2197,7 +2394,7 @@ specialists:
 
 格式能装下只是第一步；还要保证“装了有人读”。仓库用 `effects-map.md` 给每个键记录 **取值 / 默认 / 写入者 / 读取者**，并用“死设置审计”发现“看起来是配置、其实没人读”的键。这解释了为什么 `project.kind`、`cadence.*` 会被标成“保留未实现”——**能写进 YAML，不等于已经接线**。
 
-#### 13.13.3 新机制是怎么跑起来的：四条链路
+#### 13.13.6 新机制是怎么跑起来的：四条链路
 
 ```text
 【写入】
@@ -2232,7 +2429,7 @@ specialists:
 
 所以“新机制”不是“把 Markdown 废掉”，而是**把每个字段的权威位置重新分配了一遍**。
 
-#### 13.13.4 会不会有遗漏？
+#### 13.13.7 会不会有遗漏？
 
 会。但要分清五种“遗漏”，因为它们的性质完全不同：
 
@@ -2261,7 +2458,7 @@ specialists:
 2. **迁移报告显式列出被保留、被手工处理、被警告的内容**，让人有机会复核。
 3. **效果表和审计能发现“有键没人读”**，避免把“写进去了”误当成“生效了”。
 
-#### 13.13.5 自查：我的项目到底迁全了没有
+#### 13.13.8 自查：我的项目到底迁全了没有
 
 按顺序做这六件事：
 
