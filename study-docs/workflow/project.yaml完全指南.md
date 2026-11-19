@@ -13,6 +13,7 @@
 - **配置不生效，来排错**：第 6、9 节。
 - **想理解项目架构**：第 2、6、10 节。
 - **想搞懂技术栈**：第 13 节。
+- **想知道旧技术栈文件怎么装进 YAML、会不会漏**：13.13。
 - **想查某个键的取值/默认/谁读谁写**：第 14 节。
 
 ---
@@ -2057,6 +2058,225 @@ engine_values, specialists, perf_budgets, ...
 - [ ] `docs/engine-reference/<engine>/VERSION.md` 存在且版本一致。
 - [ ] `project-coherence.sh` 没有未处理的版本/渲染/物理不一致。
 
+### 13.13 旧版 `technical-preferences.md`，是怎么装进 `project.yaml` 的
+
+前面讲过“技术栈分布在九个地方”。这一节专门回答一个更尖锐的问题：
+
+> 旧文件有 9 个区块、几十个字段，内容那么多；`project.yaml` 凭什么装得下？会不会漏？
+
+先说结论，避免误解：
+
+> **`project.yaml` 不是 `technical-preferences.md` 的“YAML 版复印件”，而是它的“可执行子集 + 重新建模”。**
+> 能被机器反复使用的事实，抽成键值；只能给人读的解释性文字，留在原地；重复的信息，改成派生。
+
+#### 13.13.1 逐块对照：每一条旧内容去了哪里
+
+| 旧文件位置 | 旧内容 | 新位置 | 容纳方式 | 是否等价 |
+|---|---|---|---|---|
+| Engine & Language | `Engine: Godot 4.7` | `engine.name` + `engine.version` | 一行拆成两个键 | 否：没写版本号就拆不出 `version` |
+| Engine & Language | `Language` | `engine.language` | 直接映射 | 是 |
+| Engine & Language | `Rendering` | `engine.rendering` | 直接映射 | 是 |
+| Engine & Language | `Physics` | `engine.physics` | 直接映射 | 是 |
+| Input & Platform | `Target Platforms` | `platform.targets` | 逗号散文 → 数组 | 轻微：`PC + Console` 会变成一个元素 |
+| Input & Platform | `Input Methods` | **没有同名键** | 由 `targets` / `gamepad` / `touch` / `primary_input` 重算成 `input_methods` | 否：`Mixed` 或特殊组合无法完整回读 |
+| Input & Platform | `Primary Input` | `platform.primary_input` | 直接映射 | 是 |
+| Input & Platform | `Gamepad Support` | `platform.gamepad_support` | 直接映射 | 是 |
+| Input & Platform | `Touch Support` | `platform.touch_support` | 直接映射 | 是 |
+| Input & Platform | `Platform Notes` | **无** | 留在 Markdown | 不迁移 |
+| Naming Conventions | `Classes` | `naming.classes` | 原文搬运（不翻译成枚举） | 值保留，但可能不是合法枚举，需人工规范 |
+| Naming Conventions | `Variables` | `naming.variables` | 原文搬运 | 否：`_camelCase` 私有字段等细节丢失 |
+| Naming Conventions | `Signals/Events` | `naming.signals` | 原文搬运 | 否：自定义前缀/后缀丢失 |
+| Naming Conventions | `Files` | `naming.files` | 原文搬运 | 值保留，需人工规范 |
+| Naming Conventions | `Scenes/Prefabs` | `naming.scenes` | 原文搬运 | 值保留，需人工规范 |
+| Naming Conventions | `Constants` | `naming.constants` | 原文搬运 | 否：`PascalCase 或 UPPER_SNAKE` 只能选一个 |
+| Performance Budgets | `Target Framerate` | `performance.target_framerate` | 散文 → 数字 | 否：区间/分平台目标无法容纳 |
+| Performance Budgets | `Frame Budget` | `performance.frame_budget_ms` | 散文 → 数字 | 否：同上 |
+| Performance Budgets | `Draw Calls` | `performance.draw_call_limit` | 散文 → 数字 | 否：同上 |
+| Performance Budgets | `Memory Ceiling` | `performance.memory_ceiling_mb` | 散文 → 数字 | 否：同上 |
+| Testing | `Framework` | `testing.framework` | 原文搬运（别名需人工规范） | 轻微 |
+| Testing | `Minimum Coverage` | `qa.coverage_minimum` | 去单位后仍非数字则**跳过** | 否：`80` 或 `80%` 可以，`尽量高`、`80% 以上` 不行且不报错 |
+| Testing | `Required Tests` | **无** | 留在 Markdown | 不迁移 |
+| Forbidden Patterns | 整节 | **无** | **故意留在 Markdown** | 不迁移（设计如此） |
+| Allowed Libraries | 整节 | **无** | **故意留在 Markdown** | 不迁移（设计如此） |
+| Architecture Decisions Log | 整节 | **无** | 由 `docs/architecture/` + `docs/registry/architecture.yaml` 取代 | 迁移到别处 |
+| Engine Specialists | `Primary` | **无 `specialists.primary` 键** | 由 `engine.name` 推导 | 否：自定义主专家无法表达 |
+| Engine Specialists | `Language/Code Specialist` | `specialists.code` | 只保留裸代理名 | 是（括号说明被剪掉） |
+| Engine Specialists | `Shader Specialist` | `specialists.shader` | 只保留裸代理名 | 是 |
+| Engine Specialists | `UI Specialist` | `specialists.ui` | 只保留裸代理名 | 是 |
+| Engine Specialists | `Additional Specialists` | `specialists.additional` | 逗号散文 → 数组 | 是 |
+| Engine Specialists | `Routing Notes` | **无** | 留在 Markdown | 不迁移 |
+| Engine Specialists | `File Extension Routing` 表 | **无** | 技能按 `specialists.*` + 文件后缀自行路由 | 否：自定义行无法表达 |
+| （旧文件没有） | 构建/测试/运行/冒烟命令 | `commands.build` / `test` / `run` / `smoke` | 新增能力 | 不适用 |
+| （旧文件没有） | 联机、在线、认证等级 | `platform.multiplayer` / `online` / `cert_tier` | 新增能力 | 不适用 |
+
+读这张表的正确方式：
+
+- **“直接映射”**：YAML 里有等价键，迁移脚本能机械搬运。
+- **“散文 → 枚举/数字”**：这不是复制，是**翻译**；翻译就有信息损失。
+- **“无”**：不是遗漏，而是**有意不搬**或**留在旧家**。
+- **“新增能力”**：旧文件本来就没有，谈不上遗漏。
+
+#### 13.13.2 为什么这套格式能装下：七个设计手法
+
+`project.yaml` 能容纳旧内容，不是因为它“更长”，而是因为它换了数据模型。具体有七个手法：
+
+**① 区块镜像旧文件的 `##`**
+
+旧文件的每个 `##` 区块，在新文件里几乎都能找到同名或近名的顶层块：
+
+| 旧 `##` 区块 | 新顶层块 |
+|---|---|
+| Engine & Language | `engine:` |
+| Input & Platform | `platform:` |
+| Naming Conventions | `naming:` |
+| Performance Budgets | `performance:` |
+| Testing | `testing:` + `qa.coverage_minimum` |
+| Engine Specialists | `specialists:` |
+
+**分区一一对应**，所以“哪段旧内容该去哪个块”不需要猜；迁移脚本也是按这个对应关系写死的。
+
+**② 点路径给了每个字段一个稳定地址**
+
+旧文件靠“区块标题 + 粗体标签”定位（`## Naming Conventions` 下的 `- **Classes**`）。新文件把两层压成一个地址：
+
+```text
+naming.classes
+platform.gamepad_support
+performance.frame_budget_ms
+```
+
+这样技能、钩子、脚本都能用同一个字符串稳定地取到一个值，不依赖 Markdown 标题是否被手改过。
+
+**③ 枚举把“自由文本”收窄成“可校验值”**
+
+旧文件写 `PascalCase`、`Full`、`gdUnit4`；这些是给人看的。新文件写 `pascal_case`、`full`、`gdunit4`，并且**解析器会校验**：
+
+- 合法值 → 正常使用；
+- 非法值 → 被拒绝，写进 `notes`，继续回退，不会把 `naming.classes: 随便写` 传遍所有技能。
+
+这是“能容纳”与“能可靠使用”的分界线：**旧文件能写任何话，新文件只接受能执行的话。**
+
+> 迁移是一个例外：迁移脚本为了不猜错，**按原文搬运**命名和测试框架，不做枚举翻译。所以迁移后建议用 `/settings` 复核一遍这些值，让它们变成合法枚举。
+
+**④ 数组容纳“一对多”**
+
+旧文件用逗号散文表达集合：`PC, Console, Mobile`、`godot-specialist, godot-shader-specialist`。新文件用数组：
+
+```yaml
+platform:
+  targets:
+    - PC
+    - Console
+    - Mobile
+
+specialists:
+  additional:
+    - godot-gdextension-specialist
+```
+
+数组让“一个字段多个值”有了明确边界，解析器不需要猜逗号是不是分隔符（旧文件里 `ue-gas-specialist (abilities, effects)` 的括号内逗号就是个真实陷阱）。
+
+**⑤ 派生代替存储，消除“两份答案”**
+
+旧文件有两个“看起来像字段、其实是结论”的项：
+
+- `Primary` 专家：新文件**不存**，由 `engine.name` 推导（Godot → `godot-specialist`）。
+- `Input Methods`：新文件**不存**，由平台支持能力推导（有手柄 → 含 Gamepad；有触屏 → 含 Touch）。
+
+这样就不会出现“引擎写 Unity、Primary 写 godot-specialist”这种自相矛盾。**能算出来的，就不要存。**
+
+**⑥ `null`、注释、开放字符串各司其职**
+
+| 手法 | 作用 | 例子 |
+|---|---|---|
+| `null` | 表示“明确未设置”，区别于“这个键不存在” | `specialists.shader: null` |
+| 注释 | 保留“为什么这样设计”，Markdown 的说明能力不丢 | 模板顶部的 `modes` 说明 |
+| 开放字符串 | 不强行枚举项目自定义值 | `engine.rendering`、`commands.build`、`engine.path` |
+
+**⑦ schema 与效果表兜底**
+
+格式能装下只是第一步；还要保证“装了有人读”。仓库用 `effects-map.md` 给每个键记录 **取值 / 默认 / 写入者 / 读取者**，并用“死设置审计”发现“看起来是配置、其实没人读”的键。这解释了为什么 `project.kind`、`cadence.*` 会被标成“保留未实现”——**能写进 YAML，不等于已经接线**。
+
+#### 13.13.3 新机制是怎么跑起来的：四条链路
+
+```text
+【写入】
+  /setup-engine ──→ 先写 technical-preferences.md（人确认）
+                 └─→ 再双写 project.yaml 的 engine / specialists / naming / commands
+  /settings     ──→ 直接写 project.yaml（枚举校验），不写 Markdown
+  /adopt        ──→ 迁移脚本把旧 Markdown 的值搬进 project.yaml，保留 Markdown
+  /start        ──→ 写 modes / project.stage
+
+【读取】
+  resolve_config：project.local.yaml → project.yaml → 旧 Markdown → rigor 派生 → 默认
+  技能正文：用解析结果；个别键在 YAML 缺失时按标签回退读 Markdown
+  钩子/脚本：直接调用解析函数或读 `Engine:` 行
+
+【校验】
+  枚举拒绝非法值 → notes
+  /setup-engine 5.5.3 → 回读核对双写一致性，不一致就停
+  project-coherence.sh → 声明值 vs 实际工程文件
+  /adopt 审计 → 任一来源有值就算“已配置”
+
+【演进】
+  schema_version → 结构迁移
+  effects-map → 每个键的契约
+```
+
+四条链路里，最关键的是**写入不是“一次性搬家”，而是“持续双轨”**：
+
+- 引擎、专家、命名、命令：每次 `/setup-engine` 都双写；
+- 平台、性能、测试框架：`/setup-engine` 只写 Markdown，之后由 `/settings` 写 YAML；
+- 禁止模式、允许的库：永远只写 Markdown；
+- 旧项目：先迁移，再按上面的规则继续。
+
+所以“新机制”不是“把 Markdown 废掉”，而是**把每个字段的权威位置重新分配了一遍**。
+
+#### 13.13.4 会不会有遗漏？
+
+会。但要分清五种“遗漏”，因为它们的性质完全不同：
+
+| 类型 | 具体内容 | 结果 | 风险 |
+|---|---|---|---|
+| **完整迁移** | 引擎四字段、命名六字段、平台四字段、性能四字段、测试框架/覆盖率、专家四字段 | YAML 有等价键，技能优先读 YAML | 低 |
+| **有损转换** | 散文 → 枚举/数字；`Engine` 一行拆两键；`Input Methods` 重算；专家括号说明被剪 | 迁移报告会提示一部分；另一部分按约定翻译 | 中：需要人复核 |
+| **故意保留** | Forbidden Patterns、Allowed Libraries | 只住在 Markdown，由控制清单复制生效 | 低（设计如此），但**不能删文件** |
+| **无处安放** | `Platform Notes`、`Required Tests`、`Routing Notes`、`File Extension Routing` 自定义行 | **只住在 Markdown**；迁移脚本不会搬，也基本不会报 | 高：删文件就真丢了 |
+| **已被取代** | Architecture Decisions Log | 现行 ADR 在 `docs/architecture/` + registry | 低：内容没有丢，只是换了家 |
+
+这里有三个**静默盲区**，必须明确说出来：
+
+1. **`Platform Notes` 不在迁移键清单里。** 它既不会被搬进 YAML，也不会出现在“未迁移”报告里——因为它在一个被识别的区块内，只是迁移脚本不读这个标签。
+2. **`Required Tests` 明确不迁移。** 脚本注释写着它是“给人看的指导”，从不传给解析函数。
+3. **`Routing Notes` 和整张 `File Extension Routing` 表不迁移。** 实际路由由技能的 `specialists.*` + 文件后缀逻辑完成；自定义路由规则没有 YAML 表达方式。
+
+另外还有两类“看起来像遗漏、其实不是”的情况：
+
+- **`Input Methods` 不是被丢了，而是被重算了。** 只要 `platform.targets`、`gamepad_support`、`touch_support`、`primary_input` 都在，`input_methods` 就能重新推出一个合理值；但旧文件里写 `Mixed` 这种“结论型”描述，可能无法一比一还原。
+- **`Primary` 专家不是被丢了，而是被推导了。** 只有推导失败（引擎名不认识）时，才会回退读旧文件的 `Primary`。
+
+所以，**“不会遗漏”靠的不是格式万能，而是三条工程保证**：
+
+1. **迁移脚本从不删除 `technical-preferences.md`**——无处安放的内容继续安全地待在那里。
+2. **迁移报告显式列出被保留、被手工处理、被警告的内容**，让人有机会复核。
+3. **效果表和审计能发现“有键没人读”**，避免把“写进去了”误当成“生效了”。
+
+#### 13.13.5 自查：我的项目到底迁全了没有
+
+按顺序做这六件事：
+
+1. **看迁移报告**：`production/migration-report.md` 里有没有 `PRESERVED`、manual、warning 条目。
+2. **看 YAML 九个块**：`engine`、`platform`、`naming`、`performance`、`testing`、`specialists`、`commands` 是否齐；`qa.coverage_minimum` 是否设置。
+3. **看 Markdown 还剩什么**：如果只剩 Forbidden Patterns、Allowed Libraries 和少量说明文字，说明迁移基本完成；如果 `Engine`、`Naming` 还是真实值，说明它仍在兜底。
+4. **看平台与性能**：这两块 `/setup-engine` 不写 YAML，必须确认是你有意让 Markdown 兜底，还是漏了 `/settings`。
+5. **看来源标签**：用 `/settings` 或解析输出查看每个值的来源；出现 `(legacy)` 就说明还在读旧文件。
+6. **人工确认三类“无处安放”**：Platform Notes、Required Tests、Routing Notes 是否还有效；有效就保留 Markdown，不要为了“迁干净”而删文件。
+
+一句话收尾：
+
+> **`project.yaml` 装下的是“机器要执行的技术事实”；装不下的是“人要阅读的判断与说明”。**
+> 判断一次迁移是否完整，不是看 YAML 有多长，而是看**每个仍然生效的约束，是否还有一个明确的家**。
+
 ---
 
 ## 14. 配置项字典（逐项速查）
@@ -2206,6 +2426,7 @@ engine_values, specialists, perf_budgets, ...
 | [配置体系与rigor心智模型.md](配置体系与rigor心智模型.md) | rigor 的设计动机与配置体系总览 |
 | [7阶段逐阶指南.md](7阶段逐阶指南.md) | 每个阶段该做什么、门禁要什么 |
 | [setup-engine引擎配置指南.md](setup-engine引擎配置指南.md) | 引擎配置的完整操作 |
+| [technical-preferences完全指南.md](technical-preferences完全指南.md) | 旧技术栈文件的逐节解析、生命周期与回退机制 |
 
 ---
 
