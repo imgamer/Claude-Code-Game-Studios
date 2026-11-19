@@ -469,7 +469,7 @@ workflow_overrides:
 
 | 键 | 控制什么 | 取值与默认 | 谁写 / 谁读 |
 |---|---|---|---|
-| `testing.framework` | 用哪个测试框架 | 引擎默认：Godot `gdunit4`、Unity `unity-test-framework`、Unreal `unreal-automation`；由 `/setup-engine` 自动填 | `/setup-engine`、`/settings` 写；`qa-plan`、`dev-story`、`regression-suite`、`smoke-check` 读 |
+| `testing.framework` | 用哪个测试框架 | 引擎默认：Godot `gdunit4`、Unity `unity-test-framework`、Unreal `unreal-automation`；由 `/setup-engine` 自动填 | `/setup-engine`、`/settings` 写；直接读这个键的是 `/test-helpers`。`qa-plan`、`dev-story`、`regression-suite`、`smoke-check` 受框架影响，但按效果表核对并不逐字读这个键 |
 | `testing.strict.logic` | 逻辑测试失败是否阻断故事关闭 | `true`/`false` | `/settings` 写；`story-done`、`story-readiness`、`gate-check`、`smoke-check`、`dev-story` 读 |
 | `testing.strict.integration` | 集成测试失败是否阻断 | `true`/`false` | 同上 |
 | `testing.strict.visual` | 视觉证据缺失/失败是否阻断 | `true`/`false` | 同上 |
