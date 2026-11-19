@@ -364,6 +364,7 @@ game-pillars.md 的 Next Steps 最后一条：
 |---|---|
 | [game-concept 模板原文](../../.claude/docs/templates/game-concept.md) | 每个空位旁的引导注释与 AAA 范例 |
 | [game-pillars 模板原文](../../.claude/docs/templates/game-pillars.md) | 支柱展开版的完整结构（五部门矩阵、冲突排序、验证清单） |
+| [game-pillars完全指南.md](game-pillars完全指南.md) | 支柱文档的逐项讲解、创建与维护流程、与本文档的协作关系 |
 | [概念阶段详解.md](../workflow/概念阶段详解.md) | 概念阶段在整个七阶段流程中的位置 |
 | [brainstorm 技能规则](../workflow/skill-rules/brainstorm.md) | 概念是怎么被"问答"出来的 |
 | [16-design目录指南.md](../16-design目录指南.md) | design/ 目录下各文档的分工 |
