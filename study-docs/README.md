@@ -64,6 +64,7 @@
 | W6 | [workflow/注册表机制详解](file:///workspace/study-docs/workflow/注册表机制详解.md) | entities.yaml / architecture.yaml / tr-registry.yaml 是干什么的？为什么这样设计？格式怎么读？ | 三本注册表逐字段解剖、五条铁律、grep 优先的布局契约、registry.sh 7 个命令、写前钩子、哥布林全链路时间线、单一事实源家族（control-manifest/systems-index/asset-manifest 等） |
 | W7 | [workflow/系统设计阶段详解](file:///workspace/study-docs/workflow/系统设计阶段详解.md) | Phase 1 的 `/map-systems`（枚举+依赖+门禁）和 Phase 2 的 `/design-system`（骨架+逐节+会话隔离）怎么分工？ | 显式+隐式推断机制（6 组映射表）、依赖五层+循环检测、TD-SYSTEM-BOUNDARY 为什么在写 GDD 前、空骨架三理由、会话隔离四机制、哈希+会话怎么配合、10 条设计思路对照表 |
 | W8 | [workflow/概念阶段详解](file:///workspace/study-docs/workflow/概念阶段详解.md) | Phase 1 每一步做什么？brainstorm 两条路径+四个总监门禁+setup-engine 12 子阶段怎么配合？ | Lean Brief vs Full Concept 分叉、四个门禁判决流（CD-PILLARS/AD-CONCEPT-VISUAL/TD-FEASIBILITY/PR-SCOPE）、AD-CONCEPT-VISUAL→art-bible 跨阶段耦合、setup-engine 双写+Knowledge Gap+Version Awareness、NOT ASSESSED 规则、13 条设计思路对照表 |
+| W9 | [workflow/guidance/templates-guidance目录详解](file:///workspace/study-docs/workflow/guidance/templates-guidance目录详解.md) | templates/guidance/ 目录是给谁用的？模板+guidance 为什么拆两份？怎么按节懒加载？ | 8 组模板+guidance 完整对照、六件套格式、interaction-pattern-library 拆分、跨层传播机制、4 条设计原理、为什么 5 个有 guidance 59 个没有 |
 
 ---
 
